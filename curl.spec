@@ -1,7 +1,7 @@
 %undefine __libtoolize
 Name: curl
 Version: 7.19.3
-Release: alt2
+Release: alt3
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -105,6 +105,7 @@ Lib%name - это библиотека функций для отправки и
 %patch0 -p1
 
 %build
+./buildconf
 %configure --with-ssl \
 	    --with-libidn \
 	    --enable-ipv6 \
@@ -141,6 +142,9 @@ Lib%name - это библиотека функций для отправки и
 %_libdir/*.a
 
 %changelog
+* Mon Feb 09 2009 Anton Farygin <rider@altlinux.ru> 7.19.3-alt3
+- build from cvs
+
 * Mon Feb 09 2009 Anton Farygin <rider@altlinux.ru> 7.19.3-alt2
 - curl-config --libs fixed (#18779)
 
