@@ -1,0 +1,2 @@
+tar: v@version@:. name=curl-@version@
+diff: v@version@:.	.

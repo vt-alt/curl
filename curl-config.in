@@ -72,7 +72,7 @@ while test $# -gt 0; do
 	;;
 
     --cc)
-	echo "@CC@"
+	echo "gcc"
 	;;
 
     --prefix)
@@ -133,20 +133,11 @@ while test $# -gt 0; do
        	;;
 
     --libs)
-	if test "X@libdir@" != "X/usr/lib" -a "X@libdir@" != "X/usr/lib64"; then
-	   CURLLIBDIR="-L@libdir@ "
-	else
-	   CURLLIBDIR=""
-	fi
-	if test "X@REQUIRE_LIB_DEPS@" = "Xyes"; then
-	  echo ${CURLLIBDIR}-lcurl @LDFLAGS@ @LIBCURL_LIBS@ @LIBS@
-	else
-	  echo ${CURLLIBDIR}-lcurl @LDFLAGS@ @LIBS@
-	fi
+	pkg-config libcurl --libs
 	;;
 
     --static-libs)
-	echo @libdir@/libcurl.@libext@ @LDFLAGS@ @LIBCURL_LIBS@ @LIBS@
+	pkg-config libcurl --libs --static
 	;;
 
     *)
