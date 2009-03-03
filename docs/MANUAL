@@ -136,6 +136,14 @@ PROXY
 
         curl -U user:passwd -x my-proxy:888 http://www.get.this/
 
+ A comma-separated list of hosts and domains which do not use the proxy can
+ be specified as:
+
+        curl --noproxy localhost,get.this -x my-proxy:888 http://www.get.this/
+
+ If the proxy is specified with --proxy1.0 instead of --proxy or -x, then
+ curl will use HTTP/1.0 instead of HTTP/1.1 for any CONNECT attempts.
+
  curl also supports SOCKS4 and SOCKS5 proxies with --socks4 and --socks5.
 
  See also the environment variables Curl support that offer further proxy
@@ -504,7 +512,7 @@ CONFIG FILE
   can also specify the long options without the dashes to make it more
   readable. You can separate the options and the parameter with spaces, or
   with = or :. Comments can be used within the file. If the first letter on a
-  line is a '#'-letter the rest of the line is treated as a comment.
+  line is a '#'-symbol the rest of the line is treated as a comment.
 
   If you want the parameter to contain spaces, you must enclose the entire
   parameter within double quotes ("). Within those quotes, you specify a
@@ -793,8 +801,9 @@ ENVIRONMENT VARIABLES
 
         NO_PROXY
 
-  If a tail substring of the domain-path for a host matches one of these
-  strings, transactions with that node will not be proxied.
+  If the host name matches one of these strings, or the host is within the
+  domain of one of these strings, transactions with that node will not be
+  proxied.
 
 
   The usage of the -x/--proxy flag overrides the environment variables.

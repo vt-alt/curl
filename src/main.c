@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2008, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.502 2009-01-07 19:39:35 danf Exp $
+ * $Id: main.c,v 1.507 2009-02-17 09:09:18 bagder Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -448,6 +448,8 @@ struct Configurable {
   char *userpwd;
   char *proxyuserpwd;
   char *proxy;
+  int proxyver;     /* set to CURLPROXY_HTTP* define */
+  char *noproxy;
   bool proxytunnel;
   bool ftp_append;         /* APPE on ftp */
   bool mute;               /* shutup */
@@ -535,6 +537,10 @@ struct Configurable {
 
   char *socksproxy; /* set to server string */
   int socksver;     /* set to CURLPROXY_SOCKS* define */
+  char *socks5_gssapi_service;  /* set service name for gssapi principal
+                                 * default rcmd */
+  int socks5_gssapi_nec ;  /* The NEC reference server does not protect
+                            * the encryption type exchange */
 
   bool tcp_nodelay;
   long req_retry;   /* number of retries */
@@ -772,6 +778,7 @@ static void help(void)
     " -N/--no-buffer     Disable buffering of the output stream",
     "    --no-keepalive  Disable keepalive use on the connection",
     "    --no-sessionid  Disable SSL session-ID reusing (SSL)",
+    "    --noproxy       Comma-separated list of hosts which do not use proxy",
     "    --ntlm          Use HTTP NTLM authentication (H)",
     " -o/--output <file> Write output to <file> instead of stdout",
     "    --pass  <pass>  Pass phrase for the private key (SSL/SSH)",
@@ -785,6 +792,7 @@ static void help(void)
     "    --proxy-negotiate Use Negotiate authentication on the proxy (H)",
     "    --proxy-ntlm    Use NTLM authentication on the proxy (H)",
     " -U/--proxy-user <user[:password]> Set proxy user and password",
+    "    --proxy1.0 <host[:port]> Use HTTP/1.0 proxy on given port",
     " -p/--proxytunnel   Operate through a HTTP proxy tunnel (using CONNECT)",
     "    --pubkey <key>  Public key file name (SSH)",
     " -Q/--quote <cmd>   Send command(s) to server before file transfer (F/SFTP)",
@@ -805,6 +813,10 @@ static void help(void)
     "    --socks4a <host[:port]> SOCKS4a proxy on given host + port",
     "    --socks5 <host[:port]> SOCKS5 proxy on given host + port",
     "    --socks5-hostname <host[:port]> SOCKS5 proxy, pass host name to proxy",
+#if defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI)
+    "    --socks5-gssapi-service <name> SOCKS5 proxy service name for gssapi",
+    "    --socks5-gssapi-nec  Compatibility with NEC SOCKS5 server",
+#endif
     " -Y/--speed-limit   Stop transfer if below speed-limit for 'speed-time' secs",
     " -y/--speed-time    Time needed to trig speed-limit abort. Defaults to 30",
     " -2/--sslv2         Use SSLv2 (SSL)",
@@ -1666,6 +1678,12 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
     {"$2", "socks5-hostname", TRUE},
     {"$3", "keepalive-time",  TRUE},
     {"$4", "post302",    FALSE},
+    {"$5", "noproxy",    TRUE},
+#if defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI)
+    {"$6", "socks5-gssapi-service",  TRUE},
+    {"$7", "socks5-gssapi-nec",  FALSE},
+#endif
+    {"$8", "proxy1.0",   TRUE},
 
     {"0", "http1.0",     FALSE},
     {"1", "tlsv1",       FALSE},
@@ -2174,6 +2192,23 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
         break;
       case '4': /* --post302 */
         config->post302 = toggle;
+        break;
+      case '5': /* --noproxy */
+        /* This specifies the noproxy list */
+        GetStr(&config->noproxy, nextarg);
+        break;
+#if defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI)
+      case '6': /* --socks5-gssapi-service */
+        GetStr(&config->socks5_gssapi_service, nextarg);
+        break;
+      case '7': /* --socks5-gssapi-nec*/
+        config->socks5_gssapi_nec = TRUE;
+        break;
+#endif
+      case '8': /* --proxy1.0 */
+        /* http 1.0 proxy */
+        GetStr(&config->proxy, nextarg);
+        config->proxyver = CURLPROXY_HTTP_1_0;
         break;
       }
       break;
@@ -2860,6 +2895,7 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
     case 'x':
       /* proxy */
       GetStr(&config->proxy, nextarg);
+      config->proxyver = CURLPROXY_HTTP;
       break;
     case 'X':
       /* set custom request */
@@ -3641,6 +3677,8 @@ static void free_config_fields(struct Configurable *config)
     free(config->proxy);
   if(config->proxyuserpwd)
     free(config->proxyuserpwd);
+  if(config->noproxy)
+    free(config->noproxy);
   if(config->cookie)
     free(config->cookie);
   if(config->cookiefile)
@@ -3691,6 +3729,10 @@ static void free_config_fields(struct Configurable *config)
     free(config->referer);
   if (config->hostpubmd5)
     free(config->hostpubmd5);
+#if defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI)
+  if(config->socks5_gssapi_service)
+    free(config->socks5_gssapi_service);
+#endif
 
   curl_slist_free_all(config->quote); /* checks for config->quote == NULL */
   curl_slist_free_all(config->prequote);
@@ -4534,6 +4576,8 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
         my_setopt(curl, CURLOPT_INFILESIZE_LARGE, uploadfilesize);
         my_setopt(curl, CURLOPT_URL, url);     /* what to fetch */
         my_setopt(curl, CURLOPT_PROXY, config->proxy); /* proxy to use */
+        if(config->proxy)
+          my_setopt(curl, CURLOPT_PROXYTYPE, config->proxyver);
         my_setopt(curl, CURLOPT_NOPROGRESS, config->noprogress);
         if(config->no_body) {
           my_setopt(curl, CURLOPT_NOBODY, 1);
@@ -4559,6 +4603,7 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
         my_setopt(curl, CURLOPT_TRANSFERTEXT, config->use_ascii);
         my_setopt(curl, CURLOPT_USERPWD, config->userpwd);
         my_setopt(curl, CURLOPT_PROXYUSERPWD, config->proxyuserpwd);
+        my_setopt(curl, CURLOPT_NOPROXY, config->noproxy);
         my_setopt(curl, CURLOPT_RANGE, config->range);
         my_setopt(curl, CURLOPT_ERRORBUFFER, errorbuffer);
         my_setopt(curl, CURLOPT_TIMEOUT, config->timeout);
@@ -4708,11 +4753,11 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
 
         /* new in curl 7.10 */
         my_setopt(curl, CURLOPT_ENCODING,
-                         (config->encoding) ? "" : NULL);
+                  (config->encoding) ? "" : NULL);
 
-        /* new in curl 7.10.7 */
+        /* new in curl 7.10.7, extended in 7.19.4 but this only sets 0 or 1 */
         my_setopt(curl, CURLOPT_FTP_CREATE_MISSING_DIRS,
-                         config->ftp_create_dirs);
+                  config->ftp_create_dirs);
         if(config->proxyanyauth)
           my_setopt(curl, CURLOPT_PROXYAUTH, CURLAUTH_ANY);
         else if(config->proxynegotiate)
@@ -4758,6 +4803,16 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
           my_setopt(curl, CURLOPT_PROXYTYPE, config->socksver);
         }
 
+#if defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI)
+        /* new in curl 7.19.4 */
+        if(config->socks5_gssapi_service)
+          my_setopt(curl, CURLOPT_SOCKS5_GSSAPI_SERVICE,
+                    config->socks5_gssapi_service);
+
+        /* new in curl 7.19.4 */
+        if(config->socks5_gssapi_nec)
+          my_setopt(curl, CURLOPT_SOCKS5_GSSAPI_NEC, config->socks5_gssapi_nec);
+#endif
         /* curl 7.13.0 */
         my_setopt(curl, CURLOPT_FTP_ACCOUNT, config->ftp_account);
 
@@ -4870,17 +4925,13 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
             }
 
             if(retry) {
-              static const char * const m[]={NULL,
-                                             "timeout",
-                                             "HTTP error",
-                                             "FTP error"
+              static const char * const m[]={
+                NULL, "timeout", "HTTP error", "FTP error"
               };
               warnf(config, "Transient problem: %s "
                     "Will retry in %ld seconds. "
                     "%ld retries left.\n",
-                    m[retry],
-                    retry_sleep/1000,
-                    retry_numretries);
+                    m[retry], retry_sleep/1000, retry_numretries);
 
               go_sleep(retry_sleep);
               retry_numretries--;
@@ -4922,15 +4973,13 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
         } while(1);
 
         if((config->progressmode == CURL_PROGRESS_BAR) &&
-           progressbar.calls) {
+           progressbar.calls)
           /* if the custom progress bar has been displayed, we output a
              newline here */
           fputs("\n", progressbar.out);
-        }
 
-        if(config->writeout) {
+        if(config->writeout)
           ourWriteOut(curl, config->writeout);
-        }
 #ifdef USE_ENVIRONMENT
         if (config->writeenv)
           ourWriteEnv(curl);
@@ -5295,12 +5344,14 @@ static char *basename(char *path)
 static const char *
 msdosify (const char *file_name)
 {
-  static char dos_name[PATH_MAX*2];
-  static const char illegal_chars_dos[] = ".+, ;=[]|<>\\\":?*";
+  static char dos_name[PATH_MAX];
+  static const char illegal_chars_dos[] = ".+, ;=[]" /* illegal in DOS */
+                                       "|<>\\\":?*"; /* illegal in DOS & W95 */
   static const char *illegal_chars_w95 = &illegal_chars_dos[8];
   int idx, dot_idx;
   const char *s = file_name;
   char *d = dos_name;
+  const char * const dlimit = dos_name + sizeof(dos_name) - 1;
   const char *illegal_aliens = illegal_chars_dos;
   size_t len = sizeof (illegal_chars_dos) - 1;
   int lfn = 0;
@@ -5321,7 +5372,7 @@ msdosify (const char *file_name)
     *d++ = *s++;
   }
 
-  for (idx = 0, dot_idx = -1; *s; s++, d++) {
+  for (idx = 0, dot_idx = -1; *s && d < dlimit; s++, d++) {
     if (memchr (illegal_aliens, *s, len)) {
       /* Dots are special: DOS doesn't allow them as the leading character,
          and a file name cannot have more than a single dot.  We leave the

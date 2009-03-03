@@ -5,7 +5,7 @@
 .\" *                            | (__| |_| |  _ <| |___
 .\" *                             \___|\___/|_| \_\_____|
 .\" *
-.\" * Copyright (C) 1998 - 2008, Daniel Stenberg, <daniel@haxx.se>, et al.
+.\" * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
 .\" *
 .\" * This software is licensed as described in the file COPYING, which
 .\" * you should have received as part of this distribution. The terms
@@ -18,7 +18,7 @@
 .\" * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 .\" * KIND, either express or implied.
 .\" *
-.\" * $Id: curl.1,v 1.262 2008-12-22 13:07:14 bagder Exp $
+.\" * $Id: curl.1,v 1.268 2009-02-27 13:52:05 bagder Exp $
 .\" **************************************************************************
 .\"
 .TH curl 1 "10 July 2008" "Curl 7.19.0" "Curl Manual"
@@ -292,6 +292,10 @@ traditional PORT command.
 
 Since curl 7.19.0, \fB--eprt\fP can be used to explicitly enable EPRT again
 and \fB--no-eprt\fP is an alias for \fB--disable-eprt\fP.
+
+Disabling EPRT only changes the active behavior. If you want to switch to
+passive mode you need to not use \fI-P/--ftp-port\fP or force it with
+\fI--ftp-pasv\fP.
 .IP "--disable-epsv"
 (FTP) Tell curl to disable the use of the EPSV command when doing passive FTP
 transfers. Curl will normally always first attempt to use EPSV before PASV,
@@ -299,6 +303,9 @@ but with this option, it will not try using EPSV.
 
 Since curl 7.19.0, \fB--epsv\fP can be used to explicitly enable EPRT again
 and \fB--no-epsv\fP is an alias for \fB--disable-epsv\fP.
+
+Disabling EPSV only changes the passive behavior. If you want to switch to
+active mode you need to use \fI-P/--ftp-port\fP.
 .IP "-D/--dump-header <file>"
 Write the protocol headers to the specified file.
 
@@ -421,13 +428,16 @@ compliant than 'nocwd' but without the full penalty of 'multicwd'.
 .RE
 (Added in 7.15.1)
 .IP "--ftp-pasv"
-(FTP) Use PASV when transferring. PASV is the internal default behavior, but
-using this option can be used to override a previous --ftp-port option. (Added
-in 7.11.0)
+(FTP) Use passive mode for the data conection. Passive is the internal default
+behavior, but using this option can be used to override a previous
+\fI-P/-ftp-port\fP option. (Added in 7.11.0)
 
 If this option is used several times, the following occurrences make no
-difference. Undoing an enforced PASV really isn't doable but you must then
-instead enforce the correct EPRT again.
+difference. Undoing an enforced passive really isn't doable but you must then
+instead enforce the correct \fI-P/--ftp-port\fP again.
+
+Passive mode means that curl will try the EPSV command first and then PASV,
+unless \fI--disable-epsv\fP is used.
 .IP "--ftp-alternative-to-user <command>"
 (FTP) If authenticating with the USER and PASS commands fails, send this
 command.  When connecting to Tumbleweed's Secure Transport server over FTPS
@@ -815,6 +825,13 @@ you to succeed. (Added in 7.16.0)
 
 Note that this is the negated option name documented. You can thus use
 \fI--sessionid\fP to enforce session-ID caching.
+.IP "--noproxy <no-proxy-list>"
+Comma-separated list of hosts which do not use a proxy, if one is specified.
+The only wildcard is a single * character, which matches all hosts, and
+effectively disables the proxy. Each name in this list is matched as either
+a domain which contains the hostname, or the hostname itself. For example,
+local.com would match local.com, local.com:80, and www.local.com, but not
+www.notlocal.com.  (Added in 7.19.4).
 .IP "--ntlm"
 (HTTP) Enables NTLM authentication. The NTLM authentication method was
 designed by Microsoft and is used by IIS web servers. It is a proprietary
@@ -846,7 +863,8 @@ or use several variables like:
 You may use this option as many times as the number of URLs you have.
 
 See also the \fI--create-dirs\fP option to create the local directories
-dynamically.
+dynamically. Specifying the output as '-' (a single dash) will force the
+output to be done to stdout.
 .IP "-O/--remote-name"
 Write output to a local file named like the remote file we get. (Only the file
 part of the remote file is used, the path is cut off.)
@@ -875,7 +893,7 @@ a redirection. This option is meaningful only when using \fI-L/--location\fP
 Tells curl to respect RFC 2616/10.3.2 and not convert POST requests into GET
 requests when following a 302 redirection. The non-RFC behaviour is ubiquitous
 in web browsers, so curl does the conversion by default to maintain
-consistency. However, a server may requires a POST to remain a POST after such
+consistency. However, a server may require a POST to remain a POST after such
 a redirection. This option is meaningful only when using \fI-L/--location\fP
 (Added in 7.19.1)
 .IP "--proxy-anyauth"
@@ -896,6 +914,13 @@ with a remote host. (Added in 7.17.1)
 .IP "--proxy-ntlm"
 Tells curl to use HTTP NTLM authentication when communicating with the given
 proxy. Use \fI--ntlm\fP for enabling NTLM with a remote host.
+.IP "--proxy1.0 <proxyhost[:port]>"
+Use the specified HTTP 1.0 proxy. If the port number is not specified, it is
+assumed at port 1080.
+
+The only difference between this and the HTTP proxy option (\fI-x/--proxy\fP),
+is that attempts to use CONNECT through the proxy will specify an HTTP 1.0
+protocol instead of the default HTTP 1.1.
 .IP "-p/--proxytunnel"
 When an HTTP proxy is used (\fI-x/--proxy\fP), this option will cause non-HTTP
 protocols to attempt to tunnel through the proxy instead of merely using it to
@@ -908,11 +933,11 @@ separate file.
 
 If this option is used several times, the last one will be used.
 .IP "-P/--ftp-port <address>"
-(FTP) Reverses the initiator/listener roles when connecting with FTP. This
-switch makes Curl use the PORT command instead of PASV. In practice, PORT
-tells the server to connect to the client's specified address and port, while
-PASV asks the server for an IP address and port to connect to. <address>
-should be one of:
+(FTP) Reverses the default initiator/listener roles when connecting with
+FTP. This switch makes curl use active mode. In practice, curl then tells the
+server to connect back to the client's specified address and port, while
+passive mode asks the server to setup an IP address and port for it to connect
+to. <address> should be one of:
 .RS
 .IP interface
 i.e "eth0" to specify which interface's IP address you want to use (Unix only)
@@ -1107,6 +1132,21 @@ mutually exclusive.
 If this option is used several times, the last one will be used. (This option
 was previously wrongly documented and used as --socks without the number
 appended.)
+.IP "--socks5-gssapi-service <servicename>"
+The default service name for a socks server is rcmd/server-fqdn. This option
+allows you to change it.
+
+Examples:
+ --socks5 proxy-name \fI--socks5-gssapi-service\fP sockd   would use
+sockd/proxy-name
+ --socks5 proxy-name \fI--socks5-gssapi-service\fP sockd/real-name   would use
+sockd/real-name for cases where the proxy-name does not match the princpal name.
+ (Added in 7.19.4).
+.IP "--socks5-gssapi-nec"
+As part of the gssapi negotiation a protection mode is negotiated. The rfc1961
+says in section 4.3/4.4 it should be protected, but the NEC reference
+implementation does not.  The option \fI--socks5-gssapi-nec\fP allows the
+unprotected exchange of the protection mode negotiation. (Added in 7.19.4).
 .IP "--stderr <file>"
 Redirect all writes to stderr to the specified file instead. If the file name
 is a plain '-', it is instead written to stdout. This option has no point when

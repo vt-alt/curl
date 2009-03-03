@@ -42,11 +42,6 @@ may have been fixed since this was written!
   library header files exporting symbols/macros that should be kept private
   to the KfW library. See ticket #5601 at http://krbdev.mit.edu/rt/
 
-53. SFTP busy-loop problem. When doing SFTP uploads, we can see that libcurl
-  occasionally will busy-loop while waiting for certain network conditions.
-  Reported by Pavel Shalagin, explained somewhat by Daniel Stenberg here:
-  http://curl.haxx.se/mail/lib-2008-04/0439.html
-
 52. Gautam Kachroo's issue that identifies a problem with the multi interface
   where a connection can be re-used without actually being properly
   SSL-negoatiated:
@@ -63,13 +58,6 @@ may have been fixed since this was written!
   connection is meant to be kept alive (like for NTLM proxy auth), the
   function will return prematurely and will confuse the rest of the HTTP
   protocol code. This should be very rare.
-
-45. libcurl built to support ipv6 uses getaddrinfo() to resolve host names.
-  getaddrinfo() sorts the response list which effectively kills how libcurl
-  deals with round-robin DNS entries. All details:
-    http://curl.haxx.se/mail/lib-2007-07/0168.html
-  initial suggested function to use for randomizing the response:
-    http://curl.haxx.se/mail/lib-2007-07/0178.html
 
 43. There seems to be a problem when connecting to the Microsoft telnet server.
   http://curl.haxx.se/bug/view.cgi?id=1720605

@@ -1,19 +1,11 @@
-To be addressed in 7.19.3 (planned release: January 2009)
+To be addressed in 7.19.5 (planned release: May 2009)
 =========================
 
-
-To be addressed in 7.19.4 (planned release: March 2009)
-=========================
-
-205 - A. Craig West's CURLOPT_NOPROXY option
-
-206 - A. Craig West's CURLOPT_HTTP_VERSION change for CONNECT
-
-208 - Patch to allow GSSAPI authentication to a socks5 server
-
-214 - progress bar prefix, second try (for the curl tool)
+216 - Markus Moeller's "proxy question" to reverse lookup SOCKS proxys and more
 
 215 - Patch for Metalink Support (for the curl tool)
 
-216 - 
+220 - Take advantage of libssh2_version() that's been added for the upcoming
+      1.1, to extract the run-time version number properly.
 
+221 - 

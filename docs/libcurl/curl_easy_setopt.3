@@ -5,7 +5,7 @@
 .\" *                            | (__| |_| |  _ <| |___
 .\" *                             \___|\___/|_| \_\_____|
 .\" *
-.\" * Copyright (C) 1998 - 2008, Daniel Stenberg, <daniel@haxx.se>, et al.
+.\" * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
 .\" *
 .\" * This software is licensed as described in the file COPYING, which
 .\" * you should have received as part of this distribution. The terms
@@ -18,7 +18,7 @@
 .\" * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 .\" * KIND, either express or implied.
 .\" *
-.\" * $Id: curl_easy_setopt.3,v 1.245 2008-12-29 21:26:11 bagder Exp $
+.\" * $Id: curl_easy_setopt.3,v 1.255 2009-03-02 23:05:31 bagder Exp $
 .\" **************************************************************************
 .\"
 .TH curl_easy_setopt 3 "11 Dec 2008" "libcurl 7.19.3" "libcurl Manual"
@@ -440,12 +440,33 @@ The string given to CURLOPT_URL must be url-encoded and follow RFC 2396
 
 \fICURLOPT_URL\fP is the only option that \fBmust\fP be set before
 \fIcurl_easy_perform(3)\fP is called.
+
+\fICURLOPT_PROTOCOLS\fP can be used to limit what protocols libcurl will use
+for this transfer, independent of what libcurl has been compiled to
+support. That may be useful if you accept the URL from an external source and
+want to limit the accessibility.
+.IP CURLOPT_PROTOCOLS
+Pass a long that holds a bitmask of CURLPROTO_* defines. If used, this bitmask
+limits what protocols libcurl may use in the transfer. This allows you to have
+a libcurl built to support a wide range of protocols but still limit specific
+transfers to only be allowed to use a subset of them. By default libcurl will
+accept all protocols it supports. See also
+\fICURLOPT_REDIR_PROTOCOLS\fP. (Added in 7.19.4)
+.IP CURLOPT_REDIR_PROTOCOLS
+Pass a long that holds a bitmask of CURLPROTO_* defines. If used, this bitmask
+limits what protocols libcurl may use in a transfer that it follows to in a
+redirect when \fICURLOPT_FOLLOWLOCATION\fP is enabled. This allows you to
+limit specific transfers to only be allowed to use a subset of protocols in
+redirections. By default libcurl will allow all protocols except for FILE and
+SCP. This is a difference compared to pre-7.19.4 versions which
+unconditionally would follow to all protocols supported. (Added in 7.19.4)
 .IP CURLOPT_PROXY
 Set HTTP proxy to use. The parameter should be a char * to a zero terminated
 string holding the host name or dotted IP address. To specify port number in
 this string, append :[port] to the end of the host name. The proxy string may
 be prefixed with [protocol]:// since any such prefix will be ignored. The
-proxy's port number may optionally be specified with the separate option
+proxy's port number may optionally be specified with the separate option. If
+not specified, libcurl will default to using port 1080 for proxies.
 \fICURLOPT_PROXYPORT\fP.
 
 When you tell the library to use an HTTP proxy, libcurl will transparently
@@ -470,15 +491,33 @@ Pass a long with this option to set the proxy port to connect to unless it is
 specified in the proxy string \fICURLOPT_PROXY\fP.
 .IP CURLOPT_PROXYTYPE
 Pass a long with this option to set type of the proxy. Available options for
-this are \fICURLPROXY_HTTP\fP, \fICURLPROXY_SOCKS4\fP (added in 7.15.2),
-\fICURLPROXY_SOCKS5\fP, \fICURLPROXY_SOCKS4A\fP (added in 7.18.0) and
-\fICURLPROXY_SOCKS5_HOSTNAME\fP (added in 7.18.0). The HTTP type is
-default. (Added in 7.10)
+this are \fICURLPROXY_HTTP\fP, \fICURLPROXY_HTTP_1_0\fP (added in 7.19.4),
+\fICURLPROXY_SOCKS4\fP (added in 7.15.2), \fICURLPROXY_SOCKS5\fP,
+\fICURLPROXY_SOCKS4A\fP (added in 7.18.0) and \fICURLPROXY_SOCKS5_HOSTNAME\fP
+(added in 7.18.0). The HTTP type is default. (Added in 7.10)
+.IP CURLOPT_NOPROXY
+Pass a pointer to a zero terminated string. The should be a comma- separated
+list of hosts which do not use a proxy, if one is specified.  The only
+wildcard is a single * character, which matches all hosts, and effectively
+disables the proxy. Each name in this list is matched as either a domain which
+contains the hostname, or the hostname itself. For example, local.com would
+match local.com, local.com:80, and www.local.com, but not www.notlocal.com.
+(Added in 7.19.4)
 .IP CURLOPT_HTTPPROXYTUNNEL
 Set the parameter to 1 to make the library tunnel all operations through a
 given HTTP proxy. There is a big difference between using a proxy and to
 tunnel through it. If you don't know what this means, you probably don't want
 this tunneling option.
+.IP CURLOPT_SOCKS5_GSSAPI_SERVICE
+Pass a char * as parameter to a string holding the name of the service. The
+default service name for a SOCKS5 server is rcmd/server-fqdn. This option
+allows you to change it. (Added in 7.19.4)
+.IP CURLOPT_SOCKS5_GSSAPI_NEC
+Pass a long set to 1 to enable or 0 to disable. As part of the gssapi
+negotiation a protection mode is negotiated. The rfc1961 says in section
+4.3/4.4 it should be protected, but the NEC reference implementation does not.
+If enabled, this option allows the unprotected exchange of the protection mode
+negotiation. (Added in 7.19.4).
 .IP CURLOPT_INTERFACE
 Pass a char * as parameter. This sets the interface name to use as outgoing
 network interface. The name can be an interface name, an IP address, or a host
@@ -545,7 +584,7 @@ data at a time, and can contribute to congestion on the network if
 overdone.
 .IP CURLOPT_ADDRESS_SCOPE
 Pass a long specifying the scope_id value to use when connecting to IPv6
-link-local or site-local addresses.
+link-local or site-local addresses. (Added in 7.19.0)
 .SH NAMES and PASSWORDS OPTIONS (Authentication)
 .IP CURLOPT_NETRC
 This parameter controls the preference of libcurl between using user names and
@@ -724,6 +763,10 @@ This means that the library will re-send the same request on the new location
 and follow new Location: headers all the way until no more such headers are
 returned. \fICURLOPT_MAXREDIRS\fP can be used to limit the number of redirects
 libcurl will follow.
+
+NOTE: since 7.19.4, libcurl can limit to what protocols it will automatically
+follow. The accepted protocols are set with \fICURLOPT_REDIR_PROTOCOLS\fP and
+it excludes the FILE protocol by default.
 .IP CURLOPT_UNRESTRICTED_AUTH
 A parameter set to 1 tells the library it can continue to send authentication
 (user+password) when following locations, even when hostname changed. This
@@ -843,7 +886,6 @@ copy. In any case, the size must not be changed after
 \fICURLOPT_COPYPOSTFIELDS\fP, unless another \fICURLOPT_POSTFIELDS\fP or
 \fICURLOPT_COPYPOSTFIELDS\fP option is issued.
 (Added in 7.17.1)
-
 .IP CURLOPT_HTTPPOST
 Tells libcurl you want a multipart/formdata HTTP POST to be made and you
 instruct what data to pass on to the server.  Pass a pointer to a linked list
@@ -1000,6 +1042,14 @@ Pass a long to tell libcurl how to act on transfer decoding. If set to zero,
 transfer decoding will be disabled, if set to 1 it is enabled
 (default). libcurl does chunked transfer decoding by default unless this
 option is set to zero. (added in 7.16.2)
+.SH TFTP OPTIONS
+.IP CURLOPT_TFTPBLKSIZE
+Specify block size to use for TFTP data transmission. Valid range as per RFC
+2348 is 8-65464 bytes. The default of 512 bytes will be used if this option is
+not specified. The specified block size will only be used pending support by
+the remote server. If the server does not return an option acknowledgement or
+returns an option acknowledgement with no blksize, the default of 512 bytes
+will be used. (added in 7.19.4)
 .SH FTP OPTIONS
 .IP CURLOPT_FTPPORT
 Pass a pointer to a zero terminated string as parameter. It will be used to
@@ -1078,6 +1128,17 @@ This setting also applies to SFTP-connections. curl will attempt to create
 the remote directory if it can't obtain a handle to the target-location. The
 creation will fail if a file of the same name as the directory to create
 already exists or lack of permissions prevents creation. (Added in 7.16.3)
+
+Starting with 7.19.4, you can also set this value to 2, which will make
+libcurl retry the CWD command again if the subsequent MKD command fails. This
+is especially useful if you're doing many simultanoes connections against the
+same server and they all have this option enabled, as then CWD may first fail
+but then another connection does MKD before this connection and thus MKD fails
+but trying CWD works! 7.19.4 also introduced the \fICURLFTP_CREATE_DIR\fP and
+\fICURLFTP_CREATE_DIR_RETRY\fP enum names for these arguments.
+
+Before version 7.19.4, libcurl will simply ignore arguments set to 2 and act
+as if 1 was selected.
 .IP CURLOPT_FTP_RESPONSE_TIMEOUT
 Pass a long.  Causes curl to set a timeout period (in seconds) on the amount
 of time that the server is allowed to take in order to generate a response
@@ -1164,6 +1225,7 @@ libcurl does one CWD with the full target directory and then operates on the
 file \&"normally" (like in the multicwd case). This is somewhat more standards
 compliant than 'nocwd' but without the full penalty of 'multicwd'.
 .RE
+(Added in 7.15.1)
 .SH PROTOCOL OPTIONS
 .IP CURLOPT_TRANSFERTEXT
 A parameter set to 1 tells the library to use ASCII mode for FTP transfers,
@@ -1300,8 +1362,10 @@ value is treated. You can set this parameter to \fICURL_TIMECOND_IFMODSINCE\fP
 or \fICURL_TIMECOND_IFUNMODSINCE\fP. This feature applies to HTTP and FTP.
 
 The last modification time of a file is not always known and in such instances
-this feature will have no effect even if the given time condition would not have
-been met.
+this feature will have no effect even if the given time condition would not
+have been met. \fIcurl_easy_getinfo(3)\fP with the
+\fICURLINFO_CONDITION_UNMET\fP option can be used after a transfer to learn if
+a zero-byte successful "transfer" was due to this condition not matching.
 .IP CURLOPT_TIMEVALUE
 Pass a long as parameter. This should be the time in seconds since 1 Jan 1970,
 and the time will be used in a condition as specified with
