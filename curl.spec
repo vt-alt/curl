@@ -1,7 +1,7 @@
 %undefine __libtoolize
 Name: curl
 Version: 7.19.4
-Release: alt1
+Release: alt2
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -111,7 +111,7 @@ Lib%name - это библиотека функций для отправки и
 	    --enable-ipv6 \
 	    --disable-rpat \
 	    --disable-ldap \
-	    --enable-ares \
+	    --enable-ares=%prefix \
 	    --without-gssapi \
 	    --with-ca-bundle=%_datadir/ca-certificates/ca-bundle.crt
 
@@ -142,6 +142,9 @@ Lib%name - это библиотека функций для отправки и
 %_libdir/*.a
 
 %changelog
+* Sat Mar 07 2009 Anton Farygin <rider@altlinux.ru> 7.19.4-alt2
+- build curl with really external libcares (fixed #19097)
+
 * Tue Mar 03 2009 Anton Farygin <rider@altlinux.ru> 7.19.4-alt1
 - new version (CVE-2009-0037)
 
