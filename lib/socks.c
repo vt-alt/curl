@@ -18,17 +18,14 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: socks.c,v 1.28 2009-01-28 21:34:16 bagder Exp $
+ * $Id: socks.c,v 1.30 2009-04-21 10:26:59 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
 
-#ifndef CURL_DISABLE_PROXY
+#if !defined(CURL_DISABLE_PROXY) || defined(USE_WINDOWS_SSPI)
 #include <string.h>
 
-#ifdef NEED_MALLOC_H
-#include <malloc.h>
-#endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif

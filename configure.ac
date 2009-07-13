@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: configure.ac,v 1.392 2009-02-13 05:49:58 yangtse Exp $
+# $Id: configure.ac,v 1.410 2009-05-11 00:28:18 yangtse Exp $
 #***************************************************************************
 dnl Process this file with autoconf to produce a configure script.
 
@@ -30,7 +30,7 @@ AC_INIT([curl], [-], [a suitable curl mailing list => http://curl.haxx.se/mail/]
 CURL_OVERRIDE_AUTOCONF
 
 dnl configure script copyright
-AC_COPYRIGHT([Copyright (c) 1998 - 2008 Daniel Stenberg, <daniel@haxx.se>
+AC_COPYRIGHT([Copyright (c) 1998 - 2009 Daniel Stenberg, <daniel@haxx.se>
 This configure script may be copied, distributed and modified under the
 terms of the curl license; see COPYING for more details])
 
@@ -497,6 +497,8 @@ dnl script to allow other actions to disable it as well.
 dnl **********************************************************************
 dnl Checks for libraries.
 dnl **********************************************************************
+
+CURL_CHECK_LIB_XNET
 
 dnl gethostbyname without lib or in the nsl lib?
 AC_CHECK_FUNC(gethostbyname,
@@ -1171,7 +1173,7 @@ if test X"$OPT_SSL" != Xno; then
     PKGTEST="no"
     PREFIX_OPENSSL=$OPT_SSL
     LIB_OPENSSL="$PREFIX_OPENSSL/lib$libsuff"
-    if [ "$PREFIX_OPENSSL" != "/usr" ] ; then
+    if test "$PREFIX_OPENSSL" != "/usr" ; then
       LDFLAGS="$LDFLAGS -L$LIB_OPENSSL"
       CPPFLAGS="$CPPFLAGS -I$PREFIX_OPENSSL/include"
     fi
@@ -1493,6 +1495,9 @@ if test X"$OPT_LIBSSH2" != Xno; then
        dnl when the libssh2 shared libs were found in a path that the run-time
        dnl linker doesn't search through, we need to add it to LD_LIBRARY_PATH
        dnl to prevent further configure tests to fail due to this
+
+       dnl libssh2_version is a post 1.0 addition
+       AC_CHECK_FUNCS( libssh2_version )
 
        LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$LIB_LIBSSH2"
        export LD_LIBRARY_PATH
@@ -1866,6 +1871,7 @@ dnl Checks for header files.
 AC_HEADER_STDC
 
 CURL_CHECK_HEADER_MALLOC
+CURL_CHECK_HEADER_MEMORY
 
 dnl Now check for the very most basic headers. Then we can use these
 dnl ones as default-headers when checking for the rest!
@@ -1993,8 +1999,7 @@ AC_CHECK_TYPE([bool],[
 #endif
 ])
 
-# Check for socklen_t or equivalent
-CURL_CHECK_TYPE_SOCKLEN_T
+CURL_CONFIGURE_CURL_SOCKLEN_T
 
 TYPE_IN_ADDR_T
 
@@ -2099,7 +2104,7 @@ AC_CHECK_FUNCS([basename \
     ],[
       AC_MSG_RESULT([yes])
       eval "ac_cv_func_$func=yes"
-      AC_DEFINE_UNQUOTED([AS_TR_CPP([HAVE_$func])], [1],
+      AC_DEFINE_UNQUOTED(AS_TR_CPP([HAVE_$func]), [1],
         [Define to 1 if you have the $func function.])
     ],[
       AC_MSG_RESULT([but still no])
@@ -2545,7 +2550,6 @@ AC_CONFIG_FILES([Makefile \
            packages/Linux/RPM/curl.spec \
            packages/Linux/RPM/curl-ssl.spec \
            packages/Solaris/Makefile \
-           packages/DOS/Makefile \
            packages/EPM/curl.list \
            packages/EPM/Makefile \
            packages/vms/Makefile \

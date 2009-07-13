@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2008, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ssh.c,v 1.127 2008-12-28 05:49:39 gknauf Exp $
+ * $Id: ssh.c,v 1.131 2009-05-11 07:53:38 bagder Exp $
  ***************************************************************************/
 
 /* #define CURL_LIBSSH2_DEBUG */
@@ -31,7 +31,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <limits.h>
+#ifdef HAVE_LIMITS_H
+#  include <limits.h>
+#endif
 
 #include <libssh2.h>
 #include <libssh2_sftp.h>
@@ -104,7 +106,7 @@
 #define _MPRINTF_REPLACE /* use our functions only */
 #include <curl/mprintf.h>
 
-#include "memory.h"
+#include "curl_memory.h"
 /* The last #include file should be: */
 #include "memdebug.h"
 
@@ -461,6 +463,7 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
   const char *host_public_key_md5;
   int rc = LIBSSH2_ERROR_NONE, i;
   int err;
+  int seekerr = CURL_SEEKFUNC_OK;
   *block = 0; /* we're not blocking by default */
 
   switch(sshc->state) {
@@ -1313,37 +1316,41 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
     if(data->state.resume_from > 0) {
       /* Let's read off the proper amount of bytes from the input. */
       if(conn->seek_func) {
-        curl_off_t readthisamountnow = data->state.resume_from;
+        seekerr = conn->seek_func(conn->seek_client, data->state.resume_from,
+                                  SEEK_SET);
+      }
 
-        if(conn->seek_func(conn->seek_client,
-                           readthisamountnow, SEEK_SET) != 0) {
+      if(seekerr != CURL_SEEKFUNC_OK){
+
+        if(seekerr != CURL_SEEKFUNC_CANTSEEK) {
           failf(data, "Could not seek stream");
           return CURLE_FTP_COULDNT_USE_REST;
         }
-      }
-      else {
-        curl_off_t passed=0;
-        curl_off_t readthisamountnow;
-        curl_off_t actuallyread;
-        do {
-          readthisamountnow = (data->state.resume_from - passed);
+        /* seekerr == CURL_SEEKFUNC_CANTSEEK (can't seek to offset) */
+        else {
+          curl_off_t passed=0;
+          curl_off_t readthisamountnow;
+          curl_off_t actuallyread;
+          do {
+            readthisamountnow = (data->state.resume_from - passed);
 
-          if(readthisamountnow > BUFSIZE)
-            readthisamountnow = BUFSIZE;
+            if(readthisamountnow > BUFSIZE)
+              readthisamountnow = BUFSIZE;
 
-          actuallyread =
-            (curl_off_t) conn->fread_func(data->state.buffer, 1,
-                                          (size_t)readthisamountnow,
-                                          conn->fread_in);
+            actuallyread =
+              (curl_off_t) conn->fread_func(data->state.buffer, 1,
+                                            (size_t)readthisamountnow,
+                                            conn->fread_in);
 
-          passed += actuallyread;
-          if((actuallyread <= 0) || (actuallyread > readthisamountnow)) {
-            /* this checks for greater-than only to make sure that the
-               CURL_READFUNC_ABORT return code still aborts */
-             failf(data, "Failed to read data");
-            return CURLE_FTP_COULDNT_USE_REST;
-          }
-        } while(passed < data->state.resume_from);
+            passed += actuallyread;
+            if((actuallyread <= 0) || (actuallyread > readthisamountnow)) {
+              /* this checks for greater-than only to make sure that the
+                 CURL_READFUNC_ABORT return code still aborts */
+              failf(data, "Failed to read data");
+              return CURLE_FTP_COULDNT_USE_REST;
+            }
+          } while(passed < data->state.resume_from);
+        }
       }
 
       /* now, decrease the size of the read */
@@ -2095,10 +2102,10 @@ static int ssh_perform_getsock(const struct connectdata *conn,
 
   sock[0] = conn->sock[FIRSTSOCKET];
 
-  if(conn->proto.sshc.waitfor & KEEP_READ)
+  if(conn->proto.sshc.waitfor & KEEP_RECV)
     bitmap |= GETSOCK_READSOCK(FIRSTSOCKET);
 
-  if(conn->proto.sshc.waitfor & KEEP_WRITE)
+  if(conn->proto.sshc.waitfor & KEEP_SEND)
     bitmap |= GETSOCK_WRITESOCK(FIRSTSOCKET);
 
   return bitmap;
@@ -2144,8 +2151,8 @@ static void ssh_block2waitfor(struct connectdata *conn, bool block)
   int dir;
   if(block && (dir = libssh2_session_block_directions(sshc->ssh_session))) {
     /* translate the libssh2 define bits into our own bit defines */
-    sshc->waitfor = ((dir&LIBSSH2_SESSION_BLOCK_INBOUND)?KEEP_READ:0) |
-      ((dir&LIBSSH2_SESSION_BLOCK_OUTBOUND)?KEEP_WRITE:0);
+    sshc->waitfor = ((dir&LIBSSH2_SESSION_BLOCK_INBOUND)?KEEP_RECV:0) |
+      ((dir&LIBSSH2_SESSION_BLOCK_OUTBOUND)?KEEP_SEND:0);
   }
   else
     /* It didn't block or libssh2 didn't reveal in which direction, put back

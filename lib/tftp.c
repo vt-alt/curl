@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: tftp.c,v 1.81 2009-02-14 13:43:18 giva Exp $
+ * $Id: tftp.c,v 1.86 2009-05-10 10:25:23 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -76,7 +76,7 @@
 #define _MPRINTF_REPLACE /* use our functions only */
 #include <curl/mprintf.h>
 
-#include "memory.h"
+#include "curl_memory.h"
 #include "select.h"
 
 /* The last #include file should be: */
@@ -147,7 +147,7 @@ typedef struct tftp_state_data {
   unsigned short  block;
   struct Curl_sockaddr_storage   local_addr;
   struct Curl_sockaddr_storage   remote_addr;
-  socklen_t       remote_addrlen;
+  curl_socklen_t  remote_addrlen;
   ssize_t         rbytes;
   size_t          sbytes;
   size_t          blksize;
@@ -661,6 +661,7 @@ static CURLcode tftp_tx(tftp_state_data_t *state, tftp_event_t event)
   struct SessionHandle *data = state->conn->data;
   int sbytes;
   int rblock;
+  int readcount;
   CURLcode res = CURLE_OK;
   struct SingleRequest *k = &data->req;
 
@@ -695,6 +696,8 @@ static CURLcode tftp_tx(tftp_state_data_t *state, tftp_event_t event)
       }
       return res;
     }
+    /* fall-through */
+  case TFTP_EVENT_OACK:
     /* This is the expected packet.  Reset the counters and send the next
        block */
     state->block++;
@@ -705,8 +708,8 @@ static CURLcode tftp_tx(tftp_state_data_t *state, tftp_event_t event)
       state->state = TFTP_STATE_FIN;
       return CURLE_OK;
     }
-    res = Curl_fillreadbuffer(state->conn, state->blksize,
-                              (int *)&state->sbytes);
+    res = Curl_fillreadbuffer(state->conn, state->blksize, &readcount);
+    state->sbytes = readcount;
     if(res)
       return res;
     sbytes = sendto(state->sockfd, (void *)state->spacket.data,
@@ -863,7 +866,9 @@ static CURLcode tftp_connect(struct connectdata *conn, bool *done)
       return CURLE_OUT_OF_MEMORY;
   }
 
-  conn->bits.close = FALSE; /* keep it open if possible */
+  conn->bits.close = TRUE; /* we don't keep TFTP connections up bascially
+                              because there's none or very little gain for UDP
+                           */
 
   state->conn = conn;
   state->sockfd = state->conn->sock[FIRSTSOCKET];
@@ -945,7 +950,7 @@ static CURLcode tftp_do(struct connectdata *conn, bool *done)
   CURLcode              code;
   int                   rc;
   struct Curl_sockaddr_storage fromaddr;
-  socklen_t             fromlen;
+  curl_socklen_t        fromlen;
   int                   check_time = 0;
   struct SingleRequest *k = &data->req;
 

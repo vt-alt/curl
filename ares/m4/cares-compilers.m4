@@ -1,7 +1,7 @@
 #***************************************************************************
-# $Id: cares-compilers.m4,v 1.46 2008-11-18 20:13:55 yangtse Exp $
+# $Id: cares-compilers.m4,v 1.51 2009-05-15 09:35:46 yangtse Exp $
 #
-# Copyright (C) 2008 by Daniel Stenberg et al
+# Copyright (C) 2009 by Daniel Stenberg et al
 #
 # Permission to use, copy, modify, and distribute this software and its
 # documentation for any purpose and without fee is hereby granted, provided
@@ -16,7 +16,7 @@
 #***************************************************************************
 
 # File version for 'aclocal' use. Keep it a single number.
-# serial 46
+# serial 51
 
 
 dnl CARES_CHECK_COMPILER
@@ -186,7 +186,6 @@ AC_DEFUN([CARES_CHECK_COMPILER_INTEL_C], [
   if test "$curl_cv_have_def___INTEL_COMPILER" = "yes"; then
     AC_MSG_RESULT([yes])
     compiler_num="$curl_cv_def___INTEL_COMPILER"
-    CURL_CHECK_DEF([__i386__], [], [silent])
     CURL_CHECK_DEF([__unix__], [], [silent])
     if test "$curl_cv_have_def___unix__" = "yes"; then
       compiler_id="INTEL_UNIX_C"
@@ -196,13 +195,6 @@ AC_DEFUN([CARES_CHECK_COMPILER_INTEL_C], [
       flags_opt_all="-O -O0 -O1 -O2 -O3 -Os"
       flags_opt_yes="-O2"
       flags_opt_off="-O0"
-      dnl icc 9.1 optimization on IA32 triggers SIGSEGV
-      if test "$curl_cv_have_def___i386__" = "yes" &&
-        test "$compiler_num" -eq "910"; then
-        INTEL_UNIX_C_OPT_SIGSEGV="yes"
-      else
-        INTEL_UNIX_C_OPT_SIGSEGV="no"
-      fi
     else
       compiler_id="INTEL_WINDOWS_C"
       flags_dbg_all="/ZI /Zi /zI /zi /ZD /Zd /zD /zd /Z7 /z7 /Oy /Oy-"
@@ -382,8 +374,8 @@ dnl -------------------------------------------------
 dnl Changes standard include paths present in CFLAGS
 dnl and CPPFLAGS into isystem include paths. This is
 dnl done to prevent GNUC from generating warnings on
-dnl headers from these locations, even though this is
-dnl not reliable on ancient GNUC versions.
+dnl headers from these locations, although on ancient
+dnl GNUC versions these warnings are not silenced.
 
 AC_DEFUN([CARES_CONVERT_INCLUDE_TO_ISYSTEM], [
   AC_REQUIRE([CARES_SHFUNC_SQUEEZE])dnl
@@ -908,11 +900,7 @@ AC_DEFUN([CARES_SET_COMPILER_WARNING_OPTS], [
         #
         if test "$want_warnings" = "yes"; then
           dnl Issue all warnings
-          dnl tmp_CFLAGS="$tmp_CFLAGS +w1"
-          dnl Due to the HP-UX socklen_t issue it is insane to use the +w1
-          dnl warning level. Until the issue is somehow fixed we will just
-          dnl use the +w2 warning level.
-          tmp_CFLAGS="$tmp_CFLAGS +w2"
+          tmp_CFLAGS="$tmp_CFLAGS +w1"
         fi
         ;;
         #
@@ -960,39 +948,6 @@ AC_DEFUN([CARES_SET_COMPILER_WARNING_OPTS], [
         if test "$compiler_num" -ge "1000"; then
           dnl Disable vectorizer diagnostic information
           tmp_CFLAGS="$tmp_CFLAGS -vec-report0"
-        fi
-        dnl Disable some optimizations to debug icc 9.1 SIGSEGV
-        if test "$INTEL_UNIX_C_OPT_SIGSEGV" = "yes"; then
-          dnl Disable interprocedural optimizations
-          tmp_CFLAGS="$tmp_CFLAGS -no-ip -no-ipo"
-          dnl Separate functions for the linker
-          tmp_CFLAGS="$tmp_CFLAGS -ffunction-sections"
-          dnl Disable inlining of user-defined functions
-          tmp_CFLAGS="$tmp_CFLAGS -Ob0"
-          dnl Disable inline expansion of intrinsic functions
-          tmp_CFLAGS="$tmp_CFLAGS -fno-builtin"
-          dnl Disable inlining of functions
-          tmp_CFLAGS="$tmp_CFLAGS -fno-inline"
-          dnl Disable some IPO for single file optimizations
-          tmp_CFLAGS="$tmp_CFLAGS -fno-inline-functions"
-          dnl Disable inlining of standard library functions
-          tmp_CFLAGS="$tmp_CFLAGS -nolib-inline"
-          dnl Disable full and partial inlining when IPO
-          tmp_CFLAGS="$tmp_CFLAGS -ip-no-inlining"
-          dnl Enable floating-point stack integrity checks
-          tmp_CFLAGS="$tmp_CFLAGS -fpstkchk"
-          dnl Enable run-time detection of buffer overruns.
-          tmp_CFLAGS="$tmp_CFLAGS -fstack-security-check"
-          dnl Assume aliasing in the program.
-          tmp_CFLAGS="$tmp_CFLAGS -falias"
-          dnl Assume that arguments may be aliased.
-          tmp_CFLAGS="$tmp_CFLAGS -alias-args"
-          dnl Assume aliasing within functions
-          tmp_CFLAGS="$tmp_CFLAGS -ffnalias"
-          dnl Disable prefetch insertion optimization
-          tmp_CFLAGS="$tmp_CFLAGS -no-prefetch"
-          dnl Disable loop unrolling optimization
-          tmp_CFLAGS="$tmp_CFLAGS -unroll0"
         fi
         ;;
         #
@@ -1159,6 +1114,115 @@ AC_DEFUN([CARES_CHECK_PROG_CC], [
   AC_PROG_CC
   CFLAGS="$ac_save_CFLAGS"
   CPPFLAGS="$ac_save_CPPFLAGS"
+])
+
+
+dnl CARES_CHECK_COMPILER_HALT_ON_ERROR
+dnl -------------------------------------------------
+dnl Verifies if the compiler actually halts after the
+dnl compilation phase without generating any object
+dnl code file, when the source compiles with errors.
+
+AC_DEFUN([CARES_CHECK_COMPILER_HALT_ON_ERROR], [
+  AC_MSG_CHECKING([if compiler halts on compilation errors])
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+    ]],[[
+      force compilation error
+    ]])
+  ],[
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([compiler does not halt on compilation errors.])
+  ],[
+    AC_MSG_RESULT([yes])
+  ])
+])
+
+
+dnl CARES_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE
+dnl -------------------------------------------------
+dnl Verifies if the compiler actually halts after the
+dnl compilation phase without generating any object
+dnl code file, when the source code tries to define a
+dnl type for a constant array with negative dimension.
+
+AC_DEFUN([CARES_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE], [
+  AC_REQUIRE([CARES_CHECK_COMPILER_HALT_ON_ERROR])dnl
+  AC_MSG_CHECKING([if compiler halts on negative sized arrays])
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+      typedef char bad_t[sizeof(char) == sizeof(int) ? -1 : -1 ];
+    ]],[[
+      bad_t dummy;
+    ]])
+  ],[
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([compiler does not halt on negative sized arrays.])
+  ],[
+    AC_MSG_RESULT([yes])
+  ])
+])
+
+
+dnl CARES_CHECK_COMPILER_STRUCT_MEMBER_SIZE
+dnl -------------------------------------------------
+dnl Verifies if the compiler is capable of handling the
+dnl size of a struct member, struct which is a function
+dnl result, as a compilation-time condition inside the
+dnl type definition of a constant array.
+
+AC_DEFUN([CARES_CHECK_COMPILER_STRUCT_MEMBER_SIZE], [
+  AC_REQUIRE([CARES_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE])dnl
+  AC_MSG_CHECKING([if compiler struct member size checking works])
+  tst_compiler_check_one_works="unknown"
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+      struct mystruct {
+        int  mi;
+        char mc;
+        struct mystruct *next;
+      };
+      struct mystruct myfunc();
+      typedef char good_t1[sizeof(myfunc().mi) == sizeof(int)  ? 1 : -1 ];
+      typedef char good_t2[sizeof(myfunc().mc) == sizeof(char) ? 1 : -1 ];
+    ]],[[
+      good_t1 dummy1;
+      good_t2 dummy2;
+    ]])
+  ],[
+    tst_compiler_check_one_works="yes"
+  ],[
+    tst_compiler_check_one_works="no"
+    sed 's/^/cc-src: /' conftest.$ac_ext >&6
+    sed 's/^/cc-err: /' conftest.err >&6
+  ])
+  tst_compiler_check_two_works="unknown"
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+      struct mystruct {
+        int  mi;
+        char mc;
+        struct mystruct *next;
+      };
+      struct mystruct myfunc();
+      typedef char bad_t1[sizeof(myfunc().mi) != sizeof(int)  ? 1 : -1 ];
+      typedef char bad_t2[sizeof(myfunc().mc) != sizeof(char) ? 1 : -1 ];
+    ]],[[
+      bad_t1 dummy1;
+      bad_t2 dummy2;
+    ]])
+  ],[
+    tst_compiler_check_two_works="no"
+  ],[
+    tst_compiler_check_two_works="yes"
+  ])
+  if test "$tst_compiler_check_one_works" = "yes" &&
+    test "$tst_compiler_check_two_works" = "yes"; then
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([compiler fails struct member size checking.])
+  fi
 ])
 
 

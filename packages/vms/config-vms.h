@@ -25,9 +25,6 @@
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
 #define TIME_WITH_SYS_TIME 1
 
-/* Type to use in place of socklen_t when system does not provide it.  */
-#define socklen_t size_t
-
 /* The number of bytes in a long double.  */
 #define SIZEOF_LONG_DOUBLE 8
 
@@ -256,6 +253,9 @@
 /* Define if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H   1
 
+/* Define to 1 if you need the memory.h header file even with stdlib.h */
+#define NEED_MEMORY_H 1
+
 /* Define if you have the `sigsetjmp' function. */
 #define HAVE_SIGSETJMP 1
 
@@ -284,7 +284,7 @@
 #define GETNAMEINFO_TYPE_ARG1 struct sockaddr *
 
 /* Define to the type of arg 2 for getnameinfo. */
-#define GETNAMEINFO_TYPE_ARG2 socklen_t
+#define GETNAMEINFO_TYPE_ARG2 FIXME
 
 /* Define to the type of args 4 and 6 for getnameinfo. */
 #define GETNAMEINFO_TYPE_ARG46 size_t

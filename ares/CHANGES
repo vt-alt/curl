@@ -1,5 +1,20 @@
   Changelog for the c-ares project
 
+* May 11 2009 (Daniel Stenberg)
+- Gregor Jasny made c-ares link with libtool 's -export-symbols-regex option to
+  only expose functions starting with ares_.
+
+* May 2 2009 (Yang Tse)
+- Use a build-time configured ares_socklen_t data type instead of socklen_t.
+
+* April 21 2009 (Yang Tse)
+- Moved potential inclusion of system's malloc.h and memory.h header files to
+  setup_once.h.  Inclusion of each header file is based on the definition of
+  NEED_MALLOC_H and NEED_MEMORY_H respectively.
+
+* March 11 2009 (Yang Tse)
+- Japheth Cleaver fixed acountry.c replacing u_long with unsigned long.
+
 * February 20 2009 (Yang Tse)
 - Do not halt compilation when using VS2008 to build a Windows 2000 target.
 

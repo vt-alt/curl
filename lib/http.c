@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: http.c,v 1.412 2009-02-24 08:30:09 bagder Exp $
+ * $Id: http.c,v 1.418 2009-05-11 09:55:28 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -91,12 +91,13 @@
 #include "share.h"
 #include "hostip.h"
 #include "http.h"
-#include "memory.h"
+#include "curl_memory.h"
 #include "select.h"
 #include "parsedate.h" /* for the week day and month names */
 #include "strtoofft.h"
 #include "multiif.h"
 #include "rawstr.h"
+#include "content_encoding.h"
 
 #define _MPRINTF_REPLACE /* use our functions only */
 #include <curl/mprintf.h>
@@ -369,6 +370,8 @@ CURLcode Curl_http_perhapsrewind(struct connectdata *conn)
     case HTTPREQ_POST:
       if(data->set.postfieldsize != -1)
         expectsend = data->set.postfieldsize;
+      else if(data->set.postfields)
+        expectsend = (curl_off_t)strlen(data->set.postfields);
       break;
     case HTTPREQ_PUT:
       if(data->set.infilesize != -1)
@@ -1544,9 +1547,17 @@ CURLcode Curl_proxyCONNECT(struct connectdata *conn,
             else
               for(i = 0; i < gotbytes; ptr++, i++) {
                 perline++; /* amount of bytes in this line so far */
-                if(*ptr=='\n') {
+                if(*ptr == 0x0a) {
                   char letter;
                   int writetype;
+
+#ifdef CURL_DOES_CONVERSIONS
+                  /* convert from the network encoding */
+                  result = Curl_convert_from_network(data, line_start, perline);
+                  /* Curl_convert_from_network calls failf if unsuccessful */
+                  if(result)
+                    return result;
+#endif /* CURL_DOES_CONVERSIONS */
 
                   /* output debug if that is requested */
                   if(data->set.verbose)
@@ -1907,6 +1918,8 @@ CURLcode Curl_http_done(struct connectdata *conn,
   struct HTTP *http =data->state.proto.http;
   (void)premature; /* not used */
 
+  Curl_unencode_cleanup(conn);
+
   /* set the proper values (possibly modified on POST) */
   conn->fread_func = data->set.fread_func; /* restore */
   conn->fread_in = data->set.in; /* restore */
@@ -2054,7 +2067,7 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
   const char *httpstring;
   send_buffer *req_buffer;
   curl_off_t postsize; /* off_t type to be able to hold a large file size */
-
+  int seekerr = CURL_SEEKFUNC_OK;
 
   /* Always consider the DO phase done after this function call, even if there
      may be parts of the request that is not yet sent, since we can deal with
@@ -2335,36 +2348,40 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
       /* Now, let's read off the proper amount of bytes from the
          input. */
       if(conn->seek_func) {
-        curl_off_t readthisamountnow = data->state.resume_from;
+        seekerr = conn->seek_func(conn->seek_client, data->state.resume_from,
+                                  SEEK_SET);
+      }
 
-        if(conn->seek_func(conn->seek_client,
-                           readthisamountnow, SEEK_SET) != 0) {
+      if(seekerr != CURL_SEEKFUNC_OK) {
+        if(seekerr != CURL_SEEKFUNC_CANTSEEK) {
           failf(data, "Could not seek stream");
           return CURLE_READ_ERROR;
         }
-      }
-      else {
-        curl_off_t passed=0;
+        /* when seekerr == CURL_SEEKFUNC_CANTSEEK (can't seek to offset) */
+        else {
+          curl_off_t passed=0;
 
-        do {
-          size_t readthisamountnow = (size_t)(data->state.resume_from - passed);
-          size_t actuallyread;
+          do {
+            size_t readthisamountnow = (size_t)(data->state.resume_from -
+                                                passed);
+            size_t actuallyread;
 
-          if(readthisamountnow > BUFSIZE)
-            readthisamountnow = BUFSIZE;
+            if(readthisamountnow > BUFSIZE)
+              readthisamountnow = BUFSIZE;
 
-          actuallyread = data->set.fread_func(data->state.buffer, 1,
-                                              (size_t)readthisamountnow,
-                                              data->set.in);
+            actuallyread = data->set.fread_func(data->state.buffer, 1,
+                                                (size_t)readthisamountnow,
+                                                data->set.in);
 
-          passed += actuallyread;
-          if(actuallyread != readthisamountnow) {
-            failf(data, "Could only read %" FORMAT_OFF_T
-                  " bytes from the input",
-                  passed);
-            return CURLE_READ_ERROR;
-          }
-        } while(passed != data->state.resume_from); /* loop until done */
+            passed += actuallyread;
+            if(actuallyread != readthisamountnow) {
+              failf(data, "Could only read %" FORMAT_OFF_T
+                    " bytes from the input",
+                    passed);
+              return CURLE_READ_ERROR;
+            }
+          } while(passed != data->state.resume_from); /* loop until done */
+        }
       }
 
       /* now, decrease the size of the read */

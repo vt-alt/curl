@@ -6,7 +6,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 1998 - 2008, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.315 2008-11-19 21:56:11 bagder Exp $
+# $Id: runtests.pl,v 1.327 2009-05-15 11:59:24 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -112,6 +112,9 @@ my $SOCKSPORT; # SOCKS4/5 port
 
 my $srcdir = $ENV{'srcdir'} || '.';
 my $CURL="../src/curl"; # what curl executable to run on the tests
+my $VCURL=$CURL;   # what curl binary to use to verify the servers with
+                   # VCURL is handy to set to the system one when the one you
+                   # just built hangs or crashes and thus prevent verification
 my $DBGCURL=$CURL; #"../src/.libs/curl";  # alternative for debugging
 my $LOGDIR="log";
 my $TESTDIR="$srcdir/data";
@@ -181,6 +184,7 @@ my $has_ipv6;    # set if libcurl is built with IPv6 support
 my $has_libz;    # set if libcurl is built with libz support
 my $has_getrlimit;  # set if system has getrlimit()
 my $has_ntlm;    # set if libcurl is built with NTLM support
+my $has_charconv;# set if libcurl is built with CharConv support
 
 my $has_openssl; # built with a lib using an OpenSSL-like API
 my $has_gnutls;  # built with GnuTLS
@@ -206,6 +210,8 @@ my $sshderror;   # for socks server, ssh daemon version error
 
 my $defserverlogslocktimeout = 20; # timeout to await server logs lock removal
 my $defpostcommanddelay = 0; # delay between command and postcheck sections
+
+my $testnumcheck; # test number, set in singletest sub.
 
 #######################################################################
 # variables the command line options may set
@@ -587,7 +593,7 @@ sub stopserver {
 
 sub verifyhttp {
     my ($proto, $ip, $port) = @_;
-    my $cmd = "$CURL --max-time $server_response_maxtime --output $LOGDIR/verifiedserver --insecure --silent --verbose --globoff \"$proto://$ip:$port/verifiedserver\" 2>$LOGDIR/verifyhttp";
+    my $cmd = "$VCURL --max-time $server_response_maxtime --output $LOGDIR/verifiedserver --insecure --silent --verbose --globoff \"$proto://$ip:$port/verifiedserver\" 2>$LOGDIR/verifyhttp";
     my $pid;
 
     # verify if our/any server is running on this port
@@ -642,7 +648,7 @@ sub verifyftp {
     if($proto eq "ftps") {
     	$extra = "--insecure --ftp-ssl-control ";
     }
-    my $cmd="$CURL --max-time $server_response_maxtime --silent --verbose --globoff $extra\"$proto://$ip:$port/verifiedserver\" 2>$LOGDIR/verifyftp";
+    my $cmd="$VCURL --max-time $server_response_maxtime --silent --verbose --globoff $extra\"$proto://$ip:$port/verifiedserver\" 2>$LOGDIR/verifyftp";
     # check if this is our server running on this port:
     my @data=runclientoutput($cmd);
     logmsg "RUN: $cmd\n" if($verbose);
@@ -842,6 +848,7 @@ sub runhttpserver {
         # it is NOT alive
         logmsg "RUN: failed to start the HTTP$nameext server\n";
         stopserver("$pid2");
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return (0,0);
     }
@@ -852,6 +859,7 @@ sub runhttpserver {
         logmsg "RUN: HTTP$nameext server failed verification\n";
         # failed to talk to it properly. Kill the server and return failure
         stopserver("$httppid $pid2");
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return (0,0);
     }
@@ -906,6 +914,7 @@ sub runhttpsserver {
         # it is NOT alive
         logmsg "RUN: failed to start the HTTPS server\n";
         stopservers($verbose);
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return(0,0);
     }
@@ -916,6 +925,7 @@ sub runhttpsserver {
         logmsg "RUN: HTTPS server failed verification\n";
         # failed to talk to it properly. Kill the server and return failure
         stopserver("$httpspid $pid2");
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return (0,0);
     }
@@ -984,6 +994,7 @@ sub runftpserver {
         # it is NOT alive
         logmsg "RUN: failed to start the FTP$id$nameext server\n";
         stopserver("$pid2");
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return (0,0);
     }
@@ -994,6 +1005,7 @@ sub runftpserver {
         logmsg "RUN: FTP$id$nameext server failed verification\n";
         # failed to talk to it properly. Kill the server and return failure
         stopserver("$ftppid $pid2");
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return (0,0);
     }
@@ -1048,6 +1060,7 @@ sub runftpsserver {
         # it is NOT alive
         logmsg "RUN: failed to start the FTPS server\n";
         stopservers($verbose);
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return(0,0);
     }
@@ -1058,6 +1071,7 @@ sub runftpsserver {
         logmsg "RUN: FTPS server failed verification\n";
         # failed to talk to it properly. Kill the server and return failure
         stopserver("$ftpspid $pid2");
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return (0,0);
     }
@@ -1122,6 +1136,7 @@ sub runtftpserver {
         # it is NOT alive
         logmsg "RUN: failed to start the TFTP$id$nameext server\n";
         stopserver("$pid2");
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return (0,0);
     }
@@ -1132,6 +1147,7 @@ sub runtftpserver {
         logmsg "RUN: TFTP$id$nameext server failed verification\n";
         # failed to talk to it properly. Kill the server and return failure
         stopserver("$tftppid $pid2");
+        displaylogs($testnumcheck);
         $doesntrun{$pidfile} = 1;
         return (0,0);
     }
@@ -1566,6 +1582,10 @@ sub checksystem {
                 # NTLM enabled
                 $has_ntlm=1;
             }
+            if($feat =~ /CharConv/i) {
+                # CharConv enabled
+                $has_charconv=1;
+            }
         }
     }
     if(!$curl) {
@@ -1732,6 +1752,10 @@ sub singletest {
     my %feature;
     my $cmd;
 
+    # copy test number to a global scope var, this allows
+    # testnum checking when starting test harness servers.
+    $testnumcheck = $testnum;
+
     # load the test case file definition
     if(loadtest("${TESTDIR}/test${testnum}")) {
         if($verbose) {
@@ -1820,19 +1844,6 @@ sub singletest {
 
         $why = "curl lacks $f support";
         last;
-    }
-
-    my $dbghosttype=join(' ', runclientoutput("uname -a"));
-    if(($dbghosttype =~ /SMP PREEMPT/) && ($dbghosttype =~ /i686 GNU/)) {
-        if(!$curl_debug) {
-            if(($testnum != 1)   && ($testnum != 100) &&
-               ($testnum != 500) && ($testnum != 507) &&
-               ($testnum != 517) && ($testnum != 534) &&
-               ($testnum != 558) && ($testnum != 559) &&
-               ($testnum != 557) && ($testnum != 1013)) {
-                $why = "debugging icc build";
-            }
-        }
     }
 
     if(!$why) {
@@ -2380,7 +2391,8 @@ sub singletest {
     }
     else {
         if(!$short) {
-            printf "\ncurl returned $cmdres, %d was expected\n", $errorcode;
+            printf("\n%s returned $cmdres, %d was expected\n",
+                   (!$tool)?"curl":$tool, $errorcode);
         }
         logmsg " exit FAILED\n";
         return 1;
@@ -2808,7 +2820,7 @@ while(@ARGV) {
         # keep stdout and stderr files after tests
         $keepoutfiles=1;
     }
-    elsif($ARGV[0] eq "-h") {
+    elsif(($ARGV[0] eq "-h") || ($ARGV[0] eq "--help")) {
         # show help text
         print <<EOHELP
 Usage: runtests.pl [options] [test selection(s)]

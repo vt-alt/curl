@@ -145,6 +145,10 @@ SOURCE=..\..\ares_init.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\ares_library_init.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\ares_llist.c
 # End Source File
 # Begin Source File
@@ -225,6 +229,10 @@ SOURCE=..\..\ares.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\ares_build.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\ares_dns.h
 # End Source File
 # Begin Source File
@@ -233,11 +241,19 @@ SOURCE=..\..\ares_ipv6.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\ares_library_init.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\ares_llist.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\ares_private.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ares_rules.h
 # End Source File
 # Begin Source File
 

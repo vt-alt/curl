@@ -1,7 +1,7 @@
-/* $Id: ares_process.c,v 1.74 2009-01-13 11:51:04 philb Exp $ */
+/* $Id: ares_process.c,v 1.76 2009-05-02 02:36:48 yangtse Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
- * Copyright (C) 2004-2008 by Daniel Stenberg
+ * Copyright (C) 2004-2009 by Daniel Stenberg
  *
  * Permission to use, copy, modify, and distribute this
  * software and its documentation for any purpose and without
@@ -104,7 +104,7 @@ static void end_query(ares_channel channel, struct query *query, int status,
 int ares__timedout(struct timeval *now,
                    struct timeval *check)
 {
-  int secs = (now->tv_sec - check->tv_sec);
+  long secs = (now->tv_sec - check->tv_sec);
 
   if(secs > 0)
     return 1; /* yes, timed out */
@@ -429,7 +429,7 @@ static void read_udp_packets(ares_channel channel, fd_set *read_fds,
   unsigned char buf[PACKETSZ + 1];
 #ifdef HAVE_RECVFROM
   struct sockaddr_in from;
-  socklen_t fromlen;
+  ares_socklen_t fromlen;
 #endif
 
   if(!read_fds && (read_fd == ARES_SOCKET_BAD))

@@ -7,7 +7,7 @@ AC_INIT([c-ares], [-],
 CARES_OVERRIDE_AUTOCONF
 
 AC_CONFIG_SRCDIR([ares_ipv6.h])
-AM_CONFIG_HEADER([config.h])
+AM_CONFIG_HEADER([config.h ares_build.h])
 AM_MAINTAINER_MODE
 
 CARES_CHECK_OPTION_DEBUG
@@ -158,8 +158,8 @@ case $host in
   #
 esac
 
-CURL_CHECK_COMPILER_HALT_ON_ERROR
-CURL_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE
+CARES_CHECK_COMPILER_HALT_ON_ERROR
+CARES_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE
 
 dnl **********************************************************************
 dnl Compilation based checks should not be done before this point.
@@ -190,6 +190,8 @@ esac
 dnl **********************************************************************
 dnl Checks for libraries.
 dnl **********************************************************************
+
+CARES_CHECK_LIB_XNET
 
 dnl gethostbyname without lib or in the nsl lib?
 AC_CHECK_FUNC(gethostbyname,
@@ -430,6 +432,7 @@ dnl Checks for header files.
 AC_HEADER_STDC
 
 CURL_CHECK_HEADER_MALLOC
+CURL_CHECK_HEADER_MEMORY
 
 dnl check for a few basic system headers we need
 AC_CHECK_HEADERS(
@@ -448,6 +451,7 @@ AC_CHECK_HEADERS(
        strings.h \
        stdbool.h \
        time.h \
+       limits.h \
        arpa/nameser.h \
        arpa/nameser_compat.h \
        arpa/inet.h,
@@ -487,7 +491,9 @@ AC_HEADER_TIME
 CURL_CHECK_STRUCT_TIMEVAL
 
 AC_CHECK_SIZEOF(size_t)
+AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
+CARES_CONFIGURE_LONG
 AC_CHECK_SIZEOF(time_t)
 
 AC_CHECK_TYPE(long long,
@@ -523,8 +529,7 @@ AC_CHECK_TYPE([bool],[
 #endif
 ])
 
-# Check for socklen_t or equivalent
-CURL_CHECK_TYPE_SOCKLEN_T
+CARES_CONFIGURE_ARES_SOCKLEN_T
 
 TYPE_IN_ADDR_T
 
@@ -743,7 +748,7 @@ AC_CHECK_FUNCS([bitncmp \
   ],[
     AC_MSG_RESULT([yes])
     eval "ac_cv_func_$func=yes"
-    AC_DEFINE_UNQUOTED([AS_TR_CPP([HAVE_$func])], [1],
+    AC_DEFINE_UNQUOTED(AS_TR_CPP([HAVE_$func]), [1],
       [Define to 1 if you have the $func function.])
   ],[
     AC_MSG_RESULT([but still no])

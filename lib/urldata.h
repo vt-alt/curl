@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: urldata.h,v 1.409 2009-03-02 23:05:31 bagder Exp $
+ * $Id: urldata.h,v 1.412 2009-05-11 07:53:38 bagder Exp $
  ***************************************************************************/
 
 /* This file is for lib internal stuff */
@@ -93,6 +93,7 @@
 
 #ifdef USE_NSS
 #include <nspr.h>
+#include <pk11pub.h>
 #endif
 
 #ifdef USE_QSOSSL
@@ -210,6 +211,11 @@ struct ssl_connect_data {
 #ifdef USE_NSS
   PRFileDesc *handle;
   char *client_nickname;
+  CERTCertificate *client_cert;
+#ifdef HAVE_PK11_CREATEGENERICOBJECT
+  PK11GenericObject *key;
+  PK11GenericObject *cacert[2];
+#endif
 #endif /* USE_NSS */
 #ifdef USE_QSOSSL
   SSLHandle *handle;
@@ -647,17 +653,17 @@ struct hostname {
  */
 
 #define KEEP_NONE  0
-#define KEEP_READ  (1<<0)     /* there is or may be data to read */
-#define KEEP_WRITE (1<<1)     /* there is or may be data to write */
-#define KEEP_READ_HOLD (1<<2) /* when set, no reading should be done but there
+#define KEEP_RECV  (1<<0)     /* there is or may be data to read */
+#define KEEP_SEND (1<<1)     /* there is or may be data to write */
+#define KEEP_RECV_HOLD (1<<2) /* when set, no reading should be done but there
                                  might still be data to read */
-#define KEEP_WRITE_HOLD (1<<3) /* when set, no writing should be done but there
+#define KEEP_SEND_HOLD (1<<3) /* when set, no writing should be done but there
                                   might still be data to write */
-#define KEEP_READ_PAUSE (1<<4) /* reading is paused */
-#define KEEP_WRITE_PAUSE (1<<5) /* writing is paused */
+#define KEEP_RECV_PAUSE (1<<4) /* reading is paused */
+#define KEEP_SEND_PAUSE (1<<5) /* writing is paused */
 
-#define KEEP_READBITS (KEEP_READ | KEEP_READ_HOLD | KEEP_READ_PAUSE)
-#define KEEP_WRITEBITS (KEEP_WRITE | KEEP_WRITE_HOLD | KEEP_WRITE_PAUSE)
+#define KEEP_RECVBITS (KEEP_RECV | KEEP_RECV_HOLD | KEEP_RECV_PAUSE)
+#define KEEP_SENDBITS (KEEP_SEND | KEEP_SEND_HOLD | KEEP_SEND_PAUSE)
 
 
 #ifdef HAVE_LIBZ

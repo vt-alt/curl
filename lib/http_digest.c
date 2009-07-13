@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: http_digest.c,v 1.48 2009-02-28 01:11:57 yangtse Exp $
+ * $Id: http_digest.c,v 1.50 2009-05-10 21:33:55 bagder Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -38,7 +38,7 @@
 #include "http_digest.h"
 #include "strtok.h"
 #include "url.h" /* for Curl_safefree() */
-#include "memory.h"
+#include "curl_memory.h"
 #include "easyif.h" /* included for Curl_convert_... prototypes */
 
 #define _MPRINTF_REPLACE /* use our functions only */
@@ -543,8 +543,8 @@ CURLcode Curl_output_digest(struct connectdata *conn,
     *allocuserpwd = tmp;
   }
 
-  /* append CRLF to the userpwd header */
-  tmp = realloc(*allocuserpwd, strlen(*allocuserpwd) + 3 + 1);
+  /* append CRLF + zero (3 bytes) to the userpwd header */
+  tmp = realloc(*allocuserpwd, strlen(*allocuserpwd) + 3);
   if(!tmp)
     return CURLE_OUT_OF_MEMORY;
   strcat(tmp, "\r\n");

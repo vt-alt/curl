@@ -46,7 +46,9 @@ noinst_PROGRAMS =$(PROGS)
 EXTRA_DIST = AUTHORS CHANGES README.cares Makefile.inc Makefile.dj	   \
  Makefile.m32 Makefile.netware Makefile.vc6 $(man_MANS) $(MSVCFILES)	   \
  config-win32.h RELEASE-NOTES libcares.pc.in buildconf get_ver.awk maketgz \
- TODO
+ TODO ares_build.h.in buildconf.bat
+
+DISTCLEANFILES = ares_build.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcares.pc
@@ -85,8 +87,9 @@ if NO_UNDEFINED
 UNDEF = -no-undefined
 endif
 
+EXPORT_SYMBOLS = -export-symbols-regex '^ares_[[:alnum:]].*'
 
-libcares_la_LDFLAGS = $(UNDEF) $(VER)
+libcares_la_LDFLAGS = $(UNDEF) $(VER) $(EXPORT_SYMBOLS)
 
 # Makefile.inc provides the CSOURCES and HHEADERS defines
 include Makefile.inc
@@ -96,7 +99,8 @@ libcares_la_SOURCES = $(CSOURCES) $(HHEADERS)
 # where to install the c-ares headers
 libcares_ladir = $(includedir)
 # what headers to install on 'make install':
-libcares_la_HEADERS = ares.h ares_version.h ares_dns.h
+libcares_la_HEADERS = ares.h ares_version.h ares_dns.h \
+	ares_build.h ares_rules.h
 
 ahost_SOURCES = ahost.c ares_getopt.c ares_getopt.h
 ahost_LDADD = $(top_builddir)/$(lib_LTLIBRARIES)

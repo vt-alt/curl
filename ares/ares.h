@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.49 2009-01-14 13:08:50 bagder Exp $ */
+/* $Id: ares.h,v 1.54 2009-05-18 01:25:20 yangtse Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  * Copyright (C) 2007-2009 by Daniel Stenberg
@@ -18,6 +18,10 @@
 
 #ifndef ARES__H
 #define ARES__H
+
+#include "ares_version.h"  /* c-ares version defines   */
+#include "ares_build.h"    /* c-ares build definitions */
+#include "ares_rules.h"    /* c-ares rules enforcement */
 
 /*
  * Define WIN32 when build target is Win32 API
@@ -90,6 +94,11 @@ extern "C" {
 #define ARES_ENONAME            19
 #define ARES_EBADHINTS          20
 
+/* ares_library_init error codes */
+#define ARES_ELOADIPHLPAPI           21
+#define ARES_ELOADADVAPI32           22
+#define ARES_EADDRGetNetworkParams   23
+
 /* Flag values */
 #define ARES_FLAG_USEVC         (1 << 0)
 #define ARES_FLAG_PRIMARY       (1 << 1)
@@ -157,6 +166,11 @@ extern "C" {
 #define ARES_GETSOCK_READABLE(bits,num) (bits & (1<< (num)))
 #define ARES_GETSOCK_WRITABLE(bits,num) (bits & (1 << ((num) + \
                                          ARES_GETSOCK_MAXNUM)))
+
+/* c-ares library initialization flag values */
+#define ARES_LIB_INIT_NONE   (0)
+#define ARES_LIB_INIT_WIN32  (1 << 0)
+#define ARES_LIB_INIT_ALL    (ARES_LIB_INIT_WIN32)
 
 
 /*
@@ -232,6 +246,10 @@ typedef void (*ares_nameinfo_callback)(void *arg, int status, int timeouts,
 typedef int  (*ares_sock_create_callback)(ares_socket_t socket_fd,
                                           int type, void *data);
 
+int ares_library_init(int flags);
+void ares_library_cleanup(void);
+const char *ares_version(int *version);
+
 int ares_init(ares_channel *channelptr);
 int ares_init_options(ares_channel *channelptr, struct ares_options *options,
                       int optmask);
@@ -257,7 +275,7 @@ int ares_gethostbyname_file(ares_channel channel, const char *name,
 void ares_gethostbyaddr(ares_channel channel, const void *addr, int addrlen,
                         int family, ares_host_callback callback, void *arg);
 void ares_getnameinfo(ares_channel channel, const struct sockaddr *sa,
-                      socklen_t salen, int flags,
+                      ares_socklen_t salen, int flags,
                       ares_nameinfo_callback callback,
                       void *arg);
 int ares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds);

@@ -6,7 +6,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 1998 - 2008, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: testcurl.pl,v 1.68 2008-10-02 03:59:25 yangtse Exp $
+# $Id: testcurl.pl,v 1.74 2009-05-12 11:24:29 yangtse Exp $
 ###########################################################################
 
 ###########################
@@ -69,7 +69,7 @@ use vars qw($name $email $desc $confopts $runtestopts $setupfile $mktarball
             $extvercmd $nocvsup $nobuildconf $crosscompile $timestamp);
 
 # version of this script
-$version='$Revision: 1.68 $';
+$version='$Revision: 1.74 $';
 $fixed=0;
 
 # Determine if we're running from CVS or a canned copy of curl,
@@ -166,7 +166,8 @@ if (($^O eq 'MSWin32') &&
   $confsuffix = '-win32';
 }
 
-
+$ENV{LC_ALL}="C" if (($ENV{LC_ALL}) && ($ENV{LC_ALL} !~ /^C$/));
+$ENV{LC_CTYPE}="C" if (($ENV{LC_CTYPE}) && ($ENV{LC_CTYPE} !~ /^C$/));
 $ENV{LANG}="C";
 
 sub rmtree($) {
@@ -198,6 +199,13 @@ sub logit($) {
     my $text=$_[0];
     if ($text) {
       print "testcurl: $text\n";
+    }
+}
+
+sub logit_spaced($) {
+    my $text=$_[0];
+    if ($text) {
+      print "\ntestcurl: $text\n\n";
     }
 }
 
@@ -297,6 +305,7 @@ logit "CPPFLAGS = ".$ENV{CPPFLAGS};
 logit "CFLAGS = ".$ENV{CFLAGS};
 logit "LDFLAGS = ".$ENV{LDFLAGS};
 logit "CC = ".$ENV{CC};
+logit "MAKEFLAGS = ".$ENV{MAKEFLAGS};
 logit "target = ".$targetos;
 logit "version = $version"; # script version
 logit "date = $timestamp";  # When the test build starts
@@ -498,6 +507,9 @@ if ($configurebuild) {
     system("cp -af ../$CURLDIR/Makefile.dist Makefile");
     system("$make -i -C lib -f Makefile.netware prebuild");
     system("$make -i -C src -f Makefile.netware prebuild");
+    if (-d "../$CURLDIR/ares") {
+      system("$make -i -C ares -f Makefile.netware prebuild");
+    }
   }
   elsif ($^O eq 'linux') {
     system("cp -afr ../$CURLDIR/* .");
@@ -505,15 +517,30 @@ if ($configurebuild) {
     system("cp -af ../$CURLDIR/include/curl/curlbuild.h.dist ./include/curl/curlbuild.h");
     system("$make -i -C lib -f Makefile.$targetos prebuild");
     system("$make -i -C src -f Makefile.$targetos prebuild");
+    if (-d "../$CURLDIR/ares") {
+      system("cp -af ../$CURLDIR/ares/ares_build.h.dist ./ares/ares_build.h");
+      system("$make -i -C ares -f Makefile.$targetos prebuild");
+    }
+  }
+}
+
+if(-f "./libcurl.pc") {
+  logit_spaced "display libcurl.pc";
+  if(open(F, "<./libcurl.pc")) {
+    while(<F>) {
+      my $ll = $_;
+      print $ll if(($ll !~ /^ *#/) && ($ll !~ /^ *$/));
+    }
+    close(F);
   }
 }
 
 if(-f "./include/curl/curlbuild.h") {
-  logit "display include/curl/curlbuild.h";
+  logit_spaced "display include/curl/curlbuild.h";
   if(open(F, "<./include/curl/curlbuild.h")) {
     while(<F>) {
       my $ll = $_;
-      print $ll if(($ll =~ /^ *# *define/) && ($ll !~ /__CURL_CURLBUILD_H/));
+      print $ll if(($ll =~ /^ *# *define *CURL_/) && ($ll !~ /__CURL_CURLBUILD_H/));
     }
     close(F);
   }
@@ -522,7 +549,7 @@ else {
   mydie "no curlbuild.h created/found";
 }
 
-logit "display lib/config$confsuffix.h";
+logit_spaced "display lib/config$confsuffix.h";
 open(F, "lib/config$confsuffix.h") or die "lib/config$confsuffix.h: $!";
 while (<F>) {
   print if /^ *#/;
@@ -530,9 +557,35 @@ while (<F>) {
 close(F);
 
 if (grepfile("define USE_ARES", "lib/config$confsuffix.h")) {
+  print "\n";
   logit "setup to build ares";
 
-  logit "display ares/config$confsuffix.h";
+  if(-f "./ares/libcares.pc") {
+    logit_spaced  "display ares/libcares.pc";
+    if(open(F, "<./ares/libcares.pc")) {
+      while(<F>) {
+        my $ll = $_;
+        print $ll if(($ll !~ /^ *#/) && ($ll !~ /^ *$/));
+      }
+      close(F);
+    }
+  }
+
+  if(-f "./ares/ares_build.h") {
+    logit_spaced "display ares/ares_build.h";
+    if(open(F, "<./ares/ares_build.h")) {
+      while(<F>) {
+        my $ll = $_;
+        print $ll if(($ll =~ /^ *# *define *CARES_/) && ($ll !~ /__CARES_BUILD_H/));
+      }
+      close(F);
+    }
+  }
+  else {
+    mydie "no ares_build.h created/found";
+  }
+
+  logit_spaced "display ares/config$confsuffix.h";
   if(open(F, "ares/config$confsuffix.h")) {
       while (<F>) {
           print if /^ *#/;
@@ -540,6 +593,7 @@ if (grepfile("define USE_ARES", "lib/config$confsuffix.h")) {
       close(F);
   }
 
+  print "\n";
   logit "build ares";
   chdir "ares";
 

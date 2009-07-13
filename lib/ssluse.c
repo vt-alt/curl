@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ssluse.c,v 1.215 2009-01-26 14:36:22 bagder Exp $
+ * $Id: ssluse.c,v 1.223 2009-05-04 21:57:14 bagder Exp $
  ***************************************************************************/
 
 /*
@@ -36,6 +36,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -65,7 +68,7 @@
 #include <x509v3.h>
 #endif
 
-#include "memory.h"
+#include "curl_memory.h"
 #include "easyif.h" /* for Curl_convert_from_utf8 prototype */
 
 /* The last #include file should be: */
@@ -420,7 +423,7 @@ int cert_stuff(struct connectdata *conn,
         return 0;
       }
       /* Set Certificate Verification chain */
-      if (ca && sk_num(ca)) {
+      if (ca && sk_X509_num(ca)) {
         for (i = 0; i < sk_X509_num(ca); i++) {
           if (!SSL_CTX_add_extra_chain_cert(ctx,sk_X509_value(ca, i))) {
             failf(data, "cannot add certificate to certificate chain");
@@ -564,6 +567,9 @@ static int x509_name_oneline(X509_NAME *a, char *buf, size_t size)
   BIO *bio_out = BIO_new(BIO_s_mem());
   BUF_MEM *biomem;
   int rc;
+
+  if(!bio_out)
+    return 1; /* alloc failed! */
 
   rc = X509_NAME_print_ex(bio_out, a, 0, XN_FLAG_SEP_CPLUS_SPC);
   BIO_get_mem_ptr(bio_out, &biomem);
@@ -794,6 +800,7 @@ int Curl_ossl_shutdown(struct connectdata *conn, int sockindex)
                     to be at least 120 bytes long. */
   unsigned long sslerror;
   ssize_t nread;
+  int buffsize;
   int err;
   int done = 0;
 
@@ -806,6 +813,7 @@ int Curl_ossl_shutdown(struct connectdata *conn, int sockindex)
       (void)SSL_shutdown(connssl->handle);
 
   if(connssl->handle) {
+    buffsize = (int)sizeof(buf);
     while(!done) {
       int what = Curl_socket_ready(conn->sock[sockindex],
                              CURL_SOCKET_BAD, SSL_SHUTDOWN_TIMEOUT);
@@ -813,7 +821,7 @@ int Curl_ossl_shutdown(struct connectdata *conn, int sockindex)
         /* Something to read, let's do it and hope that it is the close
            notify alert from the server */
         nread = (ssize_t)SSL_read(conn->ssl[sockindex].handle, buf,
-                                  sizeof(buf));
+                                  buffsize);
         err = SSL_get_error(conn->ssl[sockindex].handle, (int)nread);
 
         switch(err) {
@@ -1041,7 +1049,7 @@ static CURLcode verifyhost(struct connectdata *conn,
 {
   bool matched = FALSE; /* no alternative match yet */
   int target = GEN_DNS; /* target type, GEN_DNS or GEN_IPADD */
-  int addrlen = 0;
+  size_t addrlen = 0;
   struct SessionHandle *data = conn->data;
   STACK_OF(GENERAL_NAME) *altnames;
 #ifdef ENABLE_IPV6
@@ -1084,7 +1092,7 @@ static CURLcode verifyhost(struct connectdata *conn,
       if(check->type == target) {
         /* get data and length */
         const char *altptr = (char *)ASN1_STRING_data(check->d.ia5);
-        int altlen;
+        size_t altlen;
 
         switch(target) {
         case GEN_DNS: /* name/pattern comparison */
@@ -1105,7 +1113,7 @@ static CURLcode verifyhost(struct connectdata *conn,
         case GEN_IPADD: /* IP address comparison */
           /* compare alternative IP address if the data chunk is the same size
              our server IP address is */
-          altlen = ASN1_STRING_length(check->d.ia5);
+          altlen = (size_t) ASN1_STRING_length(check->d.ia5);
           if((altlen == addrlen) && !memcmp(altptr, &addr, altlen))
             matched = TRUE;
           break;
@@ -2169,35 +2177,43 @@ ossl_connect_step3(struct connectdata *conn,
                    int sockindex)
 {
   CURLcode retcode = CURLE_OK;
-  void *ssl_sessionid=NULL;
+  void *old_ssl_sessionid=NULL;
   struct SessionHandle *data = conn->data;
   struct ssl_connect_data *connssl = &conn->ssl[sockindex];
+  int incache;
+  SSL_SESSION *our_ssl_sessionid;
 
   DEBUGASSERT(ssl_connect_3 == connssl->connecting_state);
 
-  if(Curl_ssl_getsessionid(conn, &ssl_sessionid, NULL)) {
-    /* Since this is not a cached session ID, then we want to stach this one
-       in the cache! */
-    SSL_SESSION *our_ssl_sessionid;
 #ifdef HAVE_SSL_GET1_SESSION
-    our_ssl_sessionid = SSL_get1_session(connssl->handle);
+  our_ssl_sessionid = SSL_get1_session(connssl->handle);
 
-    /* SSL_get1_session() will increment the reference
-       count and the session will stay in memory until explicitly freed with
-       SSL_SESSION_free(3), regardless of its state.
-       This function was introduced in openssl 0.9.5a. */
+  /* SSL_get1_session() will increment the reference
+     count and the session will stay in memory until explicitly freed with
+     SSL_SESSION_free(3), regardless of its state.
+     This function was introduced in openssl 0.9.5a. */
 #else
-    our_ssl_sessionid = SSL_get_session(connssl->handle);
+  our_ssl_sessionid = SSL_get_session(connssl->handle);
 
-    /* if SSL_get1_session() is unavailable, use SSL_get_session().
-       This is an inferior option because the session can be flushed
-       at any time by openssl. It is included only so curl compiles
-       under versions of openssl < 0.9.5a.
+  /* if SSL_get1_session() is unavailable, use SSL_get_session().
+     This is an inferior option because the session can be flushed
+     at any time by openssl. It is included only so curl compiles
+     under versions of openssl < 0.9.5a.
 
-       WARNING: How curl behaves if it's session is flushed is
-       untested.
-    */
+     WARNING: How curl behaves if it's session is flushed is
+     untested.
+  */
 #endif
+
+  incache = !(Curl_ssl_getsessionid(conn, &old_ssl_sessionid, NULL));
+  if (incache) {
+    if (old_ssl_sessionid != our_ssl_sessionid) {
+      infof(data, "old SSL session ID is stale, removing\n");
+      Curl_ssl_delsessionid(conn, old_ssl_sessionid);
+      incache = FALSE;
+    }
+  }
+  if (!incache) {
     retcode = Curl_ssl_addsessionid(conn, our_ssl_sessionid,
                                     0 /* unknown size */);
     if(retcode) {
@@ -2371,7 +2387,11 @@ ssize_t Curl_ossl_send(struct connectdata *conn,
   char error_buffer[120]; /* OpenSSL documents that this must be at least 120
                              bytes long. */
   unsigned long sslerror;
-  int rc = SSL_write(conn->ssl[sockindex].handle, mem, (int)len);
+  int memlen;
+  int rc;
+
+  memlen = (len > (size_t)INT_MAX) ? INT_MAX : (int)len;
+  rc = SSL_write(conn->ssl[sockindex].handle, mem, memlen);
 
   if(rc < 0) {
     err = SSL_get_error(conn->ssl[sockindex].handle, rc);
@@ -2416,8 +2436,11 @@ ssize_t Curl_ossl_recv(struct connectdata *conn, /* connection data */
   char error_buffer[120]; /* OpenSSL documents that this must be at
                              least 120 bytes long. */
   unsigned long sslerror;
-  ssize_t nread = (ssize_t)SSL_read(conn->ssl[num].handle, buf,
-                                    (int)buffersize);
+  ssize_t nread;
+  int buffsize;
+
+  buffsize = (buffersize > (size_t)INT_MAX) ? INT_MAX : (int)buffersize;
+  nread = (ssize_t)SSL_read(conn->ssl[num].handle, buf, buffsize);
   *wouldblock = FALSE;
   if(nread < 0) {
     /* failed SSL_read */

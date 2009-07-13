@@ -1,7 +1,7 @@
 #***************************************************************************
-# $Id: cares-functions.m4,v 1.27 2008-11-20 07:59:26 danf Exp $
+# $Id: cares-functions.m4,v 1.29 2009-04-28 10:40:02 yangtse Exp $
 #
-# Copyright (C) 2008 by Daniel Stenberg et al
+# Copyright (C) 2008 - 2009 by Daniel Stenberg et al
 #
 # Permission to use, copy, modify, and distribute this software and its
 # documentation for any purpose and without fee is hereby granted, provided
@@ -16,7 +16,7 @@
 #***************************************************************************
 
 # File version for 'aclocal' use. Keep it a single number.
-# serial 26
+# serial 29
 
 
 dnl CARES_INCLUDES_ARPA_INET
@@ -187,6 +187,24 @@ cares_includes_sys_socket="\
 ])
 
 
+dnl CARES_INCLUDES_SYS_TYPES
+dnl -------------------------------------------------
+dnl Set up variable with list of headers that must be
+dnl included when sys/types.h is to be included.
+
+AC_DEFUN([CARES_INCLUDES_SYS_TYPES], [
+cares_includes_sys_types="\
+/* includes start */
+#ifdef HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+#endif
+/* includes end */"
+  AC_CHECK_HEADERS(
+    sys/types.h,
+    [], [], [$cares_includes_sys_types])
+])
+
+
 dnl CARES_INCLUDES_SYS_UIO
 dnl -------------------------------------------------
 dnl Set up variable with list of headers that must be
@@ -281,6 +299,23 @@ cares_includes_ws2tcpip="\
   CURL_CHECK_HEADER_WINDOWS
   CURL_CHECK_HEADER_WINSOCK2
   CURL_CHECK_HEADER_WS2TCPIP
+])
+
+
+dnl CARES_PREPROCESS_CALLCONV
+dnl -------------------------------------------------
+dnl Set up variable with a preprocessor block which
+dnl defines function calling convention.
+
+AC_DEFUN([CARES_PREPROCESS_CALLCONV], [
+cares_preprocess_callconv="\
+/* preprocess start */
+#ifdef HAVE_WINDOWS_H
+#  define FUNCALLCONV __stdcall
+#else
+#  define FUNCALLCONV
+#endif
+/* preprocess end */"
 ])
 
 

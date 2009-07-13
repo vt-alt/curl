@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: curl.h,v 1.379 2009-03-02 23:05:31 bagder Exp $
+ * $Id: curl.h,v 1.383 2009-04-28 11:19:10 bagder Exp $
  ***************************************************************************/
 
 /*
@@ -186,15 +186,21 @@ typedef size_t (*curl_write_callback)(char *buffer,
                                       size_t nitems,
                                       void *outstream);
 
+/* this is the return codes for the seek callbacks */
+#define CURL_SEEKFUNC_OK       0
+#define CURL_SEEKFUNC_FAIL     1 /* fail the entire transfer */
+#define CURL_SEEKFUNC_CANTSEEK 2 /* tell libcurl seeking can't be done, so
+                                    libcurl might try other means instead */
+typedef int (*curl_seek_callback)(void *instream,
+                                  curl_off_t offset,
+                                  int origin); /* 'whence' */
+
 /* This is a return code for the read callback that, when returned, will
    signal libcurl to immediately abort the current transfer. */
 #define CURL_READFUNC_ABORT 0x10000000
 /* This is a return code for the read callback that, when returned, will
    signal libcurl to pause sending data on the current transfer. */
 #define CURL_READFUNC_PAUSE 0x10000001
-typedef int (*curl_seek_callback)(void *instream,
-                                  curl_off_t offset,
-                                  int origin); /* 'whence' */
 
 typedef size_t (*curl_read_callback)(char *buffer,
                                       size_t size,
@@ -1510,7 +1516,9 @@ CURL_EXTERN void curl_free(void *p);
  * DESCRIPTION
  *
  * curl_global_init() should be invoked exactly once for each application that
- * uses libcurl
+ * uses libcurl and before any call of other libcurl function.
+ *
+ * This function is not thread-safe!
  */
 CURL_EXTERN CURLcode curl_global_init(long flags);
 

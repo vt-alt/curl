@@ -3,6 +3,22 @@ join in and help us correct one or more of these! Also be sure to check the
 changelog of the current development status, as one or more of these problems
 may have been fixed since this was written!
 
+65. When doing FTP over a socks proxy or CONNECT through HTTP proxy and the
+  multi interface is used, libcurl will fail if the (passive) TCP connection
+  for the data transfer isn't more or less instant as the code does not
+  properly wait for the connect to be confirmed. See test case 564 for a first
+  shot at a test case.
+
+64. The threaded resolver used in libcurl on Windows has some kind of race
+  problem when multiple simultanoes resolves are done, like with the multi
+  interface transferring many files in parallell:
+  http://curl.haxx.se/mail/lib-2009-04/0028.html
+
+63. When CURLOPT_CONNECT_ONLY is used, the handle cannot reliably be re-used
+  for any further requests or transfers. The work-around is then to close that
+  handle with curl_easy_cleanup() and create a new. Some more details:
+  http://curl.haxx.se/mail/lib-2009-04/0300.html
+
 62. CURLOPT_TIMEOUT does not work properly with the regular multi and
   multi_socket interfaces. The work-around for apps is to simply remove the
   easy handle once the time is up. See also:
@@ -18,7 +34,8 @@ may have been fixed since this was written!
   http://curl.haxx.se/mail/lib-2008-08/0462.html
 
 59. If the CURLOPT_PORT option is used on an FTP URL like
-  "ftp://example.com/file;type=A" the ";type=A" is stripped off.
+  "ftp://example.com/file;type=A" using a proxy, the ";type=A" is stripped off.
+  See the comment in parse_remote_port()
 
 58. It seems sensible to be able to use CURLOPT_NOBODY and
   CURLOPT_FAILONERROR with FTP to detect if a file exists or not, but it is

@@ -1,5 +1,5 @@
 #################################################################
-# $Id: Makefile.netware,v 1.97 2008-12-30 08:16:24 gknauf Exp $
+# $Id: Makefile.netware,v 1.102 2009-05-02 02:37:34 yangtse Exp $
 #
 ## Makefile for building curl.nlm (NetWare version - gnu make)
 ## Use: make -f Makefile.netware
@@ -20,17 +20,17 @@ endif
 
 # Edit the path below to point to the base of your OpenSSL package.
 ifndef OPENSSL_PATH
-OPENSSL_PATH = ../../openssl-0.9.8i
+OPENSSL_PATH = ../../openssl-0.9.8k
 endif
 
 # Edit the path below to point to the base of your LibSSH2 package.
 ifndef LIBSSH2_PATH
-LIBSSH2_PATH = ../../libssh2-0.18
+LIBSSH2_PATH = ../../libssh2-1.1
 endif
 
 # Edit the path below to point to the base of your libidn package.
 ifndef LIBIDN_PATH
-LIBIDN_PATH = ../../libidn-1.11
+LIBIDN_PATH = ../../libidn-1.13
 endif
 
 ifndef INSTDIR
@@ -395,14 +395,12 @@ ifeq ($(LIBARCH),CLIB)
 	@echo $(DL)#define SEND_TYPE_ARG3 int$(DL) >> $@
 	@echo $(DL)#define SEND_TYPE_ARG4 int$(DL) >> $@
 	@echo $(DL)#define SEND_TYPE_RETV int$(DL) >> $@
-	@echo $(DL)#define socklen_t int$(DL) >> $@
 	@echo $(DL)#define pressanykey PressAnyKeyToContinue$(DL) >> $@
 else
 	@echo $(DL)#define OS "i586-pc-libc-NetWare"$(DL) >> $@
 	@echo $(DL)#define HAVE_FTRUNCATE 1$(DL) >> $@
 	@echo $(DL)#define HAVE_GETTIMEOFDAY 1$(DL) >> $@
 	@echo $(DL)#define HAVE_INTTYPES_H 1$(DL) >> $@
-	@echo $(DL)#define HAVE_LIMITS_H 1$(DL) >> $@
 	@echo $(DL)#define HAVE_LONGLONG 1$(DL) >> $@
 	@echo $(DL)#define HAVE_STDINT_H 1$(DL) >> $@
 	@echo $(DL)#define HAVE_STRCASECMP 1$(DL) >> $@
@@ -457,6 +455,7 @@ endif
 	@echo $(DL)#define HAVE_INET_ADDR 1$(DL) >> $@
 	@echo $(DL)#define HAVE_IOCTL 1$(DL) >> $@
 	@echo $(DL)#define HAVE_IOCTL_FIONBIO 1$(DL) >> $@
+	@echo $(DL)#define HAVE_LIMITS_H 1$(DL) >> $@
 	@echo $(DL)#define HAVE_LL 1$(DL) >> $@
 	@echo $(DL)#define HAVE_LOCALE_H 1$(DL) >> $@
 	@echo $(DL)#define HAVE_LOCALTIME_R 1$(DL) >> $@
@@ -545,9 +544,6 @@ endif
 	@echo $(DL)#else$(DL) >> $@
 	@echo $(DL)#define HAVE_VARIADIC_MACROS_C99 1$(DL) >> $@
 	@echo $(DL)#endif$(DL) >> $@
-ifdef OLD_NOVELLSDK
-	@echo $(DL)#define socklen_t int$(DL) >> $@
-endif
 ifdef CABUNDLE
 	@echo $(DL)#define CURL_CA_BUNDLE "$(CABUNDLE)"$(DL) >> $@
 else

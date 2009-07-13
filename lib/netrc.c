@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2008, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: netrc.c,v 1.43 2008-10-23 11:49:19 bagder Exp $
+ * $Id: netrc.c,v 1.45 2009-04-21 11:46:17 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -42,7 +42,7 @@
 
 #include "strequal.h"
 #include "strtok.h"
-#include "memory.h"
+#include "curl_memory.h"
 #include "rawstr.h"
 
 #define _MPRINTF_REPLACE /* use our functions only */
@@ -144,8 +144,9 @@ int Curl_parsenetrc(const char *host,
     char *tok_buf;
     bool done=FALSE;
     char netrcbuffer[256];
-
-    while(!done && fgets(netrcbuffer, sizeof(netrcbuffer), file)) {
+    int  netrcbuffsize = (int)sizeof(netrcbuffer);
+    
+    while(!done && fgets(netrcbuffer, netrcbuffsize, file)) {
       tok=strtok_r(netrcbuffer, " \t\n", &tok_buf);
       while(!done && tok) {
 

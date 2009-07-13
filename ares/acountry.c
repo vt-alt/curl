@@ -1,5 +1,5 @@
 /*
- * $Id: acountry.c,v 1.11 2008-12-02 02:58:04 danf Exp $
+ * $Id: acountry.c,v 1.13 2009-05-17 17:11:28 yangtse Exp $
  *
  * IP-address/hostname to country converter.
  *
@@ -116,6 +116,13 @@ int main(int argc, char **argv)
   WSAStartup(wVersionRequested, &wsaData);
 #endif
 
+  status = ares_library_init(ARES_LIB_INIT_ALL);
+  if (status != ARES_SUCCESS)
+    {
+      fprintf(stderr, "ares_library_init: %s\n", ares_strerror(status));
+      return 1;
+    }
+
   while ((ch = ares_getopt(argc, argv, "dvh?")) != -1)
     switch (ch)
       {
@@ -177,6 +184,8 @@ int main(int argc, char **argv)
 
   wait_ares(channel);
   ares_destroy(channel);
+
+  ares_library_cleanup();
 
 #if defined(WIN32) && !defined(WATT32)
   WSACleanup();
@@ -547,7 +556,7 @@ static void find_country_from_cname(const char *cname, struct in_addr addr)
   const struct search_list *country;
   char  ccode_A2[3], *ccopy, *dot_4;
   int   cnumber, z0, z1, ver_1, ver_2;
-  u_long ip;
+  unsigned long ip;
 
   ip = ntohl(addr.s_addr);
   z0 = tolower(cname[0]);

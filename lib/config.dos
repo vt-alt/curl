@@ -3,7 +3,7 @@
 
 /* lib/config.dos - Hand crafted config file for MSDOS.
  *
- * $Id: config.dos,v 1.25 2008-11-13 18:56:56 yangtse Exp $
+ * $Id: config.dos,v 1.27 2009-05-02 02:37:34 yangtse Exp $
  */
 #if defined(DJGPP)
   #define OS  "MSDOS/djgpp"
@@ -28,6 +28,7 @@
 #define HAVE_IOCTL_FIONBIO     1
 #define HAVE_IOCTLSOCKET       1
 #define HAVE_IOCTLSOCKET_FIONBIO   1
+#define HAVE_LIMITS_H          1
 #define HAVE_LOCALE_H          1
 #define HAVE_LONGLONG          1
 #define HAVE_MEMORY_H          1
@@ -116,7 +117,6 @@
 #define CURL_DISABLE_LDAP        1
 
 #define in_addr_t  u_long
-#define socklen_t  int
 
 #if defined(__HIGHC__) || \
     (defined(__GNUC__) && __GNUC__ < 4)   /* gcc 4.x built-in ? */
