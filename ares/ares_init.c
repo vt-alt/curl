@@ -1,4 +1,4 @@
-/* $Id: ares_init.c,v 1.90 2009-05-17 17:11:29 yangtse Exp $ */
+/* $Id: ares_init.c,v 1.94 2009-08-03 11:29:17 bagder Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  * Copyright (C) 2007-2009 by Daniel Stenberg
@@ -129,6 +129,9 @@ int ares_init_options(ares_channel *channelptr, struct ares_options *options,
     curl_memlimit(atoi(env));
 #endif
 
+  if (ares_library_initialized() != ARES_SUCCESS)
+    return ARES_ENOTINITIALIZED;
+
   channel = malloc(sizeof(struct ares_channeldata));
   if (!channel) {
     *channelptr = NULL;
@@ -198,12 +201,15 @@ int ares_init_options(ares_channel *channelptr, struct ares_options *options,
       DEBUGF(fprintf(stderr, "Error: init_by_resolv_conf failed: %s\n",
                      ares_strerror(status)));
   }
-  if (status == ARES_SUCCESS) {
-    status = init_by_defaults(channel);
-    if (status != ARES_SUCCESS)
-      DEBUGF(fprintf(stderr, "Error: init_by_defaults failed: %s\n",
-                     ares_strerror(status)));
-  }
+
+  /*
+   * No matter what failed or succeeded, seed defaults to provide
+   * useful behavior for things that we missed.
+   */
+  status = init_by_defaults(channel);
+  if (status != ARES_SUCCESS)
+    DEBUGF(fprintf(stderr, "Error: init_by_defaults failed: %s\n",
+                   ares_strerror(status)));
 
   /* Generate random key */
 

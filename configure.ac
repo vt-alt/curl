@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: configure.ac,v 1.410 2009-05-11 00:28:18 yangtse Exp $
+# $Id: configure.ac,v 1.423 2009-07-14 13:25:14 gknauf Exp $
 #***************************************************************************
 dnl Process this file with autoconf to produce a configure script.
 
@@ -35,12 +35,13 @@ This configure script may be copied, distributed and modified under the
 terms of the curl license; see COPYING for more details])
 
 AC_CONFIG_SRCDIR([lib/urldata.h])
-AM_CONFIG_HEADER(lib/config.h src/config.h include/curl/curlbuild.h)
+AM_CONFIG_HEADER(lib/curl_config.h src/curl_config.h include/curl/curlbuild.h)
 AM_MAINTAINER_MODE
 
 CURL_CHECK_OPTION_DEBUG
 CURL_CHECK_OPTION_OPTIMIZE
 CURL_CHECK_OPTION_WARNINGS
+CURL_CHECK_OPTION_CURLDEBUG
 
 CURL_CHECK_PATH_SEPARATOR
 
@@ -155,8 +156,6 @@ AC_SYS_LARGEFILE
 dnl support building of Windows DLLs
 AC_LIBTOOL_WIN32_DLL
 
-CURL_PROCESS_DEBUG_BUILD_OPTS
-
 dnl force libtool to build static libraries with PIC on AMD64-Linux & FreeBSD
 AC_MSG_CHECKING([if arch-OS host is AMD64-Linux/FreeBSD (to build static libraries with PIC)])
 case $host in
@@ -171,18 +170,6 @@ esac
 
 dnl libtool setup
 AC_PROG_LIBTOOL
-
-AC_MSG_CHECKING([if we need -no-undefined])
-case $host in
-  *-*-cygwin* | *-*-mingw* | *-*-pw32* | *-*-cegcc*)
-    need_no_undefined=yes
-    ;;
-  *)
-    need_no_undefined=no
-    ;;
-esac
-AC_MSG_RESULT($need_no_undefined)
-AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
 
 AC_MSG_CHECKING([if we need -mimpure-text])
 mimpure=no
@@ -269,6 +256,12 @@ esac
 
 CURL_CHECK_COMPILER_HALT_ON_ERROR
 CURL_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE
+
+CURL_CHECK_NO_UNDEFINED
+AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
+
+CURL_CHECK_CURLDEBUG
+AM_CONDITIONAL(CURLDEBUG, test x$want_curldebug = xyes)
 
 dnl **********************************************************************
 dnl Compilation based checks should not be done before this point.
@@ -663,8 +656,7 @@ if test "$ac_cv_lib_resolve_strcasecmp" = "$ac_cv_func_strcasecmp"; then
 fi
 ac_cv_func_strcasecmp="no"
 
-dnl socket lib?
-AC_CHECK_FUNC(connect, , [ AC_CHECK_LIB(socket, connect) ])
+CURL_CHECK_LIBS_CONNECT
 
 dnl **********************************************************************
 dnl In case that function clock_gettime with monotonic timer is available,
@@ -1554,25 +1546,9 @@ if test "$OPENSSL_ENABLED" != "1"; then
 
   if test X"$OPT_GNUTLS" != Xno; then
 
-    AC_MSG_NOTICE([OPT_GNUTLS is $OPT_GNUTLS])
-
     addld=""
     if test "x$OPT_GNUTLS" = "xyes"; then
-      check=`libgnutls-config --version 2>/dev/null`
-      if test -n "$check"; then
-        addlib=`libgnutls-config --libs`
-        addcflags=`libgnutls-config --cflags`
-        version=`libgnutls-config --version`
-        gtlslib=`libgnutls-config --prefix`/lib$libsuff
-      fi
-    else
-      addlib=`$OPT_GNUTLS/bin/libgnutls-config --libs`
-      addcflags=`$OPT_GNUTLS/bin/libgnutls-config --cflags`
-      version=`$OPT_GNUTLS/bin/libgnutls-config --version 2>/dev/null`
-      gtlslib=$OPT_GNUTLS/lib$libsuff
-    fi
-
-    if test -z "$version"; then
+      dnl this is with no partiular path given
       CURL_CHECK_PKGCONFIG(gnutls)
 
       if test "$PKGCONFIG" != "no" ; then
@@ -1581,8 +1557,34 @@ if test "$OPENSSL_ENABLED" != "1"; then
         addcflags=`$PKGCONFIG --cflags-only-I gnutls`
         version=`$PKGCONFIG --modversion gnutls`
         gtlslib=`echo $addld | $SED -e 's/-L//'`
+      else
+        dnl without pkg-config, we try libgnutls-config as that was how it
+        dnl used to be done
+        check=`libgnutls-config --version 2>/dev/null`
+        if test -n "$check"; then
+          addlib=`libgnutls-config --libs`
+          addcflags=`libgnutls-config --cflags`
+          version=`libgnutls-config --version`
+          gtlslib=`libgnutls-config --prefix`/lib$libsuff
+        fi
       fi
-
+    else
+      dnl this is with a given path, first check if there's a libgnutls-config
+      dnl there and if not, make an educated guess
+      check=`$OPT_GNUTLS/libgnutls-config --version 2>/dev/null`
+      if test -n "$check"; then
+        addlib=`$OPT_GNUTLS/libgnutls-config --libs`
+        addcflags=`$OPT_GNUTLS/libgnutls-config --cflags`
+        version=`$OPT_GNUTLS/libgnutls-config --version`
+        gtlslib=`$OPT_GNUTLS/libgnutls-config --prefix`/lib$libsuff
+      else
+        dnl without pkg-config and libgnutls-config, we guess a lot!
+        addlib=-lgnutls
+        addld=-L$OPT_GNUTLS/lib$libsuff
+        addcflags=-I$OPT_GNUTLS/include
+        version="" # we just don't know
+        gtlslib=$OPT_GNUTLS/lib$libsuff
+      fi
     fi
 
     if test -z "$version"; then
@@ -1663,10 +1665,10 @@ if test "$OPENSSL_ENABLED" != "1" -a "$GNUTLS_ENABLED" != "1"; then
       fi
     else
       # Without pkg-config, we'll kludge in some defaults
-      addlib="-lssl3 -lsmime3 -lnss3 -lplds4 -lplc4 -lnspr4 -lpthread -ldl"
+      addlib="-L$OPT_NSS/lib -lssl3 -lsmime3 -lnss3 -lplds4 -lplc4 -lnspr4 -lpthread -ldl"
       addcflags="-I$OPT_NSS/include"
       version="unknown"
-      gtlsprefix=$OPT_GNUTLS
+      nssprefix=$OPT_NSS
     fi
 
     dnl Check for functionPK11_CreateGenericObject
@@ -1907,6 +1909,7 @@ AC_CHECK_HEADERS(
         sys/utime.h \
         sys/poll.h \
         poll.h \
+        socket.h \
         sys/resource.h \
         libgen.h \
         locale.h \
@@ -2017,6 +2020,9 @@ CURL_CHECK_FUNC_SEND
 CURL_CHECK_MSG_NOSIGNAL
 
 CURL_CHECK_FUNC_ALARM
+CURL_CHECK_FUNC_CLOSESOCKET
+CURL_CHECK_FUNC_CLOSESOCKET_CAMEL
+CURL_CHECK_FUNC_CONNECT
 CURL_CHECK_FUNC_FCNTL
 CURL_CHECK_FUNC_FDOPEN
 CURL_CHECK_FUNC_FREEADDRINFO
@@ -2044,6 +2050,7 @@ CURL_CHECK_FUNC_SIGACTION
 CURL_CHECK_FUNC_SIGINTERRUPT
 CURL_CHECK_FUNC_SIGNAL
 CURL_CHECK_FUNC_SIGSETJMP
+CURL_CHECK_FUNC_SOCKET
 CURL_CHECK_FUNC_STRCASECMP
 CURL_CHECK_FUNC_STRCASESTR
 CURL_CHECK_FUNC_STRCMPI
@@ -2072,7 +2079,6 @@ case $host in
 esac
 
 AC_CHECK_FUNCS([basename \
-  closesocket \
   fork \
   geteuid \
   getpass_r \
@@ -2087,7 +2093,6 @@ AC_CHECK_FUNCS([basename \
   setlocale \
   setmode \
   setrlimit \
-  socket \
   uname \
   utime
 ],[
@@ -2200,6 +2205,9 @@ fi
 dnl set variable for use in automakefile(s)
 AM_CONDITIONAL(USE_MANUAL, test x"$USE_MANUAL" = x1)
 
+aresembedded="unknown"
+configure_rundir=`pwd`
+embedded_ares_builddir="$configure_rundir/ares"
 AC_MSG_CHECKING([whether to enable c-ares])
 AC_ARG_ENABLE(ares,
 AC_HELP_STRING([--enable-ares=PATH],[Enable c-ares for name lookups])
@@ -2230,14 +2238,9 @@ AC_HELP_STRING([--disable-ares],[Disable c-ares for name lookups]),
          if test -d "$srcdir/ares"; then
             aresembedded="yes"
             AC_CONFIG_SUBDIRS(ares)
-            aresinc=`cd $srcdir/ares && pwd`
-            CPPFLAGS="$CPPFLAGS -I$aresinc"
-
-            dnl the pwd= below cannot 'cd' into the ares dir to get the full
-            dnl path to it, since it may not exist yet if we build outside of
-            dnl the source tree
-            pwd=`pwd`
-            LDFLAGS="$LDFLAGS -L$pwd/ares"
+            dnl Since c-ares has installable configured header files, path
+            dnl inclusion is fully done in makefiles for in-tree builds.
+            LDFLAGS="$LDFLAGS -L$embedded_ares_builddir"
          fi
        else
          CPPFLAGS="$CPPFLAGS -I$enableval/include"
@@ -2274,6 +2277,9 @@ AC_HELP_STRING([--disable-ares],[Disable c-ares for name lookups]),
   esac ],
        AC_MSG_RESULT(no)
 )
+
+dnl set variable for use in automakefile(s)
+AM_CONDITIONAL(USE_EMBEDDED_ARES, test x$aresembedded = xyes)
 
 dnl ************************************************************
 dnl disable verbose text strings
@@ -2399,7 +2405,7 @@ AC_HELP_STRING([--disable-hidden-symbols],[Leave all symbols with default visibi
 
 dnl ************************************************************
 dnl enforce SONAME bump
-dnl 
+dnl
 
 AC_MSG_CHECKING([whether to enforce SONAME bump])
 AC_ARG_ENABLE(soname-bump,
@@ -2530,6 +2536,11 @@ squeeze CURL_LIBS
 squeeze LIBCURL_LIBS
 squeeze TEST_SERVER_LIBS
 
+if test "x$want_curldebug_assumed" = "xyes" &&
+  test "x$want_curldebug" = "xyes" && test "x$HAVE_ARES" = "x1"; then
+  ac_configure_args="$ac_configure_args --enable-curldebug"
+fi
+
 AC_CONFIG_FILES([Makefile \
            docs/Makefile \
            docs/examples/Makefile \
@@ -2583,7 +2594,7 @@ AC_MSG_NOTICE([Configured to build curl/libcurl:
   ca cert bundle:  ${ca}
   ca cert path:    ${capath}
   LDAP support:    ${curl_ldap_msg}
-  LDAPS support:   ${curl_ldaps_msg} 
+  LDAPS support:   ${curl_ldaps_msg}
 ])
 
 if test "x$soname_bump" = "xyes"; then

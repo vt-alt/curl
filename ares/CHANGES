@@ -1,5 +1,53 @@
   Changelog for the c-ares project
 
+* 3 Aug 2009 (Daniel Stenberg)
+- Joshua Kwan fixed the init routine to fill in the defaults for stuff that
+  fails to get inited by other means. This fixes a case of when the c-ares
+  init fails when internet access is fone.
+
+- Timo Teras changed the reason code used in the resolve callback done when
+  ares_cancel() is used, to be ARES_ECANCELLED instead of ARES_ETIMEOUT to
+  better allow the callback to know what's happening.
+
+* 14 Jul 2009 (Guenter Knauf)
+- renamed generated config.h to ares_config.h to avoid any future clashes
+  with config.h from other projects.
+  
+* June 8 2009 (Yang Tse)
+- Removed buildconf.bat from release and daily snapshot archives. This
+  file is only for CVS tree checkout builds.
+
+* May 26 2009 (Yang Tse)
+- Added --enable-curldebug configure option to enable and disable building
+  with the low-level curl debug memory tracking 'feature' to allow decoupled
+  setting from --enable-debug, allowing again to build c-ares independently
+  out of the CVS tree.
+
+  For the c-ares library option --enable-debug enables debug build features
+  which are _not_ related with memory tracking. For the c-ares library when
+  --enable-debug is given it does not enable the memory tracking feature. If
+  you wish to enable the curl debug memory tracking you must use configure
+  option --enable-curldebug explicitily to do so.
+
+  Internally, definition of preprocessor symbol DEBUGBUILD restricts code
+  which is only compiled for debug enabled builds. And symbol CURLDEBUG is
+  used to differentiate code which is _only_ used for memory tracking.
+
+* May 19 2009 (Yang Tse)
+- Introduced ares_library_init() and ares_library_cleanup() functions.
+
+  This is an API and ABI break for Win32/64 systems. Non-Win32/64 build targets
+  using c-ares 1.6.1 can still survive without calling these functions. Read all
+  the details on ares_library_init(3) and ares_library_cleanup(3) man pages that
+  are included.
+
+  curl/libcurl 7.19.5 is fully compatible with c-ares 1.6.1 on all systems.
+
+  In order to use c-ares 1.6.1 with curl/libcurl on Win32/64 systems it is
+  required that curl/libcurl is 7.19.5 or newer. In other words, it is not
+  possible on Win32/64 to use c-ares 1.6.1 with a curl/libcurl version less
+  than 7.19.5
+
 * May 11 2009 (Daniel Stenberg)
 - Gregor Jasny made c-ares link with libtool 's -export-symbols-regex option to
   only expose functions starting with ares_.

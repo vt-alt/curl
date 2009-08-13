@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: setup_once.h,v 1.37 2009-05-02 02:37:34 yangtse Exp $
+ * $Id: setup_once.h,v 1.39 2009-06-19 00:41:04 yangtse Exp $
  ***************************************************************************/
 
 
@@ -230,6 +230,19 @@ struct timeval {
 
 
 /*
+ * Function-like macro definition used to close a socket.
+ */
+
+#if defined(HAVE_CLOSESOCKET)
+#  define sclose(x)  closesocket((x))
+#elif defined(HAVE_CLOSESOCKET_CAMEL)
+#  define sclose(x)  CloseSocket((x))
+#else
+#  define sclose(x)  close((x))
+#endif
+
+
+/*
  * Uppercase macro versions of ANSI/ISO is*() functions/macros which
  * avoid negative number inputs with argument byte codes > 127.
  */
@@ -304,7 +317,7 @@ typedef int sig_atomic_t;
  * Macro used to include code only in debug builds.
  */
 
-#ifdef CURLDEBUG
+#ifdef DEBUGBUILD
 #define DEBUGF(x) x
 #else
 #define DEBUGF(x) do { } while (0)
@@ -315,7 +328,7 @@ typedef int sig_atomic_t;
  * Macro used to include assertion code only in debug builds.
  */
 
-#if defined(CURLDEBUG) && defined(HAVE_ASSERT_H)
+#if defined(DEBUGBUILD) && defined(HAVE_ASSERT_H)
 #define DEBUGASSERT(x) assert(x)
 #else
 #define DEBUGASSERT(x) do { } while (0)

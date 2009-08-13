@@ -1,4 +1,6 @@
+*.html
 *.lo
+*.pdf
 .deps
 .libs
 Makefile
@@ -10,8 +12,8 @@ ares_build.h
 ares_version.h.dist
 autom4te.cache
 config.guess
-config.h
-config.h.in
+ares_config.h
+ares_config.h.in
 config.log
 config.lt
 config.status
@@ -22,5 +24,6 @@ libcares.la
 libcares.pc
 libtool
 ltmain.sh
+man3
 missing
 stamp-h*

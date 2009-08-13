@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: http.c,v 1.418 2009-05-11 09:55:28 bagder Exp $
+ * $Id: http.c,v 1.424 2009-07-08 07:00:40 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -524,7 +524,7 @@ output_auth_headers(struct connectdata *conn,
     &data->state.proxyneg:&data->state.negotiate;
 #endif
 
-#ifndef CURL_DISABLE_CRYPTO_AUTH
+#ifdef CURL_DISABLE_CRYPTO_AUTH
   (void)request;
   (void)path;
 #endif
@@ -1417,10 +1417,9 @@ CURLcode Curl_proxyCONNECT(struct connectdata *conn,
     /* if timeout is requested, find out how much remaining time we have */
     check = timeout - /* timeout time */
       Curl_tvdiff(Curl_tvnow(), conn->now); /* spent time */
-    if(check <=0 ) {
+    if(check <= 0) {
       failf(data, "Proxy CONNECT aborted due to timeout");
-      error = SELECT_TIMEOUT; /* already too little time */
-      break;
+      return CURLE_RECV_ERROR;
     }
 
     /* if we're in multi-mode and we would block, return instead for a retry */
@@ -1781,17 +1780,6 @@ CURLcode Curl_http_connect(struct connectdata *conn, bool *done)
   }
 #endif /* CURL_DISABLE_PROXY */
 
-  if(!data->state.this_is_a_follow) {
-    /* this is not a followed location, get the original host name */
-    if(data->state.first_host)
-      /* Free to avoid leaking memory on multiple requests*/
-      free(data->state.first_host);
-
-    data->state.first_host = strdup(conn->host.name);
-    if(!data->state.first_host)
-      return CURLE_OUT_OF_MEMORY;
-  }
-
   if(conn->protocol & PROT_HTTPS) {
     /* perform SSL initialization */
     if(data->state.used_interface == Curl_if_multi) {
@@ -2032,6 +2020,11 @@ static CURLcode add_custom_headers(struct connectdata *conn,
                 /* this header (extended by formdata.c) is sent later */
                 checkprefix("Content-Type:", headers->data))
           ;
+        else if(conn->bits.authneg &&
+                /* while doing auth neg, don't allow the custom length since
+                   we will force length zero then */
+                checkprefix("Content-Length", headers->data))
+          ;
         else {
           CURLcode result = add_bufferf(req_buffer, "%s\r\n", headers->data);
           if(result)
@@ -2056,6 +2049,7 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
   CURLcode result=CURLE_OK;
   struct HTTP *http;
   const char *ppath = data->state.path;
+  bool paste_ftp_userpwd = FALSE;
   char ftp_typecode[sizeof(";type=?")] = "";
   const char *host = conn->host.name;
   const char *te = ""; /* transfer-encoding */
@@ -2088,6 +2082,17 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
   }
   else
     http = data->state.proto.http;
+
+  if(!data->state.this_is_a_follow) {
+    /* this is not a followed location, get the original host name */
+    if(data->state.first_host)
+      /* Free to avoid leaking memory on multiple requests*/
+      free(data->state.first_host);
+
+    data->state.first_host = strdup(conn->host.name);
+    if(!data->state.first_host)
+      return CURLE_OUT_OF_MEMORY;
+  }
 
   if( (conn->protocol&(PROT_HTTP|PROT_FTP)) &&
        data->set.upload) {
@@ -2284,9 +2289,9 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
       }
     }
     ppath = data->change.url;
-    if (data->set.proxy_transfer_mode) {
-      /* when doing ftp, append ;type=<a|i> if not present */
-      if(checkprefix("ftp://", ppath) || checkprefix("ftps://", ppath)) {
+    if(checkprefix("ftp://", ppath)) {
+      if (data->set.proxy_transfer_mode) {
+        /* when doing ftp, append ;type=<a|i> if not present */
         char *p = strstr(ppath, ";type=");
         if(p && p[6] && p[7] == 0) {
           switch (Curl_raw_toupper(p[6])) {
@@ -2302,6 +2307,8 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
           snprintf(ftp_typecode, sizeof(ftp_typecode), ";type=%c",
                    data->set.prefer_ascii ? 'a' : 'i');
       }
+      if (conn->bits.user_passwd && !conn->bits.userpwd_in_url)
+        paste_ftp_userpwd = TRUE;
     }
   }
 #endif /* CURL_DISABLE_PROXY */
@@ -2460,10 +2467,23 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
     return CURLE_OUT_OF_MEMORY;
 
   /* add the main request stuff */
-  result =
-    add_bufferf(req_buffer,
-                "%s " /* GET/HEAD/POST/PUT */
-                "%s%s HTTP/%s\r\n" /* path + HTTP version */
+  /* GET/HEAD/POST/PUT */
+  result = add_bufferf(req_buffer, "%s ", request);
+  if (result)
+    return result;
+
+  /* url */
+  if (paste_ftp_userpwd)
+    result = add_bufferf(req_buffer, "ftp://%s:%s@%s",
+        conn->user, conn->passwd, ppath + sizeof("ftp://") - 1);
+  else
+    result = add_buffer(req_buffer, ppath, strlen(ppath));
+  if (result)
+    return result;
+
+  result = add_bufferf(req_buffer,
+                "%s" /* ftp typecode (;type=x) */
+                " HTTP/%s\r\n" /* HTTP version */
                 "%s" /* proxyuserpwd */
                 "%s" /* userpwd */
                 "%s" /* range */
@@ -2475,8 +2495,6 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
                 "%s" /* Proxy-Connection */
                 "%s",/* transfer-encoding */
 
-                request,
-                ppath,
                 ftp_typecode,
                 httpstring,
                 conn->allocptr.proxyuserpwd?
@@ -2787,9 +2805,9 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
          we don't upload data chunked, as RFC2616 forbids us to set both
          kinds of headers (Transfer-Encoding: chunked and Content-Length) */
 
-      if(!checkheaders(data, "Content-Length:")) {
-        /* we allow replacing this header, although it isn't very wise to
-           actually set your own */
+      if(conn->bits.authneg || !checkheaders(data, "Content-Length:")) {
+        /* we allow replacing this header if not during auth negotiation,
+           although it isn't very wise to actually set your own */
         result = add_bufferf(req_buffer,
                              "Content-Length: %" FORMAT_OFF_T"\r\n",
                              postsize);

@@ -1,5 +1,5 @@
 /*
- * $Id: acountry.c,v 1.13 2009-05-17 17:11:28 yangtse Exp $
+ * $Id: acountry.c,v 1.16 2009-08-03 12:20:03 giva Exp $
  *
  * IP-address/hostname to country converter.
  *
@@ -10,8 +10,8 @@
  *   CNAME = zz<CC>.countries.nerd.dk with address 127.0.x.y (ver 1) or
  *   CNAME = <a.b.c.d>.zz.countries.nerd.dk with address 127.0.x.y (ver 2)
  *
- * The 2 letter country code in <CC> and the ISO-3166 country
- * number in x.y (number = x*256 + y). Version 2 of the protocol is missing
+ * The 2 letter country code is in <CC> and the ISO-3166 country
+ * number is in x.y (number = x*256 + y). Version 2 of the protocol is missing
  * the <CC> number.
  *
  * Ref: http://countries.nerd.dk/more.html
@@ -612,9 +612,14 @@ static void find_country_from_cname(const char *cname, struct in_addr addr)
     printf("Name for country-number %d not found.\n", cnumber);
   else
     {
-      if (ver_1 && *(unsigned short*)&country->short_name != *(unsigned*)&ccode_A2)
-        printf("short-name mismatch; %s vs %s\n", country->short_name, ccode_A2);
-
+      if (ver_1)
+        {
+          if ((country->short_name[0] != ccode_A2[0]) ||
+              (country->short_name[1] != ccode_A2[1]) ||
+              (country->short_name[2] != ccode_A2[2]))
+            printf("short-name mismatch; %s vs %s\n",
+                   country->short_name, ccode_A2);
+        }
       printf("%s (%s), number %d.\n",
              country->long_name, country->short_name, cnumber);
     }

@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: transfer.c,v 1.431 2009-05-11 07:53:38 bagder Exp $
+ * $Id: transfer.c,v 1.434 2009-07-16 17:41:21 gknauf Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -130,18 +130,21 @@ CURLcode Curl_fillreadbuffer(struct connectdata *conn, int bytes, int *nreadp)
   struct SessionHandle *data = conn->data;
   size_t buffersize = (size_t)bytes;
   int nread;
+#ifdef CURL_DOES_CONVERSIONS
   bool sending_http_headers = FALSE;
 
-  if(data->req.upload_chunky) {
-    /* if chunked Transfer-Encoding */
-    buffersize -= (8 + 2 + 2);   /* 32bit hex + CRLF + CRLF */
-    data->req.upload_fromhere += (8 + 2); /* 32bit hex + CRLF */
-  }
   if((conn->protocol&PROT_HTTP) &&
      (data->state.proto.http->sending == HTTPSEND_REQUEST)) {
     /* We're sending the HTTP request headers, not the data.
        Remember that so we don't re-translate them into garbage. */
     sending_http_headers = TRUE;
+  }
+#endif
+
+  if(data->req.upload_chunky) {
+    /* if chunked Transfer-Encoding */
+    buffersize -= (8 + 2 + 2);   /* 32bit hex + CRLF + CRLF */
+    data->req.upload_fromhere += (8 + 2); /* 32bit hex + CRLF */
   }
 
   /* this function returns a size_t, so we typecast to int to prevent warnings
@@ -241,7 +244,7 @@ CURLcode Curl_fillreadbuffer(struct connectdata *conn, int bytes, int *nreadp)
       data->req.upload_done = TRUE;
     }
 
-    nread+=strlen(endofline_native); /* for the added end of line */
+    nread+=(int)strlen(endofline_native); /* for the added end of line */
   }
 #ifdef CURL_DOES_CONVERSIONS
   else if((data->set.prefer_ascii) && (!sending_http_headers)) {
@@ -383,7 +386,7 @@ static void read_rewind(struct connectdata *conn,
   conn->read_pos -= thismuch;
   conn->bits.stream_was_rewound = TRUE;
 
-#ifdef CURLDEBUG
+#ifdef DEBUGBUILD
   {
     char buf[512 + 1];
     size_t show;

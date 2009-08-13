@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: testcurl.pl,v 1.74 2009-05-12 11:24:29 yangtse Exp $
+# $Id: testcurl.pl,v 1.85 2009-07-14 15:36:12 gknauf Exp $
 ###########################################################################
 
 ###########################
@@ -69,7 +69,7 @@ use vars qw($name $email $desc $confopts $runtestopts $setupfile $mktarball
             $extvercmd $nocvsup $nobuildconf $crosscompile $timestamp);
 
 # version of this script
-$version='$Revision: 1.74 $';
+$version='$Revision: 1.85 $';
 $fixed=0;
 
 # Determine if we're running from CVS or a canned copy of curl,
@@ -137,7 +137,7 @@ if ($^O eq 'MSWin32' || $targetos) {
     $binext = '.exe';
     $libext = '.lib';
   }
-  elsif ($targetos =~ /mingw32/) {
+  elsif ($targetos =~ /mingw/) {
     $binext = '.exe';
     if ($^O eq 'MSWin32') {
       $libext = '.a';
@@ -228,6 +228,22 @@ sub mydie($){
     exit 1;
 }
 
+sub get_host_triplet {
+  my $triplet;
+  my $configfile = "$pwd/$build/lib/curl_config.h";
+
+  if(-f $configfile && -s $configfile && open(LIBCONFIGH, "<$configfile")) {
+    while(<LIBCONFIGH>) {
+      if($_ =~ /^\#define\s+OS\s+"*([^"][^"]*)"*\s*/) {
+        $triplet = $1;
+        last;
+      }
+    }
+    close(LIBCONFIGH);
+  }
+  return $triplet;
+}
+
 if (open(F, "$setupfile")) {
   while (<F>) {
     if (/(\w+)=(.*)/) {
@@ -306,6 +322,7 @@ logit "CFLAGS = ".$ENV{CFLAGS};
 logit "LDFLAGS = ".$ENV{LDFLAGS};
 logit "CC = ".$ENV{CC};
 logit "MAKEFLAGS = ".$ENV{MAKEFLAGS};
+logit "PKG_CONFIG_PATH = ".$ENV{PKG_CONFIG_PATH};
 logit "target = ".$targetos;
 logit "version = $version"; # script version
 logit "date = $timestamp";  # When the test build starts
@@ -463,10 +480,8 @@ if ($configurebuild) {
 sub findinpath {
   my $c;
   my $e;
-  my $x='';
-  $x='.exe' if ($^O eq 'MSWin32');
-  my $s=':';
-  $s=';' if ($^O eq 'MSWin32');
+  my $x = ($^O eq 'MSWin32') ? '.exe' : '';
+  my $s = ($^O eq 'MSWin32') ? ';' : ':';
   my $p=$ENV{'PATH'};
   my @pa = split($s, $p);
   for $c (@_) {
@@ -482,6 +497,8 @@ my $make = findinpath("gmake", "make", "nmake");
 if(!$make) {
     mydie "Couldn't find make in the PATH";
 }
+# force to 'nmake' for VC builds
+$make = "nmake" if ($targetos =~ /vc/);
 logit "going with $make as make";
 
 # change to build dir
@@ -549,14 +566,14 @@ else {
   mydie "no curlbuild.h created/found";
 }
 
-logit_spaced "display lib/config$confsuffix.h";
-open(F, "lib/config$confsuffix.h") or die "lib/config$confsuffix.h: $!";
+logit_spaced "display lib/curl_config$confsuffix.h";
+open(F, "lib/curl_config$confsuffix.h") or die "lib/curl_config$confsuffix.h: $!";
 while (<F>) {
   print if /^ *#/;
 }
 close(F);
 
-if (grepfile("define USE_ARES", "lib/config$confsuffix.h")) {
+if (grepfile("define USE_ARES", "lib/curl_config$confsuffix.h")) {
   print "\n";
   logit "setup to build ares";
 
@@ -585,8 +602,8 @@ if (grepfile("define USE_ARES", "lib/config$confsuffix.h")) {
     mydie "no ares_build.h created/found";
   }
 
-  logit_spaced "display ares/config$confsuffix.h";
-  if(open(F, "ares/config$confsuffix.h")) {
+  logit_spaced "display ares/ares_config$confsuffix.h";
+  if(open(F, "ares/ares_config$confsuffix.h")) {
       while (<F>) {
           print if /^ *#/;
       }
@@ -614,41 +631,21 @@ if (grepfile("define USE_ARES", "lib/config$confsuffix.h")) {
   if (-f "libcares$libext") {
     logit "ares is now built successfully (libcares$libext)";
   } else {
-    logit "ares build failed (libares$libext)";
+    mydie "ares build failed (libcares$libext)";
   }
 
   # cd back to the curl build dir
   chdir "$pwd/$build";
 }
 
-if ($configurebuild) {
-  logit "$make -i";
-  open(F, "$make -i 2>&1 |") or die;
-  while (<F>) {
-    s/$pwd//g;
-    print;
-  }
-  close(F);
+my $mkcmd = "$make -i" . ($targetos && !$configurebuild ? " $targetos" : "");
+logit "$mkcmd";
+open(F, "$mkcmd 2>&1 |") or die;
+while (<F>) {
+  s/$pwd//g;
+  print;
 }
-else {
-  logit "$make -i $targetos";
-  if ($^O eq 'MSWin32') {
-    if ($targetos =~ /vc/) {
-      open(F, "nmake -i $targetos|") or die;
-    }
-    else {
-      open(F, "$make -i $targetos |") or die;
-    }
-  }
-  else {
-    open(F, "$make -i $targetos 2>&1 |") or die;
-  }
-  while (<F>) {
-    s/$pwd//g;
-    print;
-  }
-  close(F);
-}
+close(F);
 
 if (-f "lib/libcurl$libext") {
   logit "libcurl was created fine (libcurl$libext)";
@@ -669,8 +666,9 @@ if (!$crosscompile || (($extvercmd ne '') && (-x $extvercmd))) {
   my $cmd = ($extvercmd ne '' ? $extvercmd.' ' : '')."./src/curl${binext} --version|";
   open(F, $cmd);
   while(<F>) {
-      print;
-      print LOG;
+    # strip CR from output on non-win32 platforms (wine on Linux)
+    s/\r// if ($^O ne 'MSWin32');
+    print;
   }
   close(F);
 }
@@ -702,11 +700,28 @@ if ($configurebuild && !$crosscompile) {
   } else {
     logit "the tests were successful!";
   }
-} else {
-  # dummy message to feign success
+}
+else {
   if($crosscompile) {
-    logit "cross-compiling, can't run tests";
+    # build test harness programs for selected cross-compiles
+    my $host_triplet = get_host_triplet();
+    if($host_triplet =~ /([^-]+)-([^-]+)-mingw(.*)/) {
+      chdir "$pwd/$build/tests";
+      logit_spaced "build test harness";
+      open(F, "$make -i 2>&1 |") or die;
+      open(LOG, ">$buildlog") or die;
+      while (<F>) {
+        s/$pwd//g;
+        print;
+        print LOG;
+      }
+      close(F);
+      close(LOG);
+      chdir "$pwd/$build";
+    }
+    logit_spaced "cross-compiling, can't run tests";
   }
+  # dummy message to feign success
   print "TESTDONE: 1 tests out of 0 (dummy message)\n";
 }
 

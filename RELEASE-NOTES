@@ -1,6 +1,6 @@
-Curl and libcurl 7.19.5
+Curl and libcurl 7.19.6
 
- Public curl releases:         111
+ Public curl releases:         112
  Command line options:         132
  curl_easy_setopt() options:   163
  Public functions in libcurl:  58
@@ -9,45 +9,42 @@ Curl and libcurl 7.19.5
 
 This release includes the following changes:
 
- o libcurl now closes all dead connections whenever you attempt to open a new
-   connection
- o libssh2's version number can now be figured out run-time instead of using
-   the build-time fixed number
- o CURLOPT_SEEKFUNCTION may now return CURL_SEEKFUNC_CANTSEEK
- o curl can now upload with resume even when reading from a pipe
- o a build-time configured curl_socklen_t is now used instead of socklen_t
+ o CURLOPT_FTPPORT (and curl's -P/--ftpport) support port ranges
+ o Added CURLOPT_SSH_KNOWNHOSTS, CURLOPT_SSH_KEYFUNCTION, CURLOPT_SSH_KEYDATA
+ o CURLOPT_QUOTE, CURLOPT_POSTQUOTE and CURLOPT_PREQUOTE can be told to ignore
+   error responses when used with FTP
 
 This release includes the following bugfixes:
 
- o NTLM authentication memory leak on SSPI enabled Windows builds
- o fixed the GnuTLS-using code to do correct return code checks
- o an alloc-related call in the OpenSSL-using code didn't check the return value
- o curl_easy_duphandle() failed to duplicate cookies at times
- o missing TELNET timeout support in Windows builds
- o missing Curl_read() and write callback result checking in TELNET transfers
- o more ciphers enabled in libcurl built to use NSS
- o properly return an error code in curl_easy_recv
- o Sun compilers specific preprocessor block removed from curlbuild.h.dist
- o allow creation of four way fat libcurl Mac OS X Framework
- o several memory leaks in libcurl+NSS
- o improved the CURLOPT_NOBODY set to 0 confusions
- o persistent connections when doing FTP over a HTTP proxy
- o --libcurl bogus strings where other data was pointed to
- o crash related to FTP and "Re-used connection seems dead, get a new one"
- o CURLINFO_APPCONNECT_TIME with the multi interface
- o Enhanced upload speeds on Windows
- o TFTP problems after a failed transfer to the same host
- o improved out of the box TPF compatibility
- o HTTP PUT protocol line endings portions mangled from CRLF to CRCRLF
- o Rejected SSL session ids are killed properly (for OpenSSL and GnuTLS builds)
- o Deal with the TFTP OACK packet
- o fixed roff mistakes in man pages
- o use SOCKS proxy with the multi interface
- o fixed the Curl_getoff_all_pipelines SIGSEGV 
- o POST, NTLM and following a redirect hang
- o libcurl+NSS endless loop on incorrect password for private key
- o gzip decompression memory leak
- o no_proxy flaw with user name in URL
+ o crash on bad socket close with FTP
+ o leaking cookie memory when duplicate domains or paths were used
+ o build fix for Symbian
+ o CURLOPT_USERPWD set to NULL clears auth credentials
+ o libcurl-NSS build fixes
+ o configure script fixed for VMS
+ o set Content-Length: with POST and PUT failed with NTLM auth
+ o allow building libcurl for VxWorks
+ o curl tool exit codes fixed for VMS
+ o --no-buffer treated correctly
+ o djgpp build fix
+ o configure detection of GnuTLS now based on pkg-config as well
+ o libcurl-NSS client cert handling segfaults
+ o curl uploading from stdin/pipes now works in non-blocking way so that it
+   continues the downloading even when the read stalls
+ o ftp credentials are added to the url if needed for http proxies
+ o curl -o - sends data to stdout using binary mode on windows
+ o fixed the separators for "array" style string that CURLINFO_CERTINFO returns
+ o auth problem over several hosts with re-used connection
+ o improved the support for client certificates in libcurl+NSS
+ o fix leak in gtls code
+ o missing algorithms in libcurl+OpenSSL
+ o with noproxy set you could still get a proxy if a proxy env was set
+ o rand seeding on libcurl on windows built with OpenSSL was not thread-safe
+ o fixed the zero byte inserted in cert name flaw in libcurl+OpenSSL
+ o don't try SNI with SSLv2 or SSLv3 (OpenSSL and GnuTLS builds)
+ o libcurl+OpenSSL would wrongly acknowledge a cert if CN matched but
+   subjectAltName didn't
+ o TFTP upload sent illegal TSIZE packets
 
 This release includes the following known bugs:
 
@@ -56,12 +53,12 @@ This release includes the following known bugs:
 This release would not have looked like this without help, code, reports and
 advice from friends like these:
 
- Daniel Fandrich, Yang Tse, David James, Chris Deidun, Bill Egert,
- Andre Guibert de Bruet, Andreas Farber, Frank Hempel, Pierre Brico,
- Kamil Dudka, Jim Freeman, Daniel Johnson, Toshio Kuratomi, Martin Storsjo,
- Pramod Sharma, Gisle Vanem, Lenaic Lefever, Rainer Koenig, Sven Wegener,
- Tim Chen, Constantine Sapuntzakis, David McCreedy, Michael Smith,
- Colin Watson, Ebenezer Ikonne, Laurent Rabret, Michael Cronenworth,
- Balint Szilakszi, James Bursa
+ Yang Tse, Daniel Fandrich, Kamil Dudka, Caolan McNamara, Frank McGeough,
+ Andre Guibert de Bruet, Mike Crowe, Claes Jakobsson, John E. Malmberg,
+ Aaron Oneal, Igor Novoseltsev, Eric Wong, Bill Hoffman, Daniel Steinberg,
+ Fabian Keil, Michal Marek, Reuven Wachtfogel, Markus Koetter,
+ Constantine Sapuntzakis, David Binderman, Johan van Selst, Alexander Beedie,
+ Tanguy Fautre, Scott Cantor, Curt Bogmine, Peter Sylvester, Benbuck Nason,
+ Carsten Lange
 
         Thanks! (and sorry if I forgot to mention someone)

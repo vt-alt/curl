@@ -1,4 +1,20 @@
-/* $Id: ares_library_init.c,v 1.2 2009-05-18 01:25:20 yangtse Exp $ */
+/* $Id: ares_library_init.c,v 1.8 2009-05-28 09:58:24 yangtse Exp $ */
+
+/* Copyright 1998 by the Massachusetts Institute of Technology.
+ * Copyright (C) 2004-2009 by Daniel Stenberg
+ *
+ * Permission to use, copy, modify, and distribute this
+ * software and its documentation for any purpose and without
+ * fee is hereby granted, provided that the above copyright
+ * notice appear in all copies and that both that copyright
+ * notice and this permission notice appear in supporting
+ * documentation, and that the name of M.I.T. not be used in
+ * advertising or publicity pertaining to distribution of the
+ * software without specific, written prior permission.
+ * M.I.T. makes no representations about the suitability of
+ * this software for any purpose.  It is provided "as is"
+ * without express or implied warranty.
+ */
 
 #include "setup.h"
 
@@ -38,25 +54,22 @@ static int ares_win32_init(void)
   if (!fpGetNetworkParams)
     {
       FreeLibrary(hnd_iphlpapi);
-      return ARES_EADDRGetNetworkParams;
+      return ARES_EADDRGETNETWORKPARAMS;
     }
+
+  /*
+   * When advapi32.dll is unavailable or advapi32.dll has no SystemFunction036,
+   * also known as RtlGenRandom, which is the case for Windows versions prior
+   * to WinXP then c-ares uses portable rand() function. Then don't error here.
+   */
 
   hnd_advapi32 = 0;
   hnd_advapi32 = LoadLibrary("advapi32.dll");
-  if (!hnd_advapi32)
+  if (hnd_advapi32)
     {
-      FreeLibrary(hnd_iphlpapi);
-      return ARES_ELOADADVAPI32;
+      fpSystemFunction036 = (fpSystemFunction036_t)
+        GetProcAddress(hnd_advapi32, "SystemFunction036");
     }
-
-  fpSystemFunction036 = (fpSystemFunction036_t)
-    GetProcAddress(hnd_advapi32, "SystemFunction036");
-
-  /*
-   * Intentionally avoid checking if the address of SystemFunction036, a.k.a.
-   * RtlGenRandom, has been located or not. This function is only available on
-   * WinXP and later. When unavailable c-ares uses portable rand() function.
-   */
 
 #endif
   return ARES_SUCCESS;
@@ -106,4 +119,15 @@ void ares_library_cleanup(void)
 
   ares_init_flags = ARES_LIB_INIT_NONE;
 }
+
+
+int ares_library_initialized(void)
+{
+#ifdef WIN32
+  if (!ares_initialized)
+    return ARES_ENOTINITIALIZED;
+#endif
+  return ARES_SUCCESS;
+}
+
 

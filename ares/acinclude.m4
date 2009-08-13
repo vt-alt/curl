@@ -1320,7 +1320,7 @@ AC_DEFUN([CURL_CHECK_STRUCT_TIMEVAL], [
   AC_REQUIRE([AC_HEADER_TIME])dnl
   AC_REQUIRE([CURL_CHECK_HEADER_WINSOCK])dnl
   AC_REQUIRE([CURL_CHECK_HEADER_WINSOCK2])dnl
-  AC_CHECK_HEADERS(sys/types.h sys/time.h time.h)
+  AC_CHECK_HEADERS(sys/types.h sys/time.h time.h sys/socket.h)
   AC_CACHE_CHECK([for struct timeval], [ac_cv_struct_timeval], [
     AC_COMPILE_IFELSE([
       AC_LANG_PROGRAM([[
@@ -1350,6 +1350,9 @@ AC_DEFUN([CURL_CHECK_STRUCT_TIMEVAL], [
 #ifdef HAVE_TIME_H
 #include <time.h>
 #endif
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
 #endif
       ]],[[
         struct timeval ts;
@@ -1664,6 +1667,52 @@ AC_DEFUN([CURL_CHECK_LIBS_CLOCK_GETTIME_MONOTONIC], [
     #
   fi
   #
+])
+
+
+dnl CARES_CHECK_LIBS_CONNECT
+dnl -------------------------------------------------
+dnl Verify if network connect function is already available
+dnl using current libraries or if another one is required.
+
+AC_DEFUN([CARES_CHECK_LIBS_CONNECT], [
+  AC_REQUIRE([CARES_INCLUDES_WINSOCK2])dnl
+  AC_MSG_CHECKING([for connect in libraries])
+  tst_connect_save_LIBS="$LIBS"
+  tst_connect_need_LIBS="unknown"
+  for tst_lib in '' '-lsocket' ; do
+    if test "$tst_connect_need_LIBS" = "unknown"; then
+      LIBS="$tst_lib $tst_connect_save_LIBS"
+      AC_LINK_IFELSE([
+        AC_LANG_PROGRAM([[
+          $cares_includes_winsock2
+          #ifndef HAVE_WINDOWS_H
+            int connect(int, void*, int);
+          #endif
+        ]],[[
+          if(0 != connect(0, 0, 0))
+            return 1;
+        ]])
+      ],[
+        tst_connect_need_LIBS="$tst_lib"
+      ])
+    fi
+  done
+  LIBS="$tst_connect_save_LIBS"
+  #
+  case X-"$tst_connect_need_LIBS" in
+    X-unknown)
+      AC_MSG_RESULT([cannot find connect])
+      AC_MSG_ERROR([cannot find connect function in libraries.])
+      ;;
+    X-)
+      AC_MSG_RESULT([yes])
+      ;;
+    *)
+      AC_MSG_RESULT([$tst_connect_need_LIBS])
+      LIBS="$tst_connect_need_LIBS $tst_connect_save_LIBS"
+      ;;
+  esac
 ])
 
 

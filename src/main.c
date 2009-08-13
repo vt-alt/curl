@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.513 2009-05-01 12:39:40 yangtse Exp $
+ * $Id: main.c,v 1.533 2009-08-09 23:15:21 danf Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -114,6 +114,8 @@
 #include <netinet/tcp.h> /* for TCP_KEEPIDLE, TCP_KEEPINTVL */
 #endif
 
+#include "os-specific.h"
+
 /* The last #include file should be: */
 #ifdef CURLDEBUG
 #ifndef CURLTOOLDEBUG
@@ -123,6 +125,10 @@
    the library level code from this client-side is ugly, but we do this
    anyway for convenience. */
 #include "memdebug.h"
+#endif
+
+#ifdef __VMS
+static int vms_show = 0;
 #endif
 
 #if defined(NETWARE)
@@ -198,10 +204,6 @@ typedef enum {
 #include <direct.h>
 #define F_OK 0
 #define mkdir(x,y) (mkdir)(x)
-#endif
-
-#ifdef  VMS
-#include "curlmsg_vms.h"
 #endif
 
 /*
@@ -496,6 +498,7 @@ struct Configurable {
   long httpversion;
   bool progressmode;
   bool nobuffer;
+  bool readbusy; /* set when reading input returns EAGAIN */
   bool globoff;
   bool use_httpget;
   bool insecure_ok; /* set TRUE to allow insecure SSL connects */
@@ -2344,7 +2347,7 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
             postdata=strdup("");
           }
           else {
-            char *enc = curl_easy_escape(config->easy, postdata, size);
+            char *enc = curl_easy_escape(config->easy, postdata, (int)size);
             free(postdata); /* no matter if it worked or not */
             if(enc) {
               /* now make a string with the name from above and append the
@@ -2632,8 +2635,12 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
       }
       break;
     case 'N':
-      /* disable the output I/O buffering */
-      config->nobuffer = (bool)(!toggle);
+      /* disable the output I/O buffering. note that the option is called
+         --buffer but is mostly used in the negative form: --no-buffer */
+      if(longopt)
+        config->nobuffer = (bool)(!toggle);
+      else
+        config->nobuffer = toggle;
       break;
     case 'O': /* --remote-name */
       if(subletter == 'a') { /* --remote-name-all */
@@ -2696,7 +2703,6 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
       break;
     case 'Q':
       /* QUOTE command to send to FTP server */
-      err = PARAM_OK;
       switch(nextarg[0]) {
       case '-':
         /* prefixed with a dash makes it a POST TRANSFER one */
@@ -2851,6 +2857,7 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
         static const struct feat feats[] = {
           {"AsynchDNS", CURL_VERSION_ASYNCHDNS},
           {"Debug", CURL_VERSION_DEBUG},
+          {"TrackMemory", CURL_VERSION_CURLDEBUG},
           {"GSS-Negotiate", CURL_VERSION_GSSNEGOTIATE},
           {"IDN", CURL_VERSION_IDN},
           {"IPv6", CURL_VERSION_IPV6},
@@ -3049,11 +3056,11 @@ static int parseconfig(const char *filename,
             /* We got a valid filename - get the directory part */
             char *lastdirchar = strrchr(filebuffer, '\\');
             if (lastdirchar) {
-              int remaining;
+              size_t remaining;
               *lastdirchar = 0;
               /* If we have enough space, build the RC filename */
               remaining = sizeof(filebuffer) - strlen(filebuffer);
-              if ((int)strlen(CURLRC) < remaining - 1) {
+              if (strlen(CURLRC) < remaining - 1) {
                 snprintf(lastdirchar, remaining,
                          "%s%s", DIR_CHAR, CURLRC);
                 /* Don't bother checking if it exists - we do
@@ -3253,6 +3260,11 @@ static size_t my_fwrite(void *buffer, size_t sz, size_t nmemb, void *stream)
     out->bytes += (sz * nmemb);
   }
 
+  if(config->readbusy) {
+    config->readbusy = FALSE;
+    curl_easy_pause(config->easy, CURLPAUSE_CONT);
+  }
+
   if(config->nobuffer)
     /* disable output buffering */
     fflush(out->stream);
@@ -3318,9 +3330,16 @@ static size_t my_fread(void *buffer, size_t sz, size_t nmemb, void *userp)
   struct InStruct *in=(struct InStruct *)userp;
 
   rc = read(in->fd, buffer, sz*nmemb);
-  if(rc < 0)
+  if(rc < 0) {
+    if(errno == EAGAIN) {
+      errno = 0;
+      in->config->readbusy = TRUE;
+      return CURL_READFUNC_PAUSE;
+    }
     /* since size_t is unsigned we can't return negative values fine */
-    return 0;
+    rc = 0;
+  }
+  in->config->readbusy = FALSE;
   return (size_t)rc;
 }
 
@@ -3375,7 +3394,6 @@ static int myprogress (void *clientp,
     percent = frac * 100.0f;
     barwidth = bar->width - 7;
     num = (int) (((double)barwidth) * frac);
-    i = 0;
     for ( i = 0; i < num; i++ ) {
       line[i] = '#';
     }
@@ -4360,8 +4378,11 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
              file output call */
 
           if(config->create_dirs &&
-             (-1 == create_dir_hierarchy(outfile, config->errors)))
-            return CURLE_WRITE_ERROR;
+             (-1 == create_dir_hierarchy(outfile, config->errors))) {
+            free(url);
+	    res = CURLE_WRITE_ERROR;
+	    break;
+	  }
 
           if(config->resume_from_current) {
             /* We're told to continue from where we are now. Get the
@@ -4386,7 +4407,9 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
             outs.stream=(FILE *) fopen(outfile, config->resume_from?"ab":"wb");
             if (!outs.stream) {
               helpf(config->errors, "Can't open '%s'!\n", outfile);
-              return CURLE_WRITE_ERROR;
+              free(url);
+	      res = CURLE_WRITE_ERROR;
+	      break;
             }
           }
           else {
@@ -4431,13 +4454,15 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
               char *urlbuffer = malloc(strlen(url) + strlen(filep) + 3);
               if(!urlbuffer) {
                 helpf(config->errors, "out of memory\n");
-                return CURLE_OUT_OF_MEMORY;
+                free(url);
+	        res = CURLE_OUT_OF_MEMORY;
+	        break;
               }
               if(ptr)
                 /* there is a trailing slash on the URL */
                 sprintf(urlbuffer, "%s%s", url, filep);
               else
-                /* thers is no trailing slash on the URL */
+                /* there is no trailing slash on the URL */
                 sprintf(urlbuffer, "%s/%s", url, filep);
 
               curl_free(filep);
@@ -4489,6 +4514,8 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
         else if(uploadfile && curlx_strequal(uploadfile, "-")) {
           SET_BINMODE(stdin);
           infd = STDIN_FILENO;
+          if (curlx_nonblock((curl_socket_t)infd, TRUE) < 0)
+            warnf(config, "fcntl failed on fd=%d: %s\n", infd, strerror(errno));
         }
 
         if(uploadfile && config->resume_from_current)
@@ -4532,7 +4559,21 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
           urlbuffer = malloc(strlen(url) + strlen(httpgetfields) + 3);
           if(!urlbuffer) {
             helpf(config->errors, "out of memory\n");
-            return CURLE_OUT_OF_MEMORY;
+
+            /* Free the list of remaining URLs and globbed upload files
+             * to force curl to exit immediately
+             */
+            if(urls) {
+              glob_cleanup(urls);
+              urls = NULL;
+            }
+            if(inglob) {
+              glob_cleanup(inglob);
+              inglob = NULL;
+            }
+
+	    res = CURLE_OUT_OF_MEMORY;
+	    goto quit_urls;
           }
           if (pc)
             sprintf(urlbuffer, "%s%c%s", url, sep, httpgetfields);
@@ -4549,7 +4590,7 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
         if(!config->errors)
           config->errors = stderr;
 
-        if(!outfile && !config->use_ascii) {
+        if((!outfile || !strcmp(outfile, "-")) && !config->use_ascii) {
           /* We get the output to stdout and we have not got the ASCII/text
              flag, then set stdout to be binary */
           SET_BINMODE(stdout);
@@ -4673,6 +4714,33 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
           /* new stuff needed for libcurl 7.10 */
           my_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
           my_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1);
+        }
+        else {
+          char *home = homedir();
+          char *file = aprintf("%s/%sssh/known_hosts", home, DOT_CHAR);
+          if(home)
+            free(home);
+
+          if(file) {
+            my_setopt_str(curl, CURLOPT_SSH_KNOWNHOSTS, file);
+            curl_free(file);
+          }
+          else {
+            /* Free the list of remaining URLs and globbed upload files
+             * to force curl to exit immediately
+             */
+            if(urls) {
+              glob_cleanup(urls);
+              urls = NULL;
+            }
+            if(inglob) {
+              glob_cleanup(inglob);
+              inglob = NULL;
+            }
+
+	    res = CURLE_OUT_OF_MEMORY;
+	    goto quit_urls;
+          }
         }
 
         if(config->no_body || config->remote_time) {
@@ -4958,7 +5026,14 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
                 fflush(outs.stream);
                 /* truncate file at the position where we started appending */
 #ifdef HAVE_FTRUNCATE
-                ftruncate( fileno(outs.stream), outs.init);
+                if(ftruncate( fileno(outs.stream), outs.init)) {
+                  /* when truncate fails, we can't just append as then we'll
+                     create something strange, bail out */
+                  if(!config->mute)
+                    fprintf(config->errors,
+                            "failed to truncate, exiting\n");
+                  break;
+                }
                 /* now seek to the end of the file, the position where we
                    just truncated the file in a large file-safe way */
                 fseek(outs.stream, 0, SEEK_END);
@@ -4996,16 +5071,21 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
 
 show_error:
 
-#ifdef  VMS
-        if (!config->showerror)  {
-          vms_show = VMSSTS_HIDE;
+#ifdef __VMS
+        if(is_vms_shell()) {
+          /* VMS DCL shell behavior */
+          if(!config->showerror) {
+            vms_show = VMSSTS_HIDE;
+          }
         }
-#else
-        if((res!=CURLE_OK) && config->showerror) {
-          fprintf(config->errors, "curl: (%d) %s\n", res,
-                  errorbuffer[0]? errorbuffer:
-                  curl_easy_strerror((CURLcode)res));
-          if(CURLE_SSL_CACERT == res) {
+        else
+#endif
+        {
+          if((res!=CURLE_OK) && config->showerror) {
+            fprintf(config->errors, "curl: (%d) %s\n", res,
+                    errorbuffer[0]? errorbuffer:
+                    curl_easy_strerror((CURLcode)res));
+            if(CURLE_SSL_CACERT == res) {
 #define CURL_CA_CERT_ERRORMSG1 \
 "More details here: http://curl.haxx.se/docs/sslcerts.html\n\n" \
 "curl performs SSL certificate verification by default, using a \"bundle\"\n" \
@@ -5021,12 +5101,12 @@ show_error:
 "If you'd like to turn off curl's verification of the certificate, use\n" \
 " the -k (or --insecure) option.\n"
 
-            fprintf(config->errors, "%s%s",
-                    CURL_CA_CERT_ERRORMSG1,
-                    CURL_CA_CERT_ERRORMSG2 );
+              fprintf(config->errors, "%s%s",
+                      CURL_CA_CERT_ERRORMSG1,
+                      CURL_CA_CERT_ERRORMSG2 );
+            }
           }
         }
-#endif
 
         if (outfile && !curlx_strequal(outfile, "-") && outs.stream)
           fclose(outs.stream);
@@ -5180,11 +5260,11 @@ int main(int argc, char *argv[])
   free_config_fields(&config);
 
 #ifdef __NOVELL_LIBC__
-  pressanykey();
+  if (getenv("_IN_NETWARE_BASH_") == NULL)
+    pressanykey();
 #endif
-#ifdef  VMS
-  if (res > CURL_LAST) res = CURL_LAST; /* If CURL_LAST exceeded then */
-  return (vms_cond[res]|vms_show);      /* curlmsg.h is out of sync.  */
+#ifdef __VMS
+  vms_special_exit(res, vms_show);
 #else
   return res;
 #endif

@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ssluse.c,v 1.223 2009-05-04 21:57:14 bagder Exp $
+ * $Id: ssluse.c,v 1.236 2009-08-11 21:48:58 bagder Exp $
  ***************************************************************************/
 
 /*
@@ -63,6 +63,8 @@
 #ifdef USE_OPENSSL
 #include <openssl/rand.h>
 #include <openssl/x509v3.h>
+#include <openssl/dsa.h>
+#include <openssl/dh.h>
 #else
 #include <rand.h>
 #include <x509v3.h>
@@ -89,6 +91,7 @@
 #if OPENSSL_VERSION_NUMBER >= 0x00907001L
 /* ENGINE_load_private_key() takes four arguments */
 #define HAVE_ENGINE_LOAD_FOUR_ARGS
+#include <openssl/ui.h>
 #else
 /* ENGINE_load_private_key() takes three arguments */
 #undef HAVE_ENGINE_LOAD_FOUR_ARGS
@@ -222,8 +225,7 @@ static int ossl_seed(struct SessionHandle *data)
   /* If we get here, it means we need to seed the PRNG using a "silly"
      approach! */
 #ifdef HAVE_RAND_SCREEN
-  /* This one gets a random value by reading the currently shown screen */
-  RAND_screen();
+  /* if RAND_screen() is present, it was called during global init */
   nread = 100; /* just a value */
 #else
   {
@@ -571,7 +573,7 @@ static int x509_name_oneline(X509_NAME *a, char *buf, size_t size)
   if(!bio_out)
     return 1; /* alloc failed! */
 
-  rc = X509_NAME_print_ex(bio_out, a, 0, XN_FLAG_SEP_CPLUS_SPC);
+  rc = X509_NAME_print_ex(bio_out, a, 0, XN_FLAG_SEP_SPLUS_SPC);
   BIO_get_mem_ptr(bio_out, &biomem);
 
   if((size_t)biomem->length < size)
@@ -633,9 +635,18 @@ int Curl_ossl_init(void)
   /* Lets get nice error messages */
   SSL_load_error_strings();
 
-  /* Setup all the global SSL stuff */
+  /* Init the global ciphers and digests */
   if(!SSLeay_add_ssl_algorithms())
     return 0;
+
+  OpenSSL_add_all_algorithms();
+
+#ifdef HAVE_RAND_SCREEN
+  /* This one gets a random value by reading the currently shown screen.
+     RAND_screen() is not thread-safe according to OpenSSL devs - although not
+     mentioned in documentation. */
+  RAND_screen();
+#endif
 
   return 1;
 }
@@ -650,8 +661,7 @@ void Curl_ossl_cleanup(void)
   /* Free the SSL error strings */
   ERR_free_strings();
 
-  /* EVP_cleanup() removes all ciphers and digests from the
-     table. */
+  /* EVP_cleanup() removes all ciphers and digests from the table. */
   EVP_cleanup();
 
 #ifdef HAVE_ENGINE_cleanup
@@ -854,7 +864,6 @@ int Curl_ossl_shutdown(struct connectdata *conn, int sockindex)
         /* timeout */
         failf(data, "SSL shutdown timeout");
         done = 1;
-        break;
       }
       else {
         /* anything that gets here is fatally bad */
@@ -1092,7 +1101,7 @@ static CURLcode verifyhost(struct connectdata *conn,
       if(check->type == target) {
         /* get data and length */
         const char *altptr = (char *)ASN1_STRING_data(check->d.ia5);
-        size_t altlen;
+        size_t altlen = (size_t) ASN1_STRING_length(check->d.ia5);
 
         switch(target) {
         case GEN_DNS: /* name/pattern comparison */
@@ -1106,14 +1115,16 @@ static CURLcode verifyhost(struct connectdata *conn,
              "I checked the 0.9.6 and 0.9.8 sources before my patch and
              it always 0-terminates an IA5String."
           */
-          if(cert_hostcheck(altptr, conn->host.name))
+          if((altlen == strlen(altptr)) &&
+             /* if this isn't true, there was an embedded zero in the name
+                string and we cannot match it. */
+             cert_hostcheck(altptr, conn->host.name))
             matched = TRUE;
           break;
 
         case GEN_IPADD: /* IP address comparison */
           /* compare alternative IP address if the data chunk is the same size
              our server IP address is */
-          altlen = (size_t) ASN1_STRING_length(check->d.ia5);
           if((altlen == addrlen) && !memcmp(altptr, &addr, altlen))
             matched = TRUE;
           break;
@@ -1126,6 +1137,12 @@ static CURLcode verifyhost(struct connectdata *conn,
   if(matched)
     /* an alternative name matched the server hostname */
     infof(data, "\t subjectAltName: %s matched\n", conn->host.dispname);
+  else if(altnames) {
+    /* an alternative name field existed, but didn't match and then
+       we MUST fail */
+    infof(data, "\t subjectAltName does not match %s\n", conn->host.dispname);
+    res = CURLE_PEER_FAILED_VERIFICATION;
+  }
   else {
     /* we have to look to the last occurence of a commonName in the
        distinguished one to get the most significant one. */
@@ -1138,7 +1155,7 @@ static CURLcode verifyhost(struct connectdata *conn,
 
     X509_NAME *name = X509_get_subject_name(server_cert) ;
     if(name)
-      while((j=X509_NAME_get_index_by_NID(name,NID_commonName,i))>=0)
+      while((j = X509_NAME_get_index_by_NID(name, NID_commonName, i))>=0)
         i=j;
 
     /* we have the name entry and we will now convert this to a string
@@ -1153,18 +1170,27 @@ static CURLcode verifyhost(struct connectdata *conn,
          string manually to avoid the problem. This code can be made
          conditional in the future when OpenSSL has been fixed. Work-around
          brought by Alexis S. L. Carvalho. */
-      if(tmp && ASN1_STRING_type(tmp) == V_ASN1_UTF8STRING) {
+      if(tmp) {
         j = ASN1_STRING_length(tmp);
-        if(j >= 0) {
-          peer_CN = OPENSSL_malloc(j+1);
-          if(peer_CN) {
-            memcpy(peer_CN, ASN1_STRING_data(tmp), j);
-            peer_CN[j] = '\0';
+        if(ASN1_STRING_type(tmp) == V_ASN1_UTF8STRING) {
+          if(j >= 0) {
+            peer_CN = OPENSSL_malloc(j+1);
+            if(peer_CN) {
+              memcpy(peer_CN, ASN1_STRING_data(tmp), j);
+              peer_CN[j] = '\0';
+            }
           }
         }
+        else /* not a UTF8 name */
+          j = ASN1_STRING_to_UTF8(&peer_CN, tmp);
+
+        if(peer_CN && ((int)strlen((char *)peer_CN) != j)) {
+          /* there was a terminating zero before the end of string, this
+             cannot match and we return failure! */
+          failf(data, "SSL: illegal cert name field");
+          res = CURLE_PEER_FAILED_VERIFICATION;
+        }
       }
-      else /* not a UTF8 name */
-        j = ASN1_STRING_to_UTF8(&peer_CN, tmp);
     }
 
     if(peer_CN == nulstr)
@@ -1182,10 +1208,13 @@ static CURLcode verifyhost(struct connectdata *conn,
     }
 #endif /* CURL_DOES_CONVERSIONS */
 
-    if(!peer_CN) {
+    if(res)
+      /* error already detected, pass through */
+      ;
+    else if(!peer_CN) {
       failf(data,
             "SSL: unable to obtain common name from peer certificate");
-      return CURLE_PEER_FAILED_VERIFICATION;
+      res = CURLE_PEER_FAILED_VERIFICATION;
     }
     else if(!cert_hostcheck((const char *)peer_CN, conn->host.name)) {
       if(data->set.ssl.verifyhost > 1) {
@@ -1331,6 +1360,7 @@ ossl_connect_step1(struct connectdata *conn,
   X509_LOOKUP *lookup=NULL;
   curl_socket_t sockfd = conn->sock[sockindex];
   struct ssl_connect_data *connssl = &conn->ssl[sockindex];
+  bool sni = TRUE; /* default is SNI enabled */
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
 #ifdef ENABLE_IPV6
   struct in6_addr addr;
@@ -1356,9 +1386,11 @@ ossl_connect_step1(struct connectdata *conn,
     break;
   case CURL_SSLVERSION_SSLv2:
     req_method = SSLv2_client_method();
+    sni = FALSE;
     break;
   case CURL_SSLVERSION_SSLv3:
     req_method = SSLv3_client_method();
+    sni = FALSE;
     break;
   }
 
@@ -1545,6 +1577,7 @@ ossl_connect_step1(struct connectdata *conn,
 #ifdef ENABLE_IPV6
       (0 == Curl_inet_pton(AF_INET6, conn->host.name, &addr)) &&
 #endif
+      sni &&
       !SSL_set_tlsext_host_name(connssl->handle, conn->host.name))
     infof(data, "WARNING: failed to configure server name indication (SNI) "
           "TLS extension\n");
@@ -1786,11 +1819,14 @@ static int X509V3_ext(struct SessionHandle *data,
   for (i=0; i<sk_X509_EXTENSION_num(exts); i++) {
     ASN1_OBJECT *obj;
     X509_EXTENSION *ext = sk_X509_EXTENSION_value(exts, i);
-    BIO *bio_out = BIO_new(BIO_s_mem());
     BUF_MEM *biomem;
     char buf[512];
     char *ptr=buf;
     char namebuf[128];
+    BIO *bio_out = BIO_new(BIO_s_mem());
+
+    if(!bio_out)
+      return 1;
 
     obj = X509_EXTENSION_get_object(ext);
 
@@ -2266,7 +2302,6 @@ ossl_connect_common(struct connectdata *conn,
       return retcode;
   }
 
-  timeout_ms = 0;
   while(ssl_connect_2 == connssl->connecting_state ||
         ssl_connect_2_reading == connssl->connecting_state ||
         ssl_connect_2_writing == connssl->connecting_state) {

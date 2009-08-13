@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: setup.h,v 1.59 2009-05-01 12:39:40 yangtse Exp $
+ * $Id: setup.h,v 1.61 2009-07-14 13:25:14 gknauf Exp $
  ***************************************************************************/
 
 #define CURL_NO_OLDIES
@@ -39,7 +39,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "curl_config.h"
 #else
 
 #ifdef WIN32
@@ -163,9 +163,6 @@ int fileno( FILE *stream);
 #include <tcp.h>
 #ifdef word
 #undef word
-#endif
-#ifndef HAVE_LIMITS_H
-#define HAVE_LIMITS_H /* we have limits.h */
 #endif
 #define DIR_CHAR      "/"
 #define DOT_CHAR      "_"

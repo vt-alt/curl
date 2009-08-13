@@ -159,6 +159,14 @@ SOURCE=.\main.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\os-specific.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\lib\nonblock.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\lib\rawstr.c
 # End Source File
 # Begin Source File
@@ -203,7 +211,15 @@ SOURCE=.\hugehelp.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\os-specific.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\setup.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\lib\nonblock.h
 # End Source File
 # Begin Source File
 

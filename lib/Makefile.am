@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: Makefile.am,v 1.146 2009-05-08 18:55:43 yangtse Exp $
+# $Id: Makefile.am,v 1.151 2009-07-14 13:25:14 gknauf Exp $
 ###########################################################################
 AUTOMAKE_OPTIONS = foreign nostdinc
 
@@ -29,16 +29,16 @@ DOCS = README.encoding README.memoryleak README.ares README.curlx	\
  README.hostip README.multi_socket README.httpauth README.pipelining    \
  README.NSS README.curl_off_t
 
-CMAKE_DIST = CMakeLists.txt config.h.cmake
+CMAKE_DIST = CMakeLists.txt curl_config.h.cmake
 
 EXTRA_DIST = Makefile.b32 Makefile.m32 Makefile.vc6 Makefile.riscos $(DSP) \
  vc6libcurl.dsw config-win32.h config-win32ce.h config-riscos.h            \
- config-mac.h config.h.in makefile.dj config.dos libcurl.plist             \
+ config-mac.h curl_config.h.in makefile.dj config.dos libcurl.plist        \
  libcurl.rc config-amigaos.h amigaos.c amigaos.h makefile.amiga		   \
  Makefile.netware nwlib.c nwos.c libcurl.imp msvcproj.head msvcproj.foot   \
  config-win32ce.h config-os400.h setup-os400.h config-symbian.h		   \
  Makefile.Watcom config-tpf.h $(DOCS) $(VCPROJ) mk-ca-bundle.pl		   \
- firefox-db2pem.sh $(CMAKE_DIST)
+ firefox-db2pem.sh $(CMAKE_DIST) config-vxworks.h Makefile.vxworks
 
 CLEANFILES = $(DSP) $(VCPROJ)
 
@@ -52,17 +52,24 @@ LIBCURL_LIBS = @LIBCURL_LIBS@
 #
 # $(top_builddir)/include is for libcurl's generated curl/curlbuild.h file
 # $(top_srcdir)/include is for libcurl's external include files
-# $(top_builddir)/lib is for libcurl's generated lib/config.h file
+# $(top_builddir)/lib is for libcurl's generated lib/curl_config.h file
 # $(top_srcdir)/lib is for libcurl's lib/setup.h and other "private" files
 # $(top_builddir)/ares is for in-tree c-ares's generated ares_build.h file
 # $(top_srcdir)/ares is for in-tree c-ares's external include files
 
+if USE_EMBEDDED_ARES
 INCLUDES = -I$(top_builddir)/include \
            -I$(top_srcdir)/include   \
            -I$(top_builddir)/lib     \
            -I$(top_srcdir)/lib       \
            -I$(top_builddir)/ares    \
            -I$(top_srcdir)/ares
+else
+INCLUDES = -I$(top_builddir)/include \
+           -I$(top_srcdir)/include   \
+           -I$(top_builddir)/lib     \
+           -I$(top_srcdir)/lib
+endif
 
 if SONAME_BUMP
 #

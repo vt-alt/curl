@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.798 2009-05-17 14:47:50 bagder Exp $
+ * $Id: url.c,v 1.809 2009-08-11 20:43:12 bagder Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -75,6 +75,10 @@
 #endif
 
 #endif  /* WIN32 */
+
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
 
 #ifdef USE_LIBIDN
 #include <idna.h>
@@ -275,8 +279,14 @@ static CURLcode setstropt_userpwd(char *option, char **user_storage,
   char* separator;
   CURLcode result = CURLE_OK;
 
-  if(!option)
-    return result;
+  if(!option) {
+    /* we treat a NULL passed in as a hint to clear existing info */
+    Curl_safefree(*user_storage);
+    *user_storage = (char *) NULL;
+    Curl_safefree(*pwd_storage);
+    *pwd_storage = (char *) NULL;
+    return CURLE_OK;
+  }
 
   separator = strchr(option, ':');
   if (separator != NULL) {
@@ -374,7 +384,7 @@ CURLcode Curl_close(struct SessionHandle *data)
 {
   struct Curl_multi *m = data->multi;
 
-#ifdef CURLDEBUG
+#ifdef DEBUGBUILD
   /* only for debugging, scan through all connections and see if there's a
      pipe reference still identifying this handle */
 
@@ -525,22 +535,23 @@ struct conncache *Curl_mk_connc(int type,
 
   struct conncache *c;
   long default_amount;
+  long max_amount = (long)(((size_t)INT_MAX) / sizeof(struct connectdata *));
 
   if(type == CONNCACHE_PRIVATE) {
-    default_amount = (amount < 0) ? 5 : amount;
+    default_amount = (amount < 1L) ? 5L : amount;
   }
   else {
-    default_amount = (amount < 0) ? 10 : amount;
+    default_amount = (amount < 1L) ? 10L : amount;
   }
 
-  c= calloc(sizeof(struct conncache), 1);
+  if(default_amount > max_amount)
+    default_amount = max_amount;
+
+  c = calloc(1, sizeof(struct conncache));
   if(!c)
     return NULL;
 
-  if((size_t)(default_amount) > ((size_t)-1) / sizeof(struct connectdata *))
-    default_amount = ((size_t)-1) / sizeof(struct connectdata *);
-
-  c->connects = calloc(sizeof(struct connectdata *), (size_t)default_amount);
+  c->connects = calloc((size_t)default_amount, sizeof(struct connectdata *));
   if(!c->connects) {
     free(c);
     return NULL;
@@ -558,6 +569,7 @@ CURLcode Curl_ch_connc(struct SessionHandle *data,
 {
   long i;
   struct connectdata **newptr;
+  long max_amount = (long)(((size_t)INT_MAX) / sizeof(struct connectdata *));
 
   if(newamount < 1)
     newamount = 1; /* we better have at least one entry */
@@ -590,6 +602,8 @@ CURLcode Curl_ch_connc(struct SessionHandle *data,
       data->state.lastconnect = -1;
   }
   if(newamount > 0) {
+    if(newamount > max_amount)
+      newamount = max_amount;
     newptr = realloc(c->connects, sizeof(struct connectdata *) * newamount);
     if(!newptr)
       /* we closed a few connections in vain, but so what? */
@@ -1836,14 +1850,14 @@ CURLcode Curl_setopt(struct SessionHandle *data, CURLoption option,
     break;
   case CURLOPT_SSLKEY:
     /*
-     * String that holds file name of the SSL certificate to use
+     * String that holds file name of the SSL key to use
      */
     result = setstropt(&data->set.str[STRING_KEY],
                        va_arg(param, char *));
     break;
   case CURLOPT_SSLKEYTYPE:
     /*
-     * String that holds file type of the SSL certificate to use
+     * String that holds file type of the SSL key to use
      */
     result = setstropt(&data->set.str[STRING_KEY_TYPE],
                        va_arg(param, char *));
@@ -2155,6 +2169,8 @@ CURLcode Curl_setopt(struct SessionHandle *data, CURLoption option,
     data->set.ssl.sessionid = (bool)(0 != va_arg(param, long));
     break;
 
+#ifdef USE_LIBSSH2
+    /* we only include SSH options if explicitly built to support SSH */
   case CURLOPT_SSH_AUTH_TYPES:
     data->set.ssh_auth_types = va_arg(param, long);
     break;
@@ -2182,6 +2198,31 @@ CURLcode Curl_setopt(struct SessionHandle *data, CURLoption option,
     result = setstropt(&data->set.str[STRING_SSH_HOST_PUBLIC_KEY_MD5],
                        va_arg(param, char *));
     break;
+#ifdef HAVE_LIBSSH2_KNOWNHOST_API
+  case CURLOPT_SSH_KNOWNHOSTS:
+    /*
+     * Store the file name to read known hosts from.
+     */
+    result = setstropt(&data->set.str[STRING_SSH_KNOWNHOSTS],
+                       va_arg(param, char *));
+    break;
+
+  case CURLOPT_SSH_KEYFUNCTION:
+    /* setting to NULL is fine since the ssh.c functions themselves will
+       then rever to use the internal default */
+    data->set.ssh_keyfunc = va_arg(param, curl_sshkeycallback);
+    break;
+
+  case CURLOPT_SSH_KEYDATA:
+    /*
+     * Custom client data to pass to the SSH keyfunc callback
+     */
+    data->set.ssh_keyfunc_userp = va_arg(param, void *);
+    break;
+#endif /* HAVE_LIBSSH2_KNOWNHOST_API */
+
+#endif /* USE_LIBSSH2 */
+
   case CURLOPT_HTTP_TRANSFER_DECODING:
     /*
      * disable libcurl transfer encoding is used
@@ -2304,7 +2345,7 @@ CURLcode Curl_disconnect(struct connectdata *conn)
     return CURLE_OK;
   }
 
-#if defined(CURLDEBUG) && defined(AGGRESIVE_TEST)
+#if defined(DEBUGBUILD) && defined(AGGRESIVE_TEST)
   /* scan for DNS cache entries still marked as in use */
   Curl_hash_apply(data->hostcache,
                   NULL, Curl_scan_cache_used);
@@ -2425,7 +2466,7 @@ bool Curl_isPipeliningEnabled(const struct SessionHandle *handle)
 CURLcode Curl_addHandleToPipeline(struct SessionHandle *data,
                                   struct curl_llist *pipeline)
 {
-#ifdef CURLDEBUG
+#ifdef DEBUGBUILD
   if(!IsPipeliningPossible(data)) {
     /* when not pipelined, there MUST be no handle in the list already */
     if(pipeline->head)
@@ -2508,7 +2549,7 @@ static void signalPipeClose(struct curl_llist *pipeline)
     struct curl_llist_element *next = curr->next;
     struct SessionHandle *data = (struct SessionHandle *) curr->ptr;
 
-#ifdef CURLDEBUG /* debug-only code */
+#ifdef DEBUGBUILD /* debug-only code */
     if(data->magic != CURLEASY_MAGIC_NUMBER) {
       /* MAJOR BADNESS */
       infof(data, "signalPipeClose() found BAAD easy handle\n");
@@ -2590,7 +2631,7 @@ ConnectionExists(struct SessionHandle *data,
           continue;
       }
 
-#ifdef CURLDEBUG
+#ifdef DEBUGBUILD
       if(pipeLen > MAX_PIPELINE_LENGTH) {
         infof(data, "BAD! Connection #%ld has too big pipeline!\n",
               check->connectindex);
@@ -2620,7 +2661,7 @@ ConnectionExists(struct SessionHandle *data,
            get closed. */
         infof(data, "Connection #%ld isn't open enough, can't reuse\n",
               check->connectindex);
-#ifdef CURLDEBUG
+#ifdef DEBUGBUILD
         if(check->recv_pipe->size > 0) {
           infof(data, "BAD! Unconnected #%ld has a non-empty recv pipeline!\n",
                 check->connectindex);
@@ -2872,6 +2913,8 @@ static CURLcode ConnectPlease(struct SessionHandle *data,
   infof(data, "About to connect() to %s%s port %d (#%d)\n",
         conn->bits.proxy?"proxy ":"",
         hostname, conn->port, conn->connectindex);
+#else
+  (void)data;
 #endif
 
   /*************************************************************
@@ -3481,7 +3524,6 @@ static bool check_noproxy(const char* name, const char* no_proxy)
     else
       namelen = strlen(name);
 
-    tok_start = 0;
     for (tok_start = 0; tok_start < no_proxy_len; tok_start = tok_end + 1) {
       while (tok_start < no_proxy_len &&
              strchr(separator, no_proxy[tok_start]) != NULL) {
@@ -3816,10 +3858,11 @@ static CURLcode parse_url_userpass(struct SessionHandle *data,
        * set user/passwd, but doing that first adds more cases here :-(
        */
 
+      conn->bits.userpwd_in_url = 1;
       if(data->set.use_netrc != CURL_NETRC_REQUIRED) {
         /* We could use the one in the URL */
 
-        conn->bits.user_passwd = 1; /* enable user+password */
+        conn->bits.user_passwd = TRUE; /* enable user+password */
 
         if(*userpass != ':') {
           /* the name is given, get user+password */
@@ -3984,7 +4027,7 @@ static void override_userpass(struct SessionHandle *data,
          different host or similar. */
       conn->bits.netrc = TRUE;
 
-      conn->bits.user_passwd = 1; /* enable user+password */
+      conn->bits.user_passwd = TRUE; /* enable user+password */
     }
   }
 }
@@ -4376,14 +4419,17 @@ static CURLcode create_conn(struct SessionHandle *data,
     }
   }
 
-  if(!proxy)
-    proxy = detect_proxy(conn);
-  else if(data->set.str[STRING_NOPROXY]) {
-    if(check_noproxy(conn->host.name, data->set.str[STRING_NOPROXY])) {
+
+  if(data->set.str[STRING_NOPROXY] &&
+     check_noproxy(conn->host.name, data->set.str[STRING_NOPROXY])) {
+    if(proxy) {
       free(proxy);  /* proxy is in exception list */
       proxy = NULL;
     }
   }
+  else if(!proxy)
+    proxy = detect_proxy(conn);
+
   if(proxy && !*proxy) {
     free(proxy);  /* Don't bother with an empty proxy string */
     proxy = NULL;

@@ -3,6 +3,7 @@
 <keywords>
 HTTP
 HTTP POST
+HTTP CONNECT
 HTTP proxy
 HTTP proxy NTLM auth
 </keywords>
@@ -43,7 +44,7 @@ This is all fine and dandy
 https
 </server>
 <features>
-none
+NTLM
 </features>
  <name>
 HTTP POST using CONNECT with --proxy-ntlm but no auth is required

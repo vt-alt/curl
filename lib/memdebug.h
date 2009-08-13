@@ -1,6 +1,6 @@
 #ifdef CURLDEBUG
-#ifndef _CURL_MEDEBUG_H
-#define _CURL_MEDEBUG_H
+#ifndef _CURL_MEMDEBUG_H
+#define _CURL_MEMDEBUG_H
 /***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
@@ -21,7 +21,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: memdebug.h,v 1.37 2009-04-21 10:26:59 yangtse Exp $
+ * $Id: memdebug.h,v 1.39 2009-07-15 01:10:18 gknauf Exp $
  ***************************************************************************/
 
 /*
@@ -116,9 +116,6 @@ CURL_EXTERN int curl_fclose(FILE *file, int line, const char *source);
 /* sclose is probably already defined, redefine it! */
 #undef sclose
 #define sclose(sockfd) curl_sclose(sockfd,__LINE__,__FILE__)
-/* ares-adjusted define: */
-#undef closesocket
-#define closesocket(sockfd) curl_sclose(sockfd,__LINE__,__FILE__)
 
 #undef fopen
 #define fopen(file,mode) curl_fopen(file,mode,__LINE__,__FILE__)
@@ -128,5 +125,5 @@ CURL_EXTERN int curl_fclose(FILE *file, int line, const char *source);
 
 #endif /* MEMDEBUG_NODEFINES */
 
-#endif /* _CURL_MEDEBUG_H */
+#endif /* _CURL_MEMDEBUG_H */
 #endif /* CURLDEBUG */
