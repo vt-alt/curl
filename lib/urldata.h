@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: urldata.h,v 1.416 2009-07-22 22:49:02 bagder Exp $
+ * $Id: urldata.h,v 1.420 2009-10-29 03:48:00 yangtse Exp $
  ***************************************************************************/
 
 /* This file is for lib internal stuff */
@@ -115,7 +115,11 @@
 #endif
 
 #ifdef USE_ARES
-#include <ares.h>
+#  if defined(CURL_STATICLIB) && !defined(CARES_STATICLIB) && \
+     (defined(WIN32) || defined(_WIN32) || defined(__SYMBIAN32__))
+#    define CARES_STATICLIB
+#  endif
+#  include <ares.h>
 #endif
 
 #include <curl/curl.h>
@@ -362,6 +366,8 @@ typedef enum {
   FTP_PROT,
   FTP_CCC,
   FTP_PWD,
+  FTP_SYST,
+  FTP_NAMEFMT,
   FTP_QUOTE, /* waiting for a response to a command sent in a quote list */
   FTP_RETR_PREQUOTE,
   FTP_STOR_PREQUOTE,
@@ -458,6 +464,7 @@ struct ftp_conn {
   struct timeval response; /* set to Curl_tvnow() when a command has been sent
                               off, used to time-out response reading */
   ftpstate state; /* always use ftp.c:state() to change state! */
+  char * server_os;     /* The target server operating system. */
 };
 
 /****************************************************************************
@@ -565,7 +572,6 @@ struct ssh_conn {
   LIBSSH2_CHANNEL *ssh_channel; /* Secure Shell channel handle */
   LIBSSH2_SFTP *sftp_session;   /* SFTP handle */
   LIBSSH2_SFTP_HANDLE *sftp_handle;
-  int waitfor;                  /* current READ/WRITE bits to wait for */
   int orig_waitfor;             /* default READ/WRITE bits wait for */
 
   /* note that HAVE_LIBSSH2_KNOWNHOST_API is a define set in the libssh2.h
@@ -1028,6 +1034,8 @@ struct connectdata {
                                    their responses on this pipeline */
   struct curl_llist *pend_pipe; /* List of pending handles on
                                    this pipeline */
+  struct curl_llist *done_pipe; /* Handles that are finished, but
+				   still reference this connectdata */
 #define MAX_PIPELINE_LENGTH 5
 
   char* master_buffer; /* The master buffer allocated on-demand;
@@ -1070,6 +1078,8 @@ struct connectdata {
   } proto;
 
   int cselect_bits; /* bitmask of socket events */
+  int waitfor;      /* current READ/WRITE bits to wait for */
+
 #if defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI)
   int socks5_gssapi_enctype;
 #endif

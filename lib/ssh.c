@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ssh.c,v 1.136 2009-07-23 02:15:00 gknauf Exp $
+ * $Id: ssh.c,v 1.141 2009-10-30 22:28:56 bagder Exp $
  ***************************************************************************/
 
 /* #define CURL_LIBSSH2_DEBUG */
@@ -230,14 +230,11 @@ kbd_callback(const char *name, int name_len, const char *instruction,
   (void)abstract;
 } /* kbd_callback */
 
-static CURLcode sftp_libssh2_error_to_CURLE(unsigned long err)
+static CURLcode sftp_libssh2_error_to_CURLE(int err)
 {
   switch (err) {
     case LIBSSH2_FX_OK:
       return CURLE_OK;
-
-    case LIBSSH2_ERROR_ALLOC:
-      return CURLE_OUT_OF_MEMORY;
 
     case LIBSSH2_FX_NO_SUCH_FILE:
     case LIBSSH2_FX_NO_SUCH_PATH:
@@ -458,7 +455,7 @@ static int sshkeycallback(CURL *easy,
 #ifdef HAVE_LIBSSH2_SFTP_SEEK64
 #define SFTP_SEEK(x,y) libssh2_sftp_seek64(x, (libssh2_uint64_t)y)
 #else
-#define SFTP_SEEK(x,y) libssh2_sftp_seek(x, y)
+#define SFTP_SEEK(x,y) libssh2_sftp_seek(x, (size_t)y)
 #endif
 
 /*
@@ -1503,6 +1500,9 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
     result = Curl_setup_transfer(conn, -1, -1, FALSE, NULL,
                                  FIRSTSOCKET, NULL);
 
+    /* not set by Curl_setup_transfer to preserve keepon bits */
+    conn->sockfd = conn->writesockfd;
+
     if(result) {
       state(conn, SSH_SFTP_CLOSE);
       sshc->actualcode = result;
@@ -1914,6 +1914,12 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
   else {
     result = Curl_setup_transfer(conn, FIRSTSOCKET, data->req.size,
                                  FALSE, NULL, -1, NULL);
+
+    /* not set by Curl_setup_transfer to preserve keepon bits */
+    conn->writesockfd = conn->sockfd;
+
+    /* FIXME: here should be explained why we need it to start the download */
+    conn->cselect_bits = CURL_CSELECT_IN;
   }
   if(result) {
     state(conn, SSH_SFTP_CLOSE);
@@ -2034,6 +2040,9 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
     result = Curl_setup_transfer(conn, -1, data->req.size, FALSE, NULL,
                                  FIRSTSOCKET, NULL);
 
+    /* not set by Curl_setup_transfer to preserve keepon bits */
+    conn->sockfd = conn->writesockfd;
+
     if(result) {
       state(conn, SSH_SCP_CHANNEL_FREE);
       sshc->actualcode = result;
@@ -2082,6 +2091,12 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
     data->req.maxdownload =  (curl_off_t)sb.st_size;
     result = Curl_setup_transfer(conn, FIRSTSOCKET,
                                  bytecount, FALSE, NULL, -1, NULL);
+
+    /* not set by Curl_setup_transfer to preserve keepon bits */
+    conn->writesockfd = conn->sockfd;
+
+    /* FIXME: here should be explained why we need it to start the download */
+    conn->cselect_bits = CURL_CSELECT_IN;
 
     if(result) {
       state(conn, SSH_SCP_CHANNEL_FREE);
@@ -2189,6 +2204,13 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
     break;
 
   case SSH_SESSION_FREE:
+#ifdef HAVE_LIBSSH2_KNOWNHOST_API
+    if(sshc->kh) {
+      libssh2_knownhost_free(sshc->kh);
+      sshc->kh = NULL;
+    }
+#endif
+
     if(sshc->ssh_session) {
       rc = libssh2_session_free(sshc->ssh_session);
       if(rc == LIBSSH2_ERROR_EAGAIN) {
@@ -2199,6 +2221,7 @@ static CURLcode ssh_statemach_act(struct connectdata *conn, bool *block)
       }
       sshc->ssh_session = NULL;
     }
+    conn->bits.close = TRUE;
     sshc->nextstate = SSH_NO_STATE;
     state(conn, SSH_STOP);
     result = sshc->actualcode;
@@ -2235,10 +2258,10 @@ static int ssh_perform_getsock(const struct connectdata *conn,
 
   sock[0] = conn->sock[FIRSTSOCKET];
 
-  if(conn->proto.sshc.waitfor & KEEP_RECV)
+  if(conn->waitfor & KEEP_RECV)
     bitmap |= GETSOCK_READSOCK(FIRSTSOCKET);
 
-  if(conn->proto.sshc.waitfor & KEEP_SEND)
+  if(conn->waitfor & KEEP_SEND)
     bitmap |= GETSOCK_WRITESOCK(FIRSTSOCKET);
 
   return bitmap;
@@ -2282,15 +2305,17 @@ static void ssh_block2waitfor(struct connectdata *conn, bool block)
 {
   struct ssh_conn *sshc = &conn->proto.sshc;
   int dir;
-  if(block && (dir = libssh2_session_block_directions(sshc->ssh_session))) {
+  if(!block)
+    conn->waitfor = 0;
+  else if((dir = libssh2_session_block_directions(sshc->ssh_session))) {
     /* translate the libssh2 define bits into our own bit defines */
-    sshc->waitfor = ((dir&LIBSSH2_SESSION_BLOCK_INBOUND)?KEEP_RECV:0) |
+    conn->waitfor = ((dir&LIBSSH2_SESSION_BLOCK_INBOUND)?KEEP_RECV:0) |
       ((dir&LIBSSH2_SESSION_BLOCK_OUTBOUND)?KEEP_SEND:0);
   }
   else
     /* It didn't block or libssh2 didn't reveal in which direction, put back
        the original set */
-    sshc->waitfor = sshc->orig_waitfor;
+    conn->waitfor = sshc->orig_waitfor;
 }
 #else
   /* no libssh2 directional support so we simply don't know */
@@ -2548,11 +2573,12 @@ static CURLcode ssh_do(struct connectdata *conn, bool *done)
 static CURLcode scp_disconnect(struct connectdata *conn)
 {
   CURLcode result = CURLE_OK;
+  struct ssh_conn *ssh = &conn->proto.sshc;
 
   Curl_safefree(conn->data->state.proto.ssh);
   conn->data->state.proto.ssh = NULL;
 
-  if(conn->proto.sshc.ssh_session) {
+  if(ssh->ssh_session) {
     /* only if there's a session still around to use! */
 
     state(conn, SSH_SESSION_DISCONNECT);

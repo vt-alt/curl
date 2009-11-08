@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.533 2009-08-09 23:15:21 danf Exp $
+ * $Id: main.c,v 1.541 2009-10-27 16:38:42 yangtse Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -30,6 +30,12 @@
 #include <sys/stat.h>
 #include <ctype.h>
 #include <errno.h>
+
+#if defined(MSDOS) || defined(WIN32)
+#  if defined(HAVE_LIBGEN_H) && defined(HAVE_BASENAME)
+#    include <libgen.h>
+#  endif
+#endif
 
 #include <curl/curl.h>
 
@@ -158,12 +164,30 @@ static int vms_show = 0;
 #define O_BINARY 0
 #endif
 
-#ifdef MSDOS
-#define USE_WATT32
-#include <dos.h>
+#if defined(MSDOS) || defined(WIN32)
 
 static const char *msdosify(const char *);
 static char *rename_if_dos_device_name(char *);
+
+#ifndef S_ISCHR
+#  ifdef S_IFCHR
+#    define S_ISCHR(m) (((m) & S_IFMT) == S_IFCHR)
+#  else
+#    define S_ISCHR(m) (0) /* cannot tell if file is a device */
+#  endif
+#endif
+
+#ifdef WIN32
+#  define _use_lfn(f) (1)  /* long file names always available */
+#elif !defined(__DJGPP__) || (__DJGPP__ < 2)  /* DJGPP 2.0 has _use_lfn() */
+#  define _use_lfn(f) (0)  /* long file names never available */
+#endif
+
+#endif /* MSDOS || WIN32 */
+
+#ifdef MSDOS
+#define USE_WATT32
+#include <dos.h>
 
 #ifdef DJGPP
 /* we want to glob our own argv[] */
@@ -200,12 +224,6 @@ typedef enum {
   HTTPREQ_LAST
 } HttpReq;
 
-#ifdef WIN32
-#include <direct.h>
-#define F_OK 0
-#define mkdir(x,y) (mkdir)(x)
-#endif
-
 /*
  * Large file support (>2Gb) using WIN32 functions.
  */
@@ -218,6 +236,7 @@ typedef enum {
 #  define fstat(fdes,stp)            _fstati64(fdes, stp)
 #  define stat(fname,stp)            _stati64(fname, stp)
 #  define struct_stat                struct _stati64
+#  define LSEEK_ERROR                (__int64)-1
 #endif
 
 /*
@@ -232,10 +251,25 @@ typedef enum {
 #  define fstat(fdes,stp)            _fstat(fdes, stp)
 #  define stat(fname,stp)            _stat(fname, stp)
 #  define struct_stat                struct _stat
+#  define LSEEK_ERROR                (long)-1
 #endif
 
 #ifndef struct_stat
 #  define struct_stat struct stat
+#endif
+
+#ifndef LSEEK_ERROR
+#  define LSEEK_ERROR (off_t)-1
+#endif
+
+#ifdef WIN32
+#  include <direct.h>
+#  define mkdir(x,y) (mkdir)(x)
+#  undef  PATH_MAX
+#  define PATH_MAX MAX_PATH
+#  ifndef __POCC__
+#    define F_OK 0
+#  endif
 #endif
 
 /*
@@ -375,17 +409,28 @@ char convert_char(curl_infotype infotype, char this_char)
 #endif /* CURL_DOES_CONVERSIONS */
 
 #ifdef WIN32
-/*
- * Truncate a file handle at a 64-bit position 'where'.
- * Borland doesn't even support 64-bit types.
- */
+
 #ifdef __BORLANDC__
-#define _lseeki64(hnd,ofs,whence) lseek(hnd,ofs,whence)
+   /* 64-bit lseek-like function unavailable */
+#  define _lseeki64(hnd,ofs,whence) lseek(hnd,ofs,whence)
+#endif
+
+#ifdef __POCC__
+#  if (__POCC__ < 450)
+     /* 64-bit lseek-like function unavailable */
+#    define _lseeki64(hnd,ofs,whence) _lseek(hnd,ofs,whence)
+#  else
+#    define _lseeki64(hnd,ofs,whence) _lseek64(hnd,ofs,whence)
+#  endif
 #endif
 
 #ifndef HAVE_FTRUNCATE
 #define HAVE_FTRUNCATE 1
 #endif
+
+/*
+ * Truncate a file handle at a 64-bit position 'where'.
+ */
 
 static int ftruncate64 (int fd, curl_off_t where)
 {
@@ -398,7 +443,8 @@ static int ftruncate64 (int fd, curl_off_t where)
   return 0;
 }
 #define ftruncate(fd,where) ftruncate64(fd,where)
-#endif
+
+#endif /* WIN32 */
 
 typedef enum {
   TRACE_NONE,  /* no trace/verbose output at all! */
@@ -480,6 +526,7 @@ struct Configurable {
   char *cert_type;
   char *cacert;
   char *capath;
+  char *crlfile;
   char *key;
   char *key_type;
   char *key_passwd;
@@ -721,6 +768,7 @@ static void help(void)
     " -c/--cookie-jar <file> Write cookies to this file after operation (H)",
     "    --create-dirs   Create necessary local directory hierarchy",
     "    --crlf          Convert LF to CRLF in upload",
+    "    --crlfile <file> Get a CRL list in PEM format from the given file",
     " -d/--data <data>   HTTP POST data (H)",
     "    --data-ascii <data>  HTTP POST ASCII data (H)",
     "    --data-binary <data> HTTP POST binary data (H)",
@@ -1718,6 +1766,7 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
     {"Eg","capath ",     TRUE},
     {"Eh","pubkey",      TRUE},
     {"Ei", "hostpubmd5", TRUE},
+    {"Ej","crlfile",     TRUE},
     {"f", "fail",        FALSE},
     {"F", "form",        TRUE},
     {"Fs","form-string", TRUE},
@@ -2354,18 +2403,16 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
                  encoded string */
               size_t outlen = nlen + strlen(enc) + 2;
               char *n = malloc(outlen);
-              if(!n)
+              if(!n) {
+                curl_free(enc);
                 return PARAM_NO_MEM;
+              }
               if (nlen > 0) /* only append '=' if we have a name */
                 snprintf(n, outlen, "%.*s=%s", nlen, nextarg, enc);
               else
                 strcpy(n, enc);
               curl_free(enc);
-              if(n) {
-                postdata = n;
-              }
-              else
-                return PARAM_NO_MEM;
+              postdata = n;
             }
             else
               return PARAM_NO_MEM;
@@ -2497,6 +2544,10 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
         GetStr(&config->hostpubmd5, nextarg);
         if (!config->hostpubmd5 || strlen(config->hostpubmd5) != 32)
            return PARAM_BAD_USE;
+        break;
+      case 'j': /* CRL info PEM file */
+        /* CRL file */
+        GetStr(&config->crlfile, nextarg);
         break;
       default: /* certificate file */
         {
@@ -3301,13 +3352,13 @@ static int my_seek(void *stream, curl_off_t offset, int whence)
       /* this code path doesn't support other types */
       return 1;
 
-    if(-1 == lseek(in->fd, 0, SEEK_SET))
+    if(LSEEK_ERROR == lseek(in->fd, 0, SEEK_SET))
       /* couldn't rewind to beginning */
       return 1;
 
     while(left) {
       long step = (left>MAX_SEEK ? MAX_SEEK : (long)left);
-      if(-1 == lseek(in->fd, step, SEEK_CUR))
+      if(LSEEK_ERROR == lseek(in->fd, step, SEEK_CUR))
         /* couldn't seek forwards the desired amount */
         return 1;
       left -= step;
@@ -3315,7 +3366,7 @@ static int my_seek(void *stream, curl_off_t offset, int whence)
     return 0;
   }
 #endif
-  if(-1 == lseek(in->fd, offset, whence))
+  if(LSEEK_ERROR == lseek(in->fd, offset, whence))
     /* couldn't rewind, the reason is in errno but errno is just not portable
        enough and we don't actually care that much why we failed. We'll let
        libcurl know that it may try other means if it wants to. */
@@ -3726,6 +3777,8 @@ static void free_config_fields(struct Configurable *config)
     free(config->cert_type);
   if(config->capath)
     free(config->capath);
+  if(config->crlfile)
+    free(config->crlfile);
   if(config->cookiejar)
     free(config->cookiejar);
   if(config->ftp_account)
@@ -3953,6 +4006,10 @@ static void dumpeasycode(struct Configurable *config)
   curl_slist_free_all(easycode);
 }
 
+static bool stdin_upload(const char *uploadfile)
+{
+  return curlx_strequal(uploadfile, "-") || curlx_strequal(uploadfile, ".");
+}
 
 static int
 operate(struct Configurable *config, int argc, argv_item_t argv[])
@@ -4342,9 +4399,9 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
               free(url);
               break;
             }
-#if defined(MSDOS)
+#if defined(MSDOS) || defined(WIN32)
             {
-              /* This is for DOS, and then we do some major replacing of
+              /* For DOS and WIN32, we do some major replacing of
                  bad characters in the file name before using it */
               char file1[PATH_MAX];
               if(strlen(outfile) >= PATH_MAX)
@@ -4358,7 +4415,7 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
                 break;
               }
             }
-#endif /* MSDOS */
+#endif /* MSDOS || WIN32 */
           }
           else if(urls) {
             /* fill '#1' ... '#9' terms from URL pattern */
@@ -4380,9 +4437,9 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
           if(config->create_dirs &&
              (-1 == create_dir_hierarchy(outfile, config->errors))) {
             free(url);
-	    res = CURLE_WRITE_ERROR;
-	    break;
-	  }
+            res = CURLE_WRITE_ERROR;
+            break;
+          }
 
           if(config->resume_from_current) {
             /* We're told to continue from where we are now. Get the
@@ -4408,8 +4465,8 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
             if (!outs.stream) {
               helpf(config->errors, "Can't open '%s'!\n", outfile);
               free(url);
-	      res = CURLE_WRITE_ERROR;
-	      break;
+              res = CURLE_WRITE_ERROR;
+              break;
             }
           }
           else {
@@ -4417,7 +4474,7 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
           }
         }
         infdopen=FALSE;
-        if(uploadfile && !curlx_strequal(uploadfile, "-")) {
+        if(uploadfile && !stdin_upload(uploadfile)) {
           /*
            * We have specified a file to upload and it isn't "-".
            */
@@ -4455,8 +4512,8 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
               if(!urlbuffer) {
                 helpf(config->errors, "out of memory\n");
                 free(url);
-	        res = CURLE_OUT_OF_MEMORY;
-	        break;
+                res = CURLE_OUT_OF_MEMORY;
+                break;
               }
               if(ptr)
                 /* there is a trailing slash on the URL */
@@ -4511,11 +4568,14 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
           uploadfilesize=fileinfo.st_size;
 
         }
-        else if(uploadfile && curlx_strequal(uploadfile, "-")) {
+        else if(uploadfile && stdin_upload(uploadfile)) {
           SET_BINMODE(stdin);
           infd = STDIN_FILENO;
-          if (curlx_nonblock((curl_socket_t)infd, TRUE) < 0)
-            warnf(config, "fcntl failed on fd=%d: %s\n", infd, strerror(errno));
+          if (curlx_strequal(uploadfile, ".")) {
+            if (curlx_nonblock((curl_socket_t)infd, TRUE) < 0)
+              warnf(config,
+                    "fcntl failed on fd=%d: %s\n", infd, strerror(errno));
+          }
         }
 
         if(uploadfile && config->resume_from_current)
@@ -4572,8 +4632,8 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
               inglob = NULL;
             }
 
-	    res = CURLE_OUT_OF_MEMORY;
-	    goto quit_urls;
+            res = CURLE_OUT_OF_MEMORY;
+            goto quit_urls;
           }
           if (pc)
             sprintf(urlbuffer, "%s%c%s", url, sep, httpgetfields);
@@ -4710,6 +4770,8 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
             my_setopt_str(curl, CURLOPT_CAPATH, config->capath);
           my_setopt(curl, CURLOPT_SSL_VERIFYPEER, TRUE);
         }
+        if (config->crlfile)
+          my_setopt_str(curl, CURLOPT_CRLFILE, config->crlfile);
         if(config->insecure_ok) {
           /* new stuff needed for libcurl 7.10 */
           my_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
@@ -4738,8 +4800,8 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
               inglob = NULL;
             }
 
-	    res = CURLE_OUT_OF_MEMORY;
-	    goto quit_urls;
+            res = CURLE_OUT_OF_MEMORY;
+            goto quit_urls;
           }
         }
 
@@ -5400,13 +5462,13 @@ static int create_dir_hierarchy(const char *outfile, FILE *errors)
   return result; /* 0 is fine, -1 is badness */
 }
 
-#ifdef MSDOS
+#if defined(MSDOS) || defined(WIN32)
 
 #ifndef HAVE_BASENAME
 /* basename() returns a pointer to the last component of a pathname.
  * Ripped from lib/formdata.c.
  */
-static char *basename(char *path)
+static char *Curl_basename(char *path)
 {
   /* Ignore all the details above for now and make a quick and simple
      implementaion here */
@@ -5426,6 +5488,7 @@ static char *basename(char *path)
 
   return path;
 }
+#define basename(x) Curl_basename((x))
 #endif /* HAVE_BASENAME */
 
 /* The following functions are taken with modification from the DJGPP
@@ -5444,14 +5507,9 @@ msdosify (const char *file_name)
   const char * const dlimit = dos_name + sizeof(dos_name) - 1;
   const char *illegal_aliens = illegal_chars_dos;
   size_t len = sizeof (illegal_chars_dos) - 1;
-  int lfn = 0;
 
-#ifdef DJGPP
-  /* Support for Windows 9X VFAT systems, when available (djgpp only). */
-  if (_use_lfn (file_name))
-    lfn = 1;
-#endif
-  if (lfn) {
+  /* Support for Windows 9X VFAT systems, when available. */
+  if (_use_lfn (file_name)) {
     illegal_aliens = illegal_chars_w95;
     len -= (illegal_chars_w95 - illegal_chars_dos);
   }
@@ -5530,7 +5588,7 @@ rename_if_dos_device_name (char *file_name)
    * retrieve such a file would fail at best and wedge us at worst.  We need
    * to rename such files. */
   char *base;
-  struct stat st_buf;
+  struct_stat st_buf;
   char fname[PATH_MAX];
 
   strncpy(fname, file_name, PATH_MAX-1);
@@ -5551,4 +5609,4 @@ rename_if_dos_device_name (char *file_name)
   }
   return file_name;
 }
-#endif /* MSDOS */
+#endif /* MSDOS || WIN32 */

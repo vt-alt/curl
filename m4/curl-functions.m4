@@ -18,11 +18,11 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: curl-functions.m4,v 1.52 2009-07-14 13:25:14 gknauf Exp $
+# $Id: curl-functions.m4,v 1.54 2009-10-18 03:37:40 yangtse Exp $
 #***************************************************************************
 
 # File version for 'aclocal' use. Keep it a single number.
-# serial 51
+# serial 54
 
 
 dnl CURL_INCLUDES_ARPA_INET
@@ -124,6 +124,27 @@ curl_includes_inttypes="\
   AC_CHECK_HEADERS(
     sys/types.h stdint.h inttypes.h,
     [], [], [$curl_includes_inttypes])
+])
+
+
+dnl CURL_INCLUDES_LIBGEN
+dnl -------------------------------------------------
+dnl Set up variable with list of headers that must be
+dnl included when libgen.h is to be included.
+
+AC_DEFUN([CURL_INCLUDES_LIBGEN], [
+curl_includes_libgen="\
+/* includes start */
+#ifdef HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+#endif
+#ifdef HAVE_LIBGEN_H
+#  include <libgen.h>
+#endif
+/* includes end */"
+  AC_CHECK_HEADERS(
+    sys/types.h libgen.h,
+    [], [], [$curl_includes_libgen])
 ])
 
 
@@ -594,6 +615,97 @@ AC_DEFUN([CURL_CHECK_FUNC_ALARM], [
   else
     AC_MSG_RESULT([no])
     ac_cv_func_alarm="no"
+  fi
+])
+
+
+dnl CURL_CHECK_FUNC_BASENAME
+dnl -------------------------------------------------
+dnl Verify if basename is available, prototyped, and
+dnl can be compiled. If all of these are true, and
+dnl usage has not been previously disallowed with
+dnl shell variable curl_disallow_basename, then
+dnl HAVE_BASENAME will be defined.
+
+AC_DEFUN([CURL_CHECK_FUNC_BASENAME], [
+  AC_REQUIRE([CURL_INCLUDES_STRING])dnl
+  AC_REQUIRE([CURL_INCLUDES_LIBGEN])dnl
+  AC_REQUIRE([CURL_INCLUDES_UNISTD])dnl
+  #
+  tst_links_basename="unknown"
+  tst_proto_basename="unknown"
+  tst_compi_basename="unknown"
+  tst_allow_basename="unknown"
+  #
+  AC_MSG_CHECKING([if basename can be linked])
+  AC_LINK_IFELSE([
+    AC_LANG_FUNC_LINK_TRY([basename])
+  ],[
+    AC_MSG_RESULT([yes])
+    tst_links_basename="yes"
+  ],[
+    AC_MSG_RESULT([no])
+    tst_links_basename="no"
+  ])
+  #
+  if test "$tst_links_basename" = "yes"; then
+    AC_MSG_CHECKING([if basename is prototyped])
+    AC_EGREP_CPP([basename],[
+      $curl_includes_string
+      $curl_includes_libgen
+      $curl_includes_unistd
+    ],[
+      AC_MSG_RESULT([yes])
+      tst_proto_basename="yes"
+    ],[
+      AC_MSG_RESULT([no])
+      tst_proto_basename="no"
+    ])
+  fi
+  #
+  if test "$tst_proto_basename" = "yes"; then
+    AC_MSG_CHECKING([if basename is compilable])
+    AC_COMPILE_IFELSE([
+      AC_LANG_PROGRAM([[
+        $curl_includes_string
+        $curl_includes_libgen
+        $curl_includes_unistd
+      ]],[[
+        if(0 != basename(0))
+          return 1;
+      ]])
+    ],[
+      AC_MSG_RESULT([yes])
+      tst_compi_basename="yes"
+    ],[
+      AC_MSG_RESULT([no])
+      tst_compi_basename="no"
+    ])
+  fi
+  #
+  if test "$tst_compi_basename" = "yes"; then
+    AC_MSG_CHECKING([if basename usage allowed])
+    if test "x$curl_disallow_basename" != "xyes"; then
+      AC_MSG_RESULT([yes])
+      tst_allow_basename="yes"
+    else
+      AC_MSG_RESULT([no])
+      tst_allow_basename="no"
+    fi
+  fi
+  #
+  AC_MSG_CHECKING([if basename might be used])
+  if test "$tst_links_basename" = "yes" &&
+     test "$tst_proto_basename" = "yes" &&
+     test "$tst_compi_basename" = "yes" &&
+     test "$tst_allow_basename" = "yes"; then
+    AC_MSG_RESULT([yes])
+    AC_DEFINE_UNQUOTED(HAVE_BASENAME, 1,
+      [Define to 1 if you have the basename function.])
+    ac_cv_func_basename="yes"
+  else
+    AC_MSG_RESULT([no])
+    ac_cv_func_basename="no"
   fi
 ])
 
@@ -3490,6 +3602,111 @@ AC_DEFUN([CURL_CHECK_FUNC_LOCALTIME_R], [
   else
     AC_MSG_RESULT([no])
     ac_cv_func_localtime_r="no"
+  fi
+])
+
+
+dnl CURL_CHECK_FUNC_MEMRCHR
+dnl -------------------------------------------------
+dnl Verify if memrchr is available, prototyped, and
+dnl can be compiled. If all of these are true, and
+dnl usage has not been previously disallowed with
+dnl shell variable curl_disallow_memrchr, then
+dnl HAVE_MEMRCHR will be defined.
+
+AC_DEFUN([CURL_CHECK_FUNC_MEMRCHR], [
+  AC_REQUIRE([CURL_INCLUDES_STRING])dnl
+  #
+  tst_links_memrchr="unknown"
+  tst_macro_memrchr="unknown"
+  tst_proto_memrchr="unknown"
+  tst_compi_memrchr="unknown"
+  tst_allow_memrchr="unknown"
+  #
+  AC_MSG_CHECKING([if memrchr can be linked])
+  AC_LINK_IFELSE([
+    AC_LANG_FUNC_LINK_TRY([memrchr])
+  ],[
+    AC_MSG_RESULT([yes])
+    tst_links_memrchr="yes"
+  ],[
+    AC_MSG_RESULT([no])
+    tst_links_memrchr="no"
+  ])
+  #
+  if test "$tst_links_memrchr" = "no"; then
+    AC_MSG_CHECKING([if memrchr seems a macro])
+    AC_LINK_IFELSE([
+      AC_LANG_PROGRAM([[
+        $curl_includes_string
+      ]],[[
+        if(0 != memrchr(0, 0, 0))
+          return 1;
+      ]])
+    ],[
+      AC_MSG_RESULT([yes])
+      tst_macro_memrchr="yes"
+    ],[
+      AC_MSG_RESULT([no])
+      tst_macro_memrchr="no"
+    ])
+  fi
+  #
+  if test "$tst_links_memrchr" = "yes"; then
+    AC_MSG_CHECKING([if memrchr is prototyped])
+    AC_EGREP_CPP([memrchr],[
+      $curl_includes_string
+    ],[
+      AC_MSG_RESULT([yes])
+      tst_proto_memrchr="yes"
+    ],[
+      AC_MSG_RESULT([no])
+      tst_proto_memrchr="no"
+    ])
+  fi
+  #
+  if test "$tst_proto_memrchr" = "yes" ||
+     test "$tst_macro_memrchr" = "yes"; then
+    AC_MSG_CHECKING([if memrchr is compilable])
+    AC_COMPILE_IFELSE([
+      AC_LANG_PROGRAM([[
+        $curl_includes_string
+      ]],[[
+        if(0 != memrchr(0, 0, 0))
+          return 1;
+      ]])
+    ],[
+      AC_MSG_RESULT([yes])
+      tst_compi_memrchr="yes"
+    ],[
+      AC_MSG_RESULT([no])
+      tst_compi_memrchr="no"
+    ])
+  fi
+  #
+  if test "$tst_compi_memrchr" = "yes"; then
+    AC_MSG_CHECKING([if memrchr usage allowed])
+    if test "x$curl_disallow_memrchr" != "xyes"; then
+      AC_MSG_RESULT([yes])
+      tst_allow_memrchr="yes"
+    else
+      AC_MSG_RESULT([no])
+      tst_allow_memrchr="no"
+    fi
+  fi
+  #
+  AC_MSG_CHECKING([if memrchr might be used])
+  if (test "$tst_proto_memrchr" = "yes" ||
+      test "$tst_macro_memrchr" = "yes") &&
+     test "$tst_compi_memrchr" = "yes" &&
+     test "$tst_allow_memrchr" = "yes"; then
+    AC_MSG_RESULT([yes])
+    AC_DEFINE_UNQUOTED(HAVE_MEMRCHR, 1,
+      [Define to 1 if you have the memrchr function or macro.])
+    ac_cv_func_memrchr="yes"
+  else
+    AC_MSG_RESULT([no])
+    ac_cv_func_memrchr="no"
   fi
 ])
 

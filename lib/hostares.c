@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostares.c,v 1.50 2009-04-21 11:46:16 yangtse Exp $
+ * $Id: hostares.c,v 1.52 2009-09-15 00:07:25 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"

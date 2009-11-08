@@ -1,5 +1,5 @@
 #***************************************************************************
-# $Id: cares-compilers.m4,v 1.58 2009-07-16 12:20:16 gknauf Exp $
+# $Id: cares-compilers.m4,v 1.62 2009-11-01 20:26:02 yangtse Exp $
 #
 # Copyright (C) 2009 by Daniel Stenberg et al
 #
@@ -16,7 +16,7 @@
 #***************************************************************************
 
 # File version for 'aclocal' use. Keep it a single number.
-# serial 56
+# serial 61
 
 
 dnl CARES_CHECK_COMPILER
@@ -1150,8 +1150,7 @@ AC_DEFUN([CARES_CHECK_CURLDEBUG], [
   if test "$want_curldebug" = "yes"; then
     dnl TODO: Verify if the BUILDING_LIBCURL definition is still required.
     AC_DEFINE(BUILDING_LIBCURL, 1, [when building as static part of libcurl])
-    # CPPFLAGS="$CPPFLAGS -DCURLDEBUG"
-    CPPFLAGS="$CPPFLAGS -DCURLDEBUG -I../lib"
+    CPPFLAGS="$CPPFLAGS -DCURLDEBUG"
     squeeze CPPFLAGS
   fi
   #
@@ -1307,6 +1306,91 @@ AC_DEFUN([CARES_CHECK_COMPILER_STRUCT_MEMBER_SIZE], [
   else
     AC_MSG_RESULT([no])
     AC_MSG_ERROR([compiler fails struct member size checking.])
+  fi
+])
+
+
+dnl CARES_CHECK_COMPILER_SYMBOL_HIDING
+dnl -------------------------------------------------
+dnl Verify if compiler supports hiding library internal symbols, setting
+dnl shell variable supports_symbol_hiding value as appropriate, as well as
+dnl variables symbol_hiding_CFLAGS and symbol_hiding_EXTERN when supported.
+
+AC_DEFUN([CARES_CHECK_COMPILER_SYMBOL_HIDING], [
+  AC_REQUIRE([CARES_CHECK_COMPILER])dnl
+  AC_BEFORE([$0],[CARES_CONFIGURE_SYMBOL_HIDING])dnl
+  AC_MSG_CHECKING([if compiler supports hiding library internal symbols])
+  supports_symbol_hiding="no"
+  symbol_hiding_CFLAGS=""
+  symbol_hiding_EXTERN=""
+  tmp_CFLAGS=""
+  tmp_EXTERN=""
+  case "$compiler_id" in
+    GNU_C)
+      dnl Only gcc 3.4 or later
+      if test "$compiler_num" -ge "304"; then
+        if $CC --help --verbose 2>&1 | grep fvisibility= > /dev/null ; then
+          tmp_EXTERN="__attribute__ ((visibility (\"default\")))"
+          tmp_CFLAGS="-fvisibility=hidden"
+          supports_symbol_hiding="yes"
+        fi
+      fi
+      ;;
+    INTEL_UNIX_C)
+      dnl Only icc 9.0 or later
+      if test "$compiler_num" -ge "900"; then
+        if $CC --help --verbose 2>&1 | grep fvisibility= > /dev/null ; then
+          tmp_EXTERN="__attribute__ ((visibility (\"default\")))"
+          tmp_CFLAGS="-fvisibility=hidden"
+          supports_symbol_hiding="yes"
+        fi
+      fi
+      ;;
+    SUNPRO_C)
+      if $CC 2>&1 | grep flags >/dev/null && $CC -flags | grep xldscope= >/dev/null ; then
+        tmp_EXTERN="__global"
+        tmp_CFLAGS="-xldscope=hidden"
+        supports_symbol_hiding="yes"
+      fi
+      ;;
+  esac
+  if test "$supports_symbol_hiding" = "yes"; then
+    tmp_save_CFLAGS="$CFLAGS"
+    CFLAGS="$tmp_save_CFLAGS $tmp_CFLAGS"
+    squeeze CFLAGS
+    AC_COMPILE_IFELSE([
+      AC_LANG_PROGRAM([[
+        $tmp_EXTERN char *dummy(char *buff);
+        char *dummy(char *buff)
+        {
+         if(buff)
+           return ++buff;
+         else
+           return buff;
+        }
+      ]],[[
+        char b[16];
+        char *r = dummy(&b);
+        if(r)
+          return (int)*r;
+      ]])
+    ],[
+      supports_symbol_hiding="yes"
+    ],[
+      supports_symbol_hiding="no"
+      echo " " >&6
+      sed 's/^/cc-src: /' conftest.$ac_ext >&6
+      sed 's/^/cc-err: /' conftest.err >&6
+      echo " " >&6
+    ])
+    CFLAGS="$tmp_save_CFLAGS"
+  fi
+  if test "$supports_symbol_hiding" = "yes"; then
+    AC_MSG_RESULT([yes])
+    symbol_hiding_CFLAGS="$tmp_CFLAGS"
+    symbol_hiding_EXTERN="$tmp_EXTERN"
+  else
+    AC_MSG_RESULT([no])
   fi
 ])
 

@@ -1,5 +1,5 @@
 #***************************************************************************
-# $Id: cares-confopts.m4,v 1.5 2009-06-09 17:58:34 yangtse Exp $
+# $Id: cares-confopts.m4,v 1.8 2009-10-31 04:16:40 yangtse Exp $
 #
 # Copyright (C) 2008 - 2009 by Daniel Stenberg et al
 #
@@ -16,7 +16,7 @@
 #***************************************************************************
 
 # File version for 'aclocal' use. Keep it a single number.
-# serial 5
+# serial 8
 
 
 dnl CARES_CHECK_OPTION_CURLDEBUG
@@ -180,6 +180,46 @@ AC_HELP_STRING([--disable-optimize],[Disable compiler optimizations]),
 ])
 
 
+dnl CARES_CHECK_OPTION_SYMBOL_HIDING
+dnl -------------------------------------------------
+dnl Verify if configure has been invoked with option
+dnl --enable-symbol-hiding or --disable-symbol-hiding,
+dnl setting shell variable want_symbol_hiding value.
+
+AC_DEFUN([CARES_CHECK_OPTION_SYMBOL_HIDING], [
+  AC_BEFORE([$0],[CARES_CHECK_COMPILER_SYMBOL_HIDING])dnl
+  AC_MSG_CHECKING([whether to enable hiding of library internal symbols])
+  OPT_SYMBOL_HIDING="default"
+  AC_ARG_ENABLE(symbol-hiding,
+AC_HELP_STRING([--enable-symbol-hiding],[Enable hiding of library internal symbols])
+AC_HELP_STRING([--disable-symbol-hiding],[Disable hiding of library internal symbols]),
+  OPT_SYMBOL_HIDING=$enableval)
+  case "$OPT_SYMBOL_HIDING" in
+    no)
+      dnl --disable-symbol-hiding option used.
+      dnl This is an indication to not attempt hiding of library internal
+      dnl symbols. Default symbol visibility will be used, which normally
+      dnl exposes all library internal symbols.
+      want_symbol_hiding="no"
+      AC_MSG_RESULT([no])
+      ;;
+    default)
+      dnl configure's symbol-hiding option not specified.
+      dnl Handle this as if --enable-symbol-hiding option was given.
+      want_symbol_hiding="yes"
+      AC_MSG_RESULT([yes])
+      ;;
+    *)
+      dnl --enable-symbol-hiding option used.
+      dnl This is an indication to attempt hiding of library internal
+      dnl symbols. This is only supported on some compilers/linkers.
+      want_symbol_hiding="yes"
+      AC_MSG_RESULT([yes])
+      ;;
+  esac
+])
+
+
 dnl CARES_CHECK_OPTION_WARNINGS
 dnl -------------------------------------------------
 dnl Verify if configure has been invoked with option
@@ -249,6 +289,32 @@ AC_DEFUN([CARES_CHECK_NONBLOCKING_SOCKET], [
     AC_DEFINE_UNQUOTED(USE_BLOCKING_SOCKETS, 1,
       [Define to disable non-blocking sockets.])
     AC_MSG_WARN([non-blocking sockets disabled.])
+  fi
+])
+
+
+dnl CARES_CONFIGURE_SYMBOL_HIDING
+dnl -------------------------------------------------
+dnl Depending on --enable-symbol-hiding or --disable-symbol-hiding
+dnl configure option, and compiler capability to actually honor such
+dnl option, this will modify compiler flags as appropriate and also
+dnl provide needed definitions for configuration file.
+dnl This macro should not be used until all compilation tests have
+dnl been done to prevent interferences on other tests.
+
+AC_DEFUN([CARES_CONFIGURE_SYMBOL_HIDING], [
+  AC_MSG_CHECKING([whether hiding of library internal symbols will actually happen])
+  if test x"$ac_cv_native_windows" != "xyes" &&
+    test "$want_symbol_hiding" = "yes" &&
+    test "$supports_symbol_hiding" = "yes"; then
+    CFLAGS="$CFLAGS $symbol_hiding_CFLAGS"
+    AC_DEFINE_UNQUOTED(CARES_SYMBOL_HIDING, 1,
+      [Define to 1 to enable hiding of library internal symbols.])
+    AC_DEFINE_UNQUOTED(CARES_SYMBOL_SCOPE_EXTERN, $symbol_hiding_EXTERN,
+      [Definition to make a library symbol externally visible.])
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_RESULT([no])
   fi
 ])
 

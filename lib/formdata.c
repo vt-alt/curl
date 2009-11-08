@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: formdata.c,v 1.119 2009-06-15 10:15:28 patrickm Exp $
+ * $Id: formdata.c,v 1.122 2009-10-18 03:37:39 yangtse Exp $
  ***************************************************************************/
 
 /*
@@ -108,12 +108,6 @@ Content-Disposition: form-data; name="FILECONTENT"
 /* Length of the random boundary string. */
 #define BOUNDARY_LENGTH 40
 
-/* Private pseudo-random number seed. Unsigned integer >= 32bit. Threads
-   mutual exclusion is not implemented to acess it since we do not require
-   high quality random numbers (only used in form boudary generation). */
-
-static unsigned int     randseed;
-
 #if !defined(CURL_DISABLE_HTTP) || defined(USE_SSLEAY)
 
 #include <stdio.h>
@@ -127,6 +121,7 @@ static unsigned int     randseed;
 #include "urldata.h" /* for struct SessionHandle */
 #include "easyif.h" /* for Curl_convert_... prototypes */
 #include "formdata.h"
+#include "curl_rand.h"
 #include "strequal.h"
 #include "curl_memory.h"
 
@@ -140,9 +135,9 @@ static unsigned int     randseed;
 
 #ifndef CURL_DISABLE_HTTP
 
-#if defined(HAVE_BASENAME) && defined(NEED_BASENAME_PROTO)
-/* This system has a basename() but no prototype for it! */
-char *basename(char *path);
+#ifndef HAVE_BASENAME
+static char *Curl_basename(char *path);
+#define basename(x)  Curl_basename((x))
 #endif
 
 static size_t readfromfile(struct Form *form, char *buffer, size_t size);
@@ -428,7 +423,7 @@ CURLFORMcode FormAdd(struct curl_httppost **httppost,
   while(return_value == CURL_FORMADD_OK) {
 
     /* first see if we have more parts of the array param */
-    if( array_state ) {
+    if( array_state && forms ) {
       /* get the upcoming option from the given array */
       option = forms->option;
       array_value = (char *)forms->value;
@@ -1072,7 +1067,7 @@ void curl_formfree(struct curl_httppost *form)
   required to be reentrant is not required to be thread-safe.
 
 */
-static char *basename(char *path)
+static char *Curl_basename(char *path)
 {
   /* Ignore all the details above for now and make a quick and simple
      implementaion here */
@@ -1763,24 +1758,3 @@ char *Curl_FormBoundary(void)
 }
 
 #endif  /* !defined(CURL_DISABLE_HTTP) || defined(USE_SSLEAY) */
-
-/* Pseudo-random number support. This is always enabled, since called from
-   curl_global_init(). */
-
-unsigned int Curl_rand(void)
-{
-  unsigned int r;
-  /* Return an unsigned 32-bit pseudo-random number. */
-  r = randseed = randseed * 1103515245 + 12345;
-  return (r << 16) | ((r >> 16) & 0xFFFF);
-}
-
-void Curl_srand(void)
-{
-  /* Randomize pseudo-random number sequence. */
-
-  randseed = (unsigned int) time(NULL);
-  Curl_rand();
-  Curl_rand();
-  Curl_rand();
-}

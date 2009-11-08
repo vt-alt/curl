@@ -6,6 +6,226 @@
 
                                   Changelog
 
+Version 7.19.7 (4 November 2009)
+
+Daniel Stenberg (2 Nov 2009)
+- As reported independent by both Stan van de Burgt and Didier Brisebourg,
+  CURLINFO_SIZE_DOWNLOAD (the -w variable size_download) didn't work when
+  getting data from ldap!
+
+Daniel Stenberg (31 Oct 2009)
+- Gabriel Kuri reported a problem with CURLINFO_CONTENT_LENGTH_DOWNLOAD if the
+  download was 0 bytes, as libcurl would then return the size as unknown (-1)
+  and not 0. I wrote a fix and test case 566 to verify it.
+
+Daniel Stenberg (30 Oct 2009)
+- Liza Alenchery mentioned a problem with re-used SCP connection when a bad
+  auth is used, as it caused a crash. I failed to repeat the issue, but still
+  made a change that now forces the TCP connection used for a freed SCP
+  session to get closed and not be re-used.
+
+- "Tom" posted a bug report that mentioned how libcurl did wrong when doing a
+  POST using a read callback, with Digest authentication and
+  "Transfer-Encoding: chunked" enforced.  I would then cause the first request
+  to be wrongly sent and then basically hang until the server closed the
+  connection. I fixed the problem and added test case 565 to verify it.
+
+Daniel Stenberg (25 Oct 2009)
+- Dima Barsky made the curl cookie parser accept cookies even with blank or
+  unparsable expiry dates and then treat them as session cookies - previously
+  libcurl would reject cookies with a date format it couldn't parse. Research
+  shows that the major browser treat such cookies as session cookies. I
+  modified test 8 and 31 to verify this.
+
+Daniel Stenberg (21 Oct 2009)
+- Attempt to use pkg-config for finding out libssh2 installation details
+  during configure.
+
+- A patch in bug report #2883177 (http://curl.haxx.se/bug/view.cgi?id=2883177)
+  by Johan van Selst introduced the --crlfile option to curl, which makes curl
+  tell libcurl about a file with CRL (certificate revocation list) data to
+  read.
+
+Daniel Stenberg (18 Oct 2009)
+- Ray Dassen provided a patch in Debian's bug tracker (bug number #551461)
+  that now makes curl_getdate(3) actually handles RFC 822 formatted dates that
+  use the "single letter military timezones".
+  http://www.rfc-ref.org/RFC-TEXTS/822/chapter5.html has the details.
+
+- Fixed memory leak in the SCP/SFTP code as it never freed the knownhosts
+  data!
+
+- John Dennis filed bug report #2873666
+  (http://curl.haxx.se/bug/view.cgi?id=2873666) which identified a problem
+  which made libcurl loop infinitely when given incorrect credentials when
+  using HTTP GSS negotiate authentication. He also provided a small and simple
+  patch for it.
+
+- Kevin Baughman found a double close() problem with libcurl-NSS, as when
+  libcurl called NSS to close the SSL "session" it also closed the actual
+  socket.
+
+Yang Tse (17 Oct 2009)
+- Bug report #2866724 indicated
+  (http://curl.haxx.se/bug/view.cgi?id=2866724) that curl on Windows failed
+  when writing files whose file names originally contained characters which
+  are not valid for file names on Windows. Dan Fandrich provided an initial
+  patch and another revised one to fix this issue.
+
+Daniel Stenberg (1 Oct 2009)
+- Tom Mueller correctly reported in bug report #2870221
+  (http://curl.haxx.se/bug/view.cgi?id=2870221) that libcurl returned an
+  incorrect return code from the internal trynextip() function which caused
+  him grief. This is a regression that was introduced in 7.19.1 and I find it
+  strange it hasn't hit us harder, but I won't persue into figuring out
+  exactly why.
+ 
+- Constantine Sapuntzakis: The current implementation will always set
+  SO_SNDBUF to CURL_WRITE_SIZE even if the SO_SNDBUF starts out larger.  The
+  patch doesn't do a setsockopt if SO_SNDBUF is already greater than
+  CURL_WRITE_SIZE. This should help folks who have set up their computer with
+  large send buffers.
+
+Daniel Stenberg (27 Sep 2009)
+- I introduced a maximum limit for received HTTP headers. It is controlled by
+  the define CURL_MAX_HTTP_HEADER which is even exposed in the public header
+  file to allow for users to fairly easy rebuild libcurl with a modified
+  limit. The rationale for a fixed limit is that libcurl is realloc()ing a
+  buffer to be able to put a full header into it, so that it can call the
+  header callback with the entire header, but that also risk getting it into
+  trouble if a server by mistake or willingly sends a header that is more or
+  less without an end. The limit is set to 100K.
+
+Daniel Stenberg (26 Sep 2009)
+- John P. McCaskey posted a bug report that showed how libcurl did wrong when
+  saving received cookies with no given path, if the path in the request had a
+  query part. That is means a question mark (?) and characters on the right
+  side of that. I wrote test case 1105 and fixed this problem.
+
+Kamil Dudka (26 Sep 2009)
+- Implemented a protocol independent way to specify blocking direction, used by
+  transfer.c for blocking. It is currently used only by SCP and SFTP protocols.
+  This enhancement resolves an issue with 100% CPU usage during SFTP upload,
+  reported by Vourhey.
+
+Daniel Stenberg (25 Sep 2009)
+- Chris Mumford filed bug report #2861587
+  (http://curl.haxx.se/bug/view.cgi?id=2861587) identifying that libcurl used
+  the OpenSSL function X509_load_crl_file() wrongly and failed if it would
+  load a CRL file with more than one certificate within. This is now fixed.
+  
+Daniel Stenberg (16 Sep 2009)
+- Sven Anders reported that we introduced a cert verfication flaw for OpenSSL-
+  powered libcurl in 7.19.6. If there was a X509v3 Subject Alternative Name
+  field in the certficate it had to match and so even if non-DNS and non-IP
+  entry was present it caused the verification to fail.
+
+Daniel Fandrich (15 Sep 2009)
+- Moved the libssh2 checks after the SSL library checks. This helps when
+  statically linking since libssh2 needs the SSL library link flags to be
+  set up already to satisfy its dependencies. This wouldn't be necessary if
+  the libssh2 configure check was changed to use pkg-config since the
+  --static flag would add the dependencies automatically.
+
+Yang Tse (14 Sep 2009)
+- Revert Joshua Kwan's patch committed 11 Sep 2009.
+
+  Some systems poll function sets POLLHUP in revents without setting
+  POLLIN, and sets POLLERR without setting POLLIN and POLLOUT. In some
+  libcurl code execution paths this could trigger busy wait loops with
+  high CPU usage until a timeout condition aborted the loop.
+
+  The reverted patch addressed the above issue for a very specific case,
+  when awaiting c-ares to resolve. A libcurl-wide fix for Curl_poll now
+  superceeds this one.
+
+Guenter Knauf (11 Sep 2009)
+- Joshua Kwan provided a patch to pass POLLERR / POLLHUP back to c-ares.
+  This fixes a loop problem with high CPU usage.
+
+Daniel Stenberg (10 Sep 2009)
+- Claes Jakobsson fixed a problem with cookie expiry dates at exctly the epoch
+  start second "Thu Jan 1 00:00:00 GMT 1970" as the date parser then returns 0
+  which internally then is treated as a session cookie. That particular date
+  is now made to get the value of 1.
+
+Daniel Stenberg (2 Sep 2009)
+- Daniel Johnson found a flaw in the code converting sftp-errors to libcurl
+  errors.
+
+Daniel Stenberg (1 Sep 2009)
+- Peter Sylvester made a debug feature for Curl_resolv() that now will force
+  libcurl to resolve 'localhost' whatever name you use in the URL *if* you set
+  the --interface option to (exactly) "LocalHost". This will enable us to
+  write tests for custom hosts names but still use a local host server.
+
+- configure now tries to use pkg-config for a number of sub-dependencies even
+  when cross-compiling. The key to success is then you properly setup
+  PKG_CONFIG_PATH before invoking configure.
+
+  I also improved how NSS is detected by trying nss-config if pkg-config isn't
+  present, and as a last resort just use the lib name and force the user to
+  setup the LIBS/LDFLAGS/CFLAGS etc properly. The previous last resort would
+  add a range of various libs that would almost never be quite correct.
+
+Daniel Stenberg (31 Aug 2009)
+- When using the multi interface with FTP and you asked for NOBODY, you did no
+  QUOTE commands and the request used the same path as the connection had
+  already changed to, it would decide that no commands would be necessary for
+  the "DO" action and that was not handled properly but libcurl would instead
+  hang.
+
+Kamil Dudka (28 Aug 2009)
+- Improved error message for not matching certificate subject name in
+  libcurl-NSS. Originally reported at:
+  https://bugzilla.redhat.com/show_bug.cgi?id=516056#c9
+
+Patrick Monnerat (24 Aug 2009)
+- Introduced a SYST-based test to properly set-up name format when dealing
+  with the OS/400 FTP server.
+
+- Fixed an ftp_readresp() bug preventing detection of failing control socket
+  and causing FTP client to loop forever.
+
+Daniel Stenberg (24 Aug 2009)
+- Marc de Bruin pointed out that configure --with-gnutls=PATH didn't work
+  properly and provided a fix. http://curl.haxx.se/bug/view.cgi?id=2843008
+
+- Eric Wong introduced support for the new option -T. (dot) that makes curl
+  read stdin in a non-blocking fashion. This also brings back -T- (minus) to
+  the previous blocking behavior since it could break stuff for people at
+  times.
+
+Michal Marek (21 Aug 2009)
+- With CURLOPT_PROXY_TRANSFER_MODE, avoid sending invalid URLs like
+  ftp://example.com;type=i if the user specified ftp://example.com without the
+  slash.
+
+Daniel Stenberg (21 Aug 2009)
+- Andre Guibert de Bruet pointed out a missing return code check for a
+  strdup() that could lead to segfault if it returned NULL. I extended his
+  suggest patch to now have Curl_retry_request() return a regular return code
+  and better check that.
+
+- Lots of good work by Krister Johansen, mostly related to pipelining:
+
+  Fix SIGSEGV on free'd easy_conn when pipe unexpectedly breaks
+  Fix data corruption issue with re-connected transfers
+  Fix use after free if we're completed but easy_conn not NULL
+
+Kamil Dudka (13 Aug 2009)
+- Changed NSS code to not ignore the value of ssl.verifyhost and produce more
+  verbose error messages. Originally reported at:
+  https://bugzilla.redhat.com/show_bug.cgi?id=516056
+
+Daniel Stenberg (12 Aug 2009)
+- Karl Moerder fixed the Makefile.vc* makefiles to include the new file
+  nonblock.c so that they work fine again
+
+- I expanded test 517 with a bunch of more dates that originate from the
+  Chrome browser test suite. It turns out most of them get parsed the same
+  way.
+
 Version 7.19.6 (12 August 2009)
 
 Daniel Stenberg (12 Aug 2009)

@@ -1,4 +1,4 @@
-/* $Id: ares_expand_name.c,v 1.18 2009-01-11 13:49:13 bagder Exp $ */
+/* $Id: ares_expand_name.c,v 1.20 2009-11-02 11:55:53 yangtse Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -15,7 +15,7 @@
  * without express or implied warranty.
  */
 
-#include "setup.h"
+#include "ares_setup.h"
 
 #ifdef HAVE_SYS_SOCKET_H
 #  include <sys/socket.h>
@@ -71,10 +71,10 @@ int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
   const unsigned char *p;
 
   len = name_length(encoded, abuf, alen);
-  if (len == -1)
+  if (len < 0)
     return ARES_EBADNAME;
 
-  *s = malloc(len + 1);
+  *s = malloc(((size_t)len) + 1);
   if (!*s)
     return ARES_ENOMEM;
   q = *s;

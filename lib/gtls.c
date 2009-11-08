@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: gtls.c,v 1.61 2009-08-01 22:11:58 bagder Exp $
+ * $Id: gtls.c,v 1.63 2009-10-19 18:10:47 gknauf Exp $
  ***************************************************************************/
 
 /*
@@ -58,6 +58,17 @@
 /* The last #include file should be: */
 #include "memdebug.h"
 
+/*
+ Some hackish cast macros based on:
+ http://library.gnome.org/devel/glib/unstable/glib-Type-Conversion-Macros.html
+*/
+#ifndef GNUTLS_POINTER_TO_INT_CAST
+#define GNUTLS_POINTER_TO_INT_CAST(p) ((int) (long) (p))
+#endif
+#ifndef GNUTLS_INT_TO_POINTER_CAST
+#define GNUTLS_INT_TO_POINTER_CAST(i) ((void*) (long) (i))
+#endif
+
 /* Enable GnuTLS debugging by defining GTLSDEBUG */
 /*#define GTLSDEBUG */
 
@@ -78,12 +89,12 @@ static bool gtls_inited = FALSE;
  */
 static ssize_t Curl_gtls_push(void *s, const void *buf, size_t len)
 {
-  return swrite(s, buf, len);
+  return swrite(GNUTLS_POINTER_TO_INT_CAST(s), buf, len);
 }
 
 static ssize_t Curl_gtls_pull(void *s, void *buf, size_t len)
 {
-  return sread(s, buf, len);
+  return sread(GNUTLS_POINTER_TO_INT_CAST(s), buf, len);
 }
 
 /* Curl_gtls_init()
@@ -381,7 +392,7 @@ Curl_gtls_connect(struct connectdata *conn,
 
   /* set the connection handle (file descriptor for the socket) */
   gnutls_transport_set_ptr(session,
-                           (gnutls_transport_ptr)conn->sock[sockindex]);
+                           GNUTLS_INT_TO_POINTER_CAST(conn->sock[sockindex]));
 
   /* register callback functions to send and receive data. */
   gnutls_transport_set_push_function(session, Curl_gtls_push);
@@ -676,7 +687,7 @@ void Curl_gtls_close(struct connectdata *conn, int sockindex)
  */
 int Curl_gtls_shutdown(struct connectdata *conn, int sockindex)
 {
-  int result;
+  ssize_t result;
   int retval = 0;
   struct SessionHandle *data = conn->data;
   int done = 0;
@@ -776,7 +787,7 @@ ssize_t Curl_gtls_recv(struct connectdata *conn, /* connection data */
 
   if(ret < 0) {
     failf(conn->data, "GnuTLS recv error (%d): %s",
-          (int)ret, gnutls_strerror(ret));
+          (int)ret, gnutls_strerror((int)ret));
     return -1;
   }
 

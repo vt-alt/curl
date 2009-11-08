@@ -15,12 +15,16 @@ ACLOCAL_AMFLAGS = -I m4
 #
 # $(top_builddir)/../include is for libcurl's generated curl/curlbuild.h file
 # $(top_srcdir)/../include is for libcurl's external include files
+# $(top_builddir)/../lib is for libcurl's generated lib/curl_config.h file
+# $(top_srcdir)/../lib is for libcurl's lib/setup.h and other "private" files
 # $(top_builddir) is for c-ares's generated ares_config.h file
-# $(top_srcdir) is for c-ares's lib/setup.h and other "c-ares-private" files
+# $(top_srcdir) is for c-ares's ares_setup.h and other "c-ares-private" files
 
 if CURLDEBUG
 INCLUDES = -I$(top_builddir)/../include \
            -I$(top_srcdir)/../include   \
+           -I$(top_builddir)/../lib     \
+           -I$(top_srcdir)/../lib       \
            -I$(top_builddir)            \
            -I$(top_srcdir)
 else
@@ -32,8 +36,8 @@ lib_LTLIBRARIES = libcares.la
 
 man_MANS = $(MANPAGES)
 
-MSVCFILES = vc/vc.dsw vc/acountry/acountry.dsp vc/adig/adig.dsp \
- vc/ahost/ahost.dsp vc/areslib/areslib.dsp vc/areslib/areslib.dsw
+MSVCFILES = vc/vc6aws.dsw vc/acountry/vc6acountry.dsp vc/adig/vc6adig.dsp \
+ vc/ahost/vc6ahost.dsp vc/cares/vc6cares.dsp vc/cares/vc6cares.dsw
 
 if CURLDEBUG
 PROGS =
@@ -48,7 +52,7 @@ noinst_PROGRAMS =$(PROGS)
 EXTRA_DIST = AUTHORS CHANGES README.cares Makefile.inc Makefile.dj	   \
  Makefile.m32 Makefile.netware Makefile.vc6 $(man_MANS) $(MSVCFILES)	   \
  config-win32.h RELEASE-NOTES libcares.pc.in buildconf get_ver.awk maketgz \
- TODO ares_build.h.in $(PDFPAGES)
+ TODO ares_build.h.in $(PDFPAGES) cares.rc
 
 CLEANFILES = $(PDFPAGES) $(HTMLPAGES)
 
@@ -91,9 +95,7 @@ if NO_UNDEFINED
 UNDEF = -no-undefined
 endif
 
-# EXPORT_SYMBOLS = -export-symbols-regex '^ares_[[:alnum:]].*'
-
-libcares_la_LDFLAGS = $(UNDEF) $(VER) $(EXPORT_SYMBOLS)
+libcares_la_LDFLAGS = $(UNDEF) $(VER)
 
 # Makefile.inc provides the CSOURCES and HHEADERS defines
 include Makefile.inc

@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: cookie.c,v 1.105 2009-06-15 02:29:49 yangtse Exp $
+ * $Id: cookie.c,v 1.111 2009-10-25 18:15:14 bagder Exp $
  ***************************************************************************/
 
 /***
@@ -97,6 +97,7 @@ Example set of cookies:
 #include "share.h"
 #include "strtoofft.h"
 #include "rawstr.h"
+#include "curl_memrchr.h"
 
 /* The last #include file should be: */
 #include "memdebug.h"
@@ -167,6 +168,7 @@ static void strstore(char **str, const char *newstr)
   *str = strdup(newstr);
 }
 
+
 /****************************************************************************
  *
  * Curl_cookie_add()
@@ -186,8 +188,8 @@ Curl_cookie_add(struct SessionHandle *data,
                 char *lineptr,   /* first character of the line */
                 const char *domain, /* default domain */
                 const char *path)   /* full path used when this cookie is set,
-                                    used to get default path for the cookie
-                                    unless set */
+                                       used to get default path for the cookie
+                                       unless set */
 {
   struct Cookie *clist;
   char name[MAX_NAME];
@@ -361,10 +363,17 @@ Curl_cookie_add(struct SessionHandle *data,
               badcookie = TRUE;
               break;
             }
-            /* Note that we store -1 in 'expires' here if the date couldn't
-               get parsed for whatever reason. This will have the effect that
-               the cookie won't match. */
+            /* Note that if the date couldn't get parsed for whatever reason,
+               the cookie will be treated as a session cookie */
             co->expires = curl_getdate(what, &now);
+
+            /* Session cookies have expires set to 0 so if we get that back
+               from the date parser let's add a second to make it a
+               non-session cookie */
+            if (co->expires == 0)
+              co->expires = 1;
+            else if( co->expires < 0 )
+                co->expires = 0;
           }
           else if(!co->name) {
             co->name = strdup(name);
@@ -423,10 +432,20 @@ Curl_cookie_add(struct SessionHandle *data,
     }
 
     if(!badcookie && !co->path && path) {
-      /* no path was given in the header line, set the default  */
-      char *endslash = strrchr(path, '/');
+      /* No path was given in the header line, set the default.
+         Note that the passed-in path to this function MAY have a '?' and
+         following part that MUST not be stored as part of the path. */
+      char *queryp = strchr(path, '?');
+
+      /* queryp is where the interesting part of the path ends, so now we
+         want to the find the last */
+      char *endslash;
+      if(!queryp)
+        endslash = strrchr(path, '/');
+      else
+        endslash = memrchr(path, '/', (size_t)(queryp - path));
       if(endslash) {
-        size_t pathlen = endslash-path+1; /* include the ending slash */
+        size_t pathlen = (size_t)(endslash-path+1); /* include ending slash */
         co->path=malloc(pathlen+1); /* one extra for the zero byte */
         if(co->path) {
           memcpy(co->path, path, pathlen);

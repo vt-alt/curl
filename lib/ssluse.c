@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ssluse.c,v 1.236 2009-08-11 21:48:58 bagder Exp $
+ * $Id: ssluse.c,v 1.243 2009-10-14 02:32:27 gknauf Exp $
  ***************************************************************************/
 
 /*
@@ -1056,7 +1056,8 @@ cert_hostcheck(const char *match_pattern, const char *hostname)
 static CURLcode verifyhost(struct connectdata *conn,
                            X509 *server_cert)
 {
-  bool matched = FALSE; /* no alternative match yet */
+  int matched = -1; /* -1 is no alternative match yet, 1 means match and 0
+                       means mismatch */
   int target = GEN_DNS; /* target type, GEN_DNS or GEN_IPADD */
   size_t addrlen = 0;
   struct SessionHandle *data = conn->data;
@@ -1093,7 +1094,7 @@ static CURLcode verifyhost(struct connectdata *conn,
     numalts = sk_GENERAL_NAME_num(altnames);
 
     /* loop through all alternatives while none has matched */
-    for (i=0; (i<numalts) && !matched; i++) {
+    for (i=0; (i<numalts) && (matched != 1); i++) {
       /* get a handle to alternative name number i */
       const GENERAL_NAME *check = sk_GENERAL_NAME_value(altnames, i);
 
@@ -1119,14 +1120,18 @@ static CURLcode verifyhost(struct connectdata *conn,
              /* if this isn't true, there was an embedded zero in the name
                 string and we cannot match it. */
              cert_hostcheck(altptr, conn->host.name))
-            matched = TRUE;
+            matched = 1;
+          else
+            matched = 0;
           break;
 
         case GEN_IPADD: /* IP address comparison */
           /* compare alternative IP address if the data chunk is the same size
              our server IP address is */
           if((altlen == addrlen) && !memcmp(altptr, &addr, altlen))
-            matched = TRUE;
+            matched = 1;
+          else
+            matched = 0;
           break;
         }
       }
@@ -1134,10 +1139,10 @@ static CURLcode verifyhost(struct connectdata *conn,
     GENERAL_NAMES_free(altnames);
   }
 
-  if(matched)
+  if(matched == 1)
     /* an alternative name matched the server hostname */
     infof(data, "\t subjectAltName: %s matched\n", conn->host.dispname);
-  else if(altnames) {
+  else if(matched == 0) {
     /* an alternative name field existed, but didn't match and then
        we MUST fail */
     infof(data, "\t subjectAltName does not match %s\n", conn->host.dispname);
@@ -1171,8 +1176,8 @@ static CURLcode verifyhost(struct connectdata *conn,
          conditional in the future when OpenSSL has been fixed. Work-around
          brought by Alexis S. L. Carvalho. */
       if(tmp) {
-        j = ASN1_STRING_length(tmp);
         if(ASN1_STRING_type(tmp) == V_ASN1_UTF8STRING) {
+          j = ASN1_STRING_length(tmp);
           if(j >= 0) {
             peer_CN = OPENSSL_malloc(j+1);
             if(peer_CN) {
@@ -1348,6 +1353,12 @@ static void ssl_tls_trace(int direction, int ssl_ver, int content_type,
 #ifdef USE_SSLEAY
 /* ====================================================== */
 
+#ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+#  define use_sni(x)  sni = (x)
+#else
+#  define use_sni(x)  do { } while (0)
+#endif
+
 static CURLcode
 ossl_connect_step1(struct connectdata *conn,
                    int sockindex)
@@ -1360,8 +1371,8 @@ ossl_connect_step1(struct connectdata *conn,
   X509_LOOKUP *lookup=NULL;
   curl_socket_t sockfd = conn->sock[sockindex];
   struct ssl_connect_data *connssl = &conn->ssl[sockindex];
-  bool sni = TRUE; /* default is SNI enabled */
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+  bool sni;
 #ifdef ENABLE_IPV6
   struct in6_addr addr;
 #else
@@ -1380,17 +1391,19 @@ ossl_connect_step1(struct connectdata *conn,
   case CURL_SSLVERSION_DEFAULT:
     /* we try to figure out version */
     req_method = SSLv23_client_method();
+    use_sni(TRUE);
     break;
   case CURL_SSLVERSION_TLSv1:
     req_method = TLSv1_client_method();
+    use_sni(TRUE);
     break;
   case CURL_SSLVERSION_SSLv2:
     req_method = SSLv2_client_method();
-    sni = FALSE;
+    use_sni(FALSE);
     break;
   case CURL_SSLVERSION_SSLv3:
     req_method = SSLv3_client_method();
-    sni = FALSE;
+    use_sni(FALSE);
     break;
   }
 
@@ -1523,8 +1536,8 @@ ossl_connect_step1(struct connectdata *conn,
      * revocation */
     lookup=X509_STORE_add_lookup(connssl->ctx->cert_store,X509_LOOKUP_file());
     if ( !lookup ||
-         (X509_load_crl_file(lookup,data->set.str[STRING_SSL_CRLFILE],
-                             X509_FILETYPE_PEM)!=1) ) {
+         (!X509_load_crl_file(lookup,data->set.str[STRING_SSL_CRLFILE],
+                              X509_FILETYPE_PEM)) ) {
       failf(data,"error loading CRL file :\n"
             "  CRLfile: %s\n",
             data->set.str[STRING_SSL_CRLFILE]?
@@ -1596,7 +1609,7 @@ ossl_connect_step1(struct connectdata *conn,
   }
 
   /* pass the raw socket into the SSL layers */
-  if(!SSL_set_fd(connssl->handle, sockfd)) {
+  if(!SSL_set_fd(connssl->handle, (int)sockfd)) {
      failf(data, "SSL: SSL_set_fd failed: %s",
            ERR_error_string(ERR_get_error(),NULL));
      return CURLE_SSL_CONNECT_ERROR;
@@ -1722,29 +1735,29 @@ static CURLcode push_certinfo_len(struct SessionHandle *data,
                                   size_t valuelen)
 {
   struct curl_certinfo *ci = &data->info.certs;
-  char *outp;
+  char *output;
   struct curl_slist *nl;
   CURLcode res = CURLE_OK;
   size_t labellen = strlen(label);
   size_t outlen = labellen + 1 + valuelen + 1; /* label:value\0 */
 
-  outp = malloc(outlen);
-  if(!outp)
+  output = malloc(outlen);
+  if(!output)
     return CURLE_OUT_OF_MEMORY;
 
   /* sprintf the label and colon */
-  snprintf(outp, outlen, "%s:", label);
+  snprintf(output, outlen, "%s:", label);
 
   /* memcpy the value (it might not be zero terminated) */
-  memcpy(&outp[labellen+1], value, valuelen);
+  memcpy(&output[labellen+1], value, valuelen);
 
   /* zero terminate the output */
-  outp[labellen + 1 + valuelen] = 0;
+  output[labellen + 1 + valuelen] = 0;
 
   /* TODO: we should rather introduce an internal API that can do the
      equivalent of curl_slist_append but doesn't strdup() the given data as
      like in this place the extra malloc/free is totally pointless */
-  nl = curl_slist_append(ci->certinfo[certnum], outp);
+  nl = curl_slist_append(ci->certinfo[certnum], output);
   if(!nl) {
     curl_slist_free_all(ci->certinfo[certnum]);
     res = CURLE_OUT_OF_MEMORY;
@@ -1752,7 +1765,7 @@ static CURLcode push_certinfo_len(struct SessionHandle *data,
   else
     ci->certinfo[certnum] = nl;
 
-  free(outp);
+  free(output);
 
   return res;
 }
@@ -2287,6 +2300,7 @@ ossl_connect_common(struct connectdata *conn,
   struct ssl_connect_data *connssl = &conn->ssl[sockindex];
   curl_socket_t sockfd = conn->sock[sockindex];
   long timeout_ms;
+  int what;
 
   if(ssl_connect_1==connssl->connecting_state) {
     /* Find out how much more time we're allowed */
@@ -2324,32 +2338,27 @@ ossl_connect_common(struct connectdata *conn,
       curl_socket_t readfd = ssl_connect_2_reading==
         connssl->connecting_state?sockfd:CURL_SOCKET_BAD;
 
-      while(1) {
-        int what = Curl_socket_ready(readfd, writefd,
-                                     nonblocking?0:(int)timeout_ms);
-        if(what > 0)
-          /* readable or writable, go loop in the outer loop */
-          break;
-        else if(0 == what) {
-          if(nonblocking) {
-            *done = FALSE;
-            return CURLE_OK;
-          }
-          else {
-            /* timeout */
-            failf(data, "SSL connection timeout");
-            return CURLE_OPERATION_TIMEDOUT;
-          }
+      what = Curl_socket_ready(readfd, writefd,
+                               nonblocking?0:(int)timeout_ms);
+      if(what < 0) {
+        /* fatal error */
+        failf(data, "select/poll on SSL socket, errno: %d", SOCKERRNO);
+        return CURLE_SSL_CONNECT_ERROR;
+      }
+      else if(0 == what) {
+        if(nonblocking) {
+          *done = FALSE;
+          return CURLE_OK;
         }
         else {
-          /* anything that gets here is fatally bad */
-          failf(data, "select/poll on SSL socket, errno: %d", SOCKERRNO);
-          return CURLE_SSL_CONNECT_ERROR;
+          /* timeout */
+          failf(data, "SSL connection timeout");
+          return CURLE_OPERATION_TIMEDOUT;
         }
-      } /* while()-loop for the select() */
+      }
+      /* socket is readable or writable */
     }
 
-    /* get the timeout from step2 to avoid computing it twice. */
     retcode = ossl_connect_step2(conn, sockindex);
     if(retcode)
       return retcode;

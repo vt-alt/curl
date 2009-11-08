@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: configure.ac,v 1.423 2009-07-14 13:25:14 gknauf Exp $
+# $Id: configure.ac,v 1.434 2009-10-28 00:33:28 yangtse Exp $
 #***************************************************************************
 dnl Process this file with autoconf to produce a configure script.
 
@@ -43,7 +43,7 @@ CURL_CHECK_OPTION_OPTIMIZE
 CURL_CHECK_OPTION_WARNINGS
 CURL_CHECK_OPTION_CURLDEBUG
 
-CURL_CHECK_PATH_SEPARATOR
+CURL_CHECK_PATH_SEPARATOR_REQUIRED
 
 dnl SED is mandatory for configure process and libtool.
 dnl Set it now, allowing it to be changed later.
@@ -79,7 +79,7 @@ fi
 AC_SUBST([EGREP])
 
 dnl AR is mandatory for configure process and libtool.
-dnl This is target dependant, so check it as a tool.
+dnl This is target dependent, so check it as a tool.
 AC_PATH_TOOL([AR], [ar], [not_found],
   [$PATH:/usr/bin:/usr/local/bin])
 if test -z "$AR" || test "$AR" = "not_found"; then
@@ -110,7 +110,7 @@ AC_SUBST(PKGADD_VENDOR)
 
 dnl
 dnl initialize all the info variables
-    curl_ssl_msg="no      (--with-ssl / --with-gnutls)"
+    curl_ssl_msg="no      (--with-ssl / --with-gnutls / --with-nss)"
     curl_ssh_msg="no      (--with-libssh2)"
    curl_zlib_msg="no      (--with-zlib)"
    curl_krb4_msg="no      (--with-krb4*)"
@@ -1433,72 +1433,6 @@ dnl set variable for use in automakefile(s)
 AM_CONDITIONAL(HAVE_LIBZ, test x"$AMFIXLIB" = x1)
 
 dnl **********************************************************************
-dnl Check for the presence of LIBSSH2 libraries and headers
-dnl **********************************************************************
-
-dnl Default to compiler & linker defaults for LIBSSH2 files & libraries.
-OPT_LIBSSH2=off
-AC_ARG_WITH(libssh2,dnl
-AC_HELP_STRING([--with-libssh2=PATH],[Where to look for libssh2, PATH points to the LIBSSH2 installation (default: /usr/local/lib); when possible, set the PKG_CONFIG_PATH environment variable instead of using this option])
-AC_HELP_STRING([--without-libssh2], [disable LIBSSH2]),
-  OPT_LIBSSH2=$withval)
-
-if test X"$OPT_LIBSSH2" != Xno; then
-  dnl backup the pre-libssh2 variables
-  CLEANLDFLAGS="$LDFLAGS"
-  CLEANCPPFLAGS="$CPPFLAGS"
-  CLEANLIBS="$LIBS"
-
-  case "$OPT_LIBSSH2" in
-  yes)
-    dnl --with-libssh2 (without path) used
-    PREFIX_LIBSSH2=/usr/local/lib
-    LIB_LIBSSH2="$PREFIX_LIBSSH2$libsuff"
-    ;;
-  off)
-    dnl no --with-libssh2 option given, just check default places
-    PREFIX_LIBSSH2=
-    ;;
-  *)
-    dnl use the given --with-libssh2 spot
-    PREFIX_LIBSSH2=$OPT_LIBSSH2
-    LIB_LIBSSH2="$PREFIX_LIBSSH2/lib$libsuff"
-    LDFLAGS="$LDFLAGS -L$LIB_LIBSSH2"
-    CPPFLAGS="$CPPFLAGS -I$PREFIX_LIBSSH2/include"
-    ;;
-  esac
-
-  AC_CHECK_LIB(ssh2, libssh2_channel_open_ex)
-
-  AC_CHECK_HEADERS(libssh2.h,
-    curl_ssh_msg="enabled (libSSH2)"
-    LIBSSH2_ENABLED=1
-    AC_DEFINE(USE_LIBSSH2, 1, [if libSSH2 is in use])
-    AC_SUBST(USE_LIBSSH2, [1])
-  )
-
-  if test X"$OPT_LIBSSH2" != Xoff &&
-     test "$LIBSSH2_ENABLED" != "1"; then
-    AC_MSG_ERROR([libSSH2 libs and/or directories were not found where specified!])
-  fi
-
-  if test "$LIBSSH2_ENABLED" = "1"; then
-    if test -n "$LIB_LIBSSH2"; then
-       dnl when the libssh2 shared libs were found in a path that the run-time
-       dnl linker doesn't search through, we need to add it to LD_LIBRARY_PATH
-       dnl to prevent further configure tests to fail due to this
-
-       dnl libssh2_version is a post 1.0 addition
-       AC_CHECK_FUNCS( libssh2_version )
-
-       LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$LIB_LIBSSH2"
-       export LD_LIBRARY_PATH
-       AC_MSG_NOTICE([Added $LIB_LIBSSH2 to LD_LIBRARY_PATH])
-    fi
-  fi
-fi
-
-dnl **********************************************************************
 dnl Check for the random seed preferences
 dnl **********************************************************************
 
@@ -1571,12 +1505,13 @@ if test "$OPENSSL_ENABLED" != "1"; then
     else
       dnl this is with a given path, first check if there's a libgnutls-config
       dnl there and if not, make an educated guess
-      check=`$OPT_GNUTLS/libgnutls-config --version 2>/dev/null`
+      cfg=$OPT_GNUTLS/bin/libgnutls-config
+      check=`$cfg --version 2>/dev/null`
       if test -n "$check"; then
-        addlib=`$OPT_GNUTLS/libgnutls-config --libs`
-        addcflags=`$OPT_GNUTLS/libgnutls-config --cflags`
-        version=`$OPT_GNUTLS/libgnutls-config --version`
-        gtlslib=`$OPT_GNUTLS/libgnutls-config --prefix`/lib$libsuff
+        addlib=`$cfg --libs`
+        addcflags=`$cfg --cflags`
+        version=`$cfg --version`
+        gtlslib=`$cfg --prefix`/lib$libsuff
       else
         dnl without pkg-config and libgnutls-config, we guess a lot!
         addlib=-lgnutls
@@ -1662,13 +1597,21 @@ if test "$OPENSSL_ENABLED" != "1" -a "$GNUTLS_ENABLED" != "1"; then
         addcflags=`$PKGCONFIG --cflags nss`
         version=`$PKGCONFIG --modversion nss`
         nssprefix=`$PKGCONFIG --variable=prefix nss`
+      else
+        dnl Without pkg-config, we check for nss-config
+
+        check=`nss-config --version 2>/dev/null`
+        if test -n "$check"; then
+          addlib=`nss-config --libs`
+          addcflags=`nss-config --cflags`
+          version=`nss-config --version`
+          nssprefix=`nss-config --prefix`
+        else
+          addlib="-lnss3"
+          addcflags=""
+          version="unknown"
+        fi
       fi
-    else
-      # Without pkg-config, we'll kludge in some defaults
-      addlib="-L$OPT_NSS/lib -lssl3 -lsmime3 -lnss3 -lplds4 -lplc4 -lnspr4 -lpthread -ldl"
-      addcflags="-I$OPT_NSS/include"
-      version="unknown"
-      nssprefix=$OPT_NSS
     fi
 
     dnl Check for functionPK11_CreateGenericObject
@@ -1734,6 +1677,92 @@ dnl Check for the CA bundle
 dnl **********************************************************************
 
 CURL_CHECK_CA_BUNDLE
+
+dnl **********************************************************************
+dnl Check for the presence of LIBSSH2 libraries and headers
+dnl **********************************************************************
+
+dnl Default to compiler & linker defaults for LIBSSH2 files & libraries.
+OPT_LIBSSH2=off
+AC_ARG_WITH(libssh2,dnl
+AC_HELP_STRING([--with-libssh2=PATH],[Where to look for libssh2, PATH points to the LIBSSH2 installation (default: /usr/local/lib); when possible, set the PKG_CONFIG_PATH environment variable instead of using this option])
+AC_HELP_STRING([--without-libssh2], [disable LIBSSH2]),
+  OPT_LIBSSH2=$withval)
+
+if test X"$OPT_LIBSSH2" != Xno; then
+  dnl backup the pre-libssh2 variables
+  CLEANLDFLAGS="$LDFLAGS"
+  CLEANCPPFLAGS="$CPPFLAGS"
+  CLEANLIBS="$LIBS"
+
+  case "$OPT_LIBSSH2" in
+  yes)
+    dnl --with-libssh2 (without path) used
+    CURL_CHECK_PKGCONFIG(libssh2)
+
+    if test "$PKGCONFIG" != "no" ; then
+      LIB_SSH2=`$PKGCONFIG --libs-only-l libssh2`
+      LD_SSH2=`$PKGCONFIG --libs-only-L libssh2`
+      CPP_SSH2=`$PKGCONFIG --cflags-only-I libssh2`
+      version=`$PKGCONFIG --modversion libssh2`
+      DIR_SSH2=`echo $LD_SSH2 | $SED -e 's/-L//'`
+    fi
+    
+    ;;
+  off)
+    dnl no --with-libssh2 option given, just check default places
+    ;;
+  *)
+    dnl use the given --with-libssh2 spot
+    PREFIX_SSH2=$OPT_LIBSSH2
+    ;;
+  esac
+
+  dnl if given with a prefix, we set -L and -I based on that
+  if test -n "$PREFIX_SSH2"; then
+    LD_SSH2=-L${PREFIX_SSH2}/lib$libsuff
+    CPP_SSH2=-I${PREFIX_SSH2}/include
+    DIR_SSH2=${PREFIX_SSH2}/lib$libsuff
+  fi
+
+  LDFLAGS="$LDFLAGS $LD_SSH2"
+  CPPFLAGS="$CPPFLAGS $CPP_SSH2"
+  LIBS="$LIBS $LIB_SSH2"
+
+  AC_CHECK_LIB(ssh2, libssh2_channel_open_ex)
+
+  AC_CHECK_HEADERS(libssh2.h,
+    curl_ssh_msg="enabled (libSSH2)"
+    LIBSSH2_ENABLED=1
+    AC_DEFINE(USE_LIBSSH2, 1, [if libSSH2 is in use])
+    AC_SUBST(USE_LIBSSH2, [1])
+  )
+
+  if test X"$OPT_LIBSSH2" != Xoff &&
+     test "$LIBSSH2_ENABLED" != "1"; then
+    AC_MSG_ERROR([libSSH2 libs and/or directories were not found where specified!])
+  fi
+
+  if test "$LIBSSH2_ENABLED" = "1"; then
+    if test -n "$DIR_SSH2"; then
+       dnl when the libssh2 shared libs were found in a path that the run-time
+       dnl linker doesn't search through, we need to add it to LD_LIBRARY_PATH
+       dnl to prevent further configure tests to fail due to this
+
+       dnl libssh2_version is a post 1.0 addition
+       AC_CHECK_FUNCS( libssh2_version )
+
+       LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$DIR_SSH2"
+       export LD_LIBRARY_PATH
+       AC_MSG_NOTICE([Added $DIR_SSH2 to LD_LIBRARY_PATH])
+    fi
+  else
+    dnl no libssh2, revert back to clean variables
+    LDFLAGS=$CLEANLDFLAGS
+    CPPFLAGS=$CLEANCPPFLAGS
+    LIBS=$CLEANLIBS
+  fi
+fi
 
 dnl **********************************************************************
 dnl Check for the presence of IDN libraries and headers
@@ -2020,6 +2049,7 @@ CURL_CHECK_FUNC_SEND
 CURL_CHECK_MSG_NOSIGNAL
 
 CURL_CHECK_FUNC_ALARM
+CURL_CHECK_FUNC_BASENAME
 CURL_CHECK_FUNC_CLOSESOCKET
 CURL_CHECK_FUNC_CLOSESOCKET_CAMEL
 CURL_CHECK_FUNC_CONNECT
@@ -2044,6 +2074,7 @@ CURL_CHECK_FUNC_IOCTL
 CURL_CHECK_FUNC_IOCTLSOCKET
 CURL_CHECK_FUNC_IOCTLSOCKET_CAMEL
 CURL_CHECK_FUNC_LOCALTIME_R
+CURL_CHECK_FUNC_MEMRCHR
 CURL_CHECK_FUNC_POLL
 CURL_CHECK_FUNC_SETSOCKOPT
 CURL_CHECK_FUNC_SIGACTION
@@ -2078,8 +2109,7 @@ case $host in
     ;;
 esac
 
-AC_CHECK_FUNCS([basename \
-  fork \
+AC_CHECK_FUNCS([fork \
   geteuid \
   getpass_r \
   getppid \
@@ -2116,21 +2146,6 @@ AC_CHECK_FUNCS([basename \
     ])
   fi
 ])
-
-
-AC_CHECK_DECL(basename, ,
-              AC_DEFINE(NEED_BASENAME_PROTO, 1, [If you lack a fine basename() prototype]),
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-#ifdef HAVE_LIBGEN_H
-#include <libgen.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-)
-
 
 dnl Check if the getnameinfo function is available
 dnl and get the types of five of its arguments.

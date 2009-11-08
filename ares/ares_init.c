@@ -1,4 +1,4 @@
-/* $Id: ares_init.c,v 1.94 2009-08-03 11:29:17 bagder Exp $ */
+/* $Id: ares_init.c,v 1.99 2009-11-02 11:55:53 yangtse Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  * Copyright (C) 2007-2009 by Daniel Stenberg
@@ -16,7 +16,7 @@
  * without express or implied warranty.
  */
 
-#include "setup.h"
+#include "ares_setup.h"
 
 #if defined(WIN32) && !defined(WATT32)
 #include <iphlpapi.h>
@@ -80,14 +80,16 @@ static int init_by_environment(ares_channel channel);
 static int init_by_resolv_conf(ares_channel channel);
 static int init_by_defaults(ares_channel channel);
 
+#ifndef WATT32
 static int config_nameserver(struct server_state **servers, int *nservers,
                              char *str);
+#endif
 static int set_search(ares_channel channel, const char *str);
 static int set_options(ares_channel channel, const char *str);
 static const char *try_option(const char *p, const char *q, const char *opt);
 static int init_id_key(rc4_key* key,int key_data_len);
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(WATT32)
 static int sortlist_alloc(struct apattern **sortlist, int *nsort, struct apattern *pat);
 static int ip_addr(const char *s, int len, struct in_addr *addr);
 static void natural_mask(struct apattern *pat);
@@ -635,7 +637,9 @@ quit:
 
 static int init_by_resolv_conf(ares_channel channel)
 {
+#ifndef WATT32
   char *line = NULL;
+#endif
   int status = -1, nservers = 0, nsort = 0;
   struct server_state *servers = NULL;
   struct apattern *sortlist = NULL;
@@ -805,7 +809,7 @@ DhcpNameServer
   {
     char *p;
     FILE *fp;
-    int linesize;
+    size_t linesize;
     int error;
 
     /* Don't read resolv.conf and friends if we don't have to */
@@ -971,6 +975,9 @@ static int init_by_defaults(ares_channel channel)
 {
   char *hostname = NULL;
   int rc = ARES_SUCCESS;
+#ifdef HAVE_GETHOSTNAME
+  char *dot;
+#endif
 
   if (channel->flags == -1)
     channel->flags = 0;
@@ -1040,15 +1047,15 @@ static int init_by_defaults(ares_channel channel)
 
     } while(0);
 
-    if (strchr(hostname, '.'))  {
+    dot = strchr(hostname, '.');
+    if (dot) {
       /* a dot was found */
-
       channel->domains = malloc(sizeof(char *));
       if (!channel->domains) {
         rc = ARES_ENOMEM;
         goto error;
       }
-      channel->domains[0] = strdup(strchr(hostname, '.') + 1);
+      channel->domains[0] = strdup(dot + 1);
       if (!channel->domains[0]) {
         rc = ARES_ENOMEM;
         goto error;
@@ -1088,7 +1095,7 @@ static int init_by_defaults(ares_channel channel)
   return rc;
 }
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(WATT32)
 static int config_domain(ares_channel channel, char *str)
 {
   char *q;
@@ -1128,9 +1135,9 @@ static int config_lookup(ares_channel channel, const char *str,
   channel->lookups = strdup(lookups);
   return (channel->lookups) ? ARES_SUCCESS : ARES_ENOMEM;
 }
+#endif  /* !WIN32 & !WATT32 */
 
-#endif
-
+#ifndef WATT32
 static int config_nameserver(struct server_state **servers, int *nservers,
                              char *str)
 {
@@ -1273,7 +1280,8 @@ static int config_sortlist(struct apattern **sortlist, int *nsort,
 
   return ARES_SUCCESS;
 }
-#endif
+#endif  /* !WIN32 */
+#endif  /* !WATT32 */
 
 static int set_search(ares_channel channel, const char *str)
 {
@@ -1365,29 +1373,39 @@ static int set_options(ares_channel channel, const char *str)
   return ARES_SUCCESS;
 }
 
-#ifndef WIN32
+static const char *try_option(const char *p, const char *q, const char *opt)
+{
+  size_t len = strlen(opt);
+  return ((size_t)(q - p) >= len && !strncmp(p, opt, len)) ? &p[len] : NULL;
+}
+
+#if !defined(WIN32) && !defined(WATT32)
 static char *try_config(char *s, const char *opt)
 {
   size_t len;
-  ssize_t i;
-  ssize_t j;
   char *p;
+  char *q;
 
   if (!s || !opt)
     /* no line or no option */
     return NULL;
 
   /* trim line comment */
-  for (i = 0; s[i] && s[i] != '#'; ++i);
-  s[i] = '\0';
+  p = s;
+  while (*p && (*p != '#'))
+    p++;
+  *p = '\0';
 
   /* trim trailing whitespace */
-  for (j = i-1; j >= 0 && ISSPACE(s[j]); --j);
-  s[++j] = '\0';
+  q = p - 1;
+  while ((q >= s) && ISSPACE(*q))
+    q--;
+  *++q = '\0';
 
   /* skip leading whitespace */
-  for (i = 0; s[i] && ISSPACE(s[i]); ++i);
-  p = &s[i];
+  p = s;
+  while (*p && ISSPACE(*p))
+    p++;
 
   if (!*p)
     /* empty line */
@@ -1424,15 +1442,7 @@ static char *try_config(char *s, const char *opt)
   /* return pointer to option value */
   return p;
 }
-#endif
 
-static const char *try_option(const char *p, const char *q, const char *opt)
-{
-  size_t len = strlen(opt);
-  return ((size_t)(q - p) >= len && !strncmp(p, opt, len)) ? &p[len] : NULL;
-}
-
-#ifndef WIN32
 static int sortlist_alloc(struct apattern **sortlist, int *nsort,
                           struct apattern *pat)
 {
@@ -1478,7 +1488,8 @@ static void natural_mask(struct apattern *pat)
   else
     pat->mask.addr4.s_addr = htonl(IN_CLASSC_NET);
 }
-#endif
+#endif /* !WIN32 && !WATT32 */
+
 /* initialize an rc4 key. If possible a cryptographically secure random key
    is generated using a suitable function (for example win32's RtlGenRandom as
    described in

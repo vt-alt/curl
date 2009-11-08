@@ -18,7 +18,7 @@
 .\" * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 .\" * KIND, either express or implied.
 .\" *
-.\" * $Id: curl.1,v 1.272 2009-08-04 12:02:27 bagder Exp $
+.\" * $Id: curl.1,v 1.280 2009-10-26 08:54:23 bagder Exp $
 .\" **************************************************************************
 .\"
 .TH curl 1 "10 July 2008" "Curl 7.19.0" "Curl Manual"
@@ -74,6 +74,10 @@ If you specify URL without protocol:// prefix, curl will attempt to guess what
 protocol you might want. It will then default to HTTP but try other protocols
 based on often-used host name prefixes. For example, for host names starting
 with "ftp." curl will assume you want to speak FTP.
+
+curl will do its best to use what you pass to it as a URL. It is not trying to
+validate it as a syntactically correct URL by any means but is instead
+\fBvery\fP liberal with what it accepts.
 
 Curl will attempt to re-use connections for multiple file transfers, so that
 getting many files from the same server will not do multiple connects /
@@ -215,6 +219,13 @@ To create remote directories when using FTP or SFTP, try
 \fI--ftp-create-dirs\fP.
 .IP "--crlf"
 (FTP) Convert LF to CRLF in upload. Useful for MVS (OS/390).
+.IP "--crlfile <file>"
+(HTTPS/FTPS) Provide a file using PEM format with a Certificate Revocation
+List that may specify peer certificates that are to be considered revoked.
+
+If this option is used several times, the last one will be used.
+
+(Added in 7.19.7)
 .IP "-d/--data <data>"
 (HTTP) Sends the specified data in a POST request to the HTTP server, in the
 same way that a browser does when a user has filled in an HTML form and
@@ -1097,7 +1108,7 @@ Set this option to zero to not timeout retries. (Added in 7.12.3)
 If this option is used multiple times, the last occurrence determines the
 amount.
 .IP "-s/--silent"
-Silent mode. Don't show progress meter or error messages.  Makes
+Silent or quiet mode. Don't show progress meter or error messages.  Makes
 Curl mute.
 .IP "-S/--show-error"
 When used with -s it makes curl show an error message if it fails.
@@ -1179,6 +1190,9 @@ file name to use. That will most likely cause the upload operation to fail. If
 this is used on a HTTP(S) server, the PUT command will be used.
 
 Use the file name "-" (a single dash) to use stdin instead of a given file.
+Alternately, the file name "." (a single period) may be specified instead
+of "-" to use stdin in non-blocking mode to allow reading server output
+while stdin is being uploaded.
 
 You can specify one -T for each URL on the command line. Each -T + URL pair
 specifies what to upload and to where. curl also supports "globbing" of the -T
@@ -1253,6 +1267,8 @@ If you think this option still doesn't give you enough details, consider using
 \fI--trace\fP or \fI--trace-ascii\fP instead.
 
 This option overrides previous uses of \fI--trace-ascii\fP or \fI--trace\fP.
+
+Use \fI-S/--silent\fP to make curl quiet.
 .IP "-V/--version"
 Displays information about curl and the libcurl version it uses.
 
@@ -1420,7 +1436,9 @@ If this option is used several times, the last one will be used.
 (HTTP) Specifies a custom request method to use when communicating with the
 HTTP server.  The specified request will be used instead of the method
 otherwise used (which defaults to GET). Read the HTTP 1.1 specification for
-details and explanations.
+details and explanations. Common additional HTTP requests include PUT and
+DELETE, but related technologies like WebDAV offers PROPFIND, COPY, MOVE and
+more.
 
 (FTP)
 Specifies a custom FTP command to use instead of LIST when doing file lists

@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: sws.c,v 1.133 2009-06-12 09:01:41 yangtse Exp $
+ * $Id: sws.c,v 1.136 2009-09-17 14:02:50 yangtse Exp $
  ***************************************************************************/
 
 /* sws.c: simple (silly?) web server
@@ -584,7 +584,7 @@ static int get_request(curl_socket_t sock, struct httprequest *req)
   /*** end of httprequest init ***/
 
   while (req->offset < REQBUFSIZ-1) {
-    if(pipereq_length) {
+    if(pipereq_length && pipereq) {
       memmove(reqbuf, pipereq, pipereq_length);
       got = pipereq_length;
       pipereq_length = 0;
@@ -613,7 +613,7 @@ static int get_request(curl_socket_t sock, struct httprequest *req)
 
     logmsg("Read %zd bytes", got);
 
-    req->offset += got;
+    req->offset += (int)got;
     reqbuf[req->offset] = '\0';
 
     if(ProcessRequest(req)) {

@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: setup.h,v 1.167 2009-07-14 13:25:14 gknauf Exp $
+ * $Id: setup.h,v 1.171 2009-10-27 16:38:42 yangtse Exp $
  ***************************************************************************/
 
 /*
@@ -78,7 +78,7 @@
 
 /* ================================================================ */
 /* Definition of preprocessor macros/symbols which modify compiler  */
-/* behaviour or generated code characteristics must be done here,   */
+/* behavior or generated code characteristics must be done here,   */
 /* as appropriate, before any system header file is included. It is */
 /* also possible to have them defined in the config file included   */
 /* before this point. As a result of all this we frown inclusion of */
@@ -175,9 +175,9 @@
 
 /*
  * Include header files for windows builds before redefining anything.
- * Use this preproessor block only to include or exclude windows.h,
+ * Use this preprocessor block only to include or exclude windows.h,
  * winsock2.h, ws2tcpip.h or winsock.h. Any other windows thing belongs
- * to any other further and independant block.  Under Cygwin things work
+ * to any other further and independent block.  Under Cygwin things work
  * just as under linux (e.g. <sys/socket.h>) and the winsock headers should
  * never be included when __CYGWIN__ is defined.  configure script takes
  * care of this, not defining HAVE_WINDOWS_H, HAVE_WINSOCK_H, HAVE_WINSOCK2_H,
@@ -255,19 +255,10 @@
 #include <curl/stdcheaders.h>
 #endif
 
-/*
- * PellesC kludge section (yikes);
- *  - It has 'ssize_t', but it is in <unistd.h>. The way the headers
- *    on Win32 are included, forces me to include this header here.
- *  - sys_nerr, EINTR is missing in v4.0 or older.
- */
 #ifdef __POCC__
-  #include <sys/types.h>
-  #include <unistd.h>
-  #if (__POCC__ <= 400)
-  #define sys_nerr EILSEQ  /* for strerror.c */
-  #define EINTR    -1      /* for select.c */
-  #endif
+#  include <sys/types.h>
+#  include <unistd.h>
+#  define sys_nerr EILSEQ
 #endif
 
 /*
@@ -293,6 +284,7 @@
 #  define fstat(fdes,stp)            _fstati64(fdes, stp)
 #  define stat(fname,stp)            _stati64(fname, stp)
 #  define struct_stat                struct _stati64
+#  define LSEEK_ERROR                (__int64)-1
 #endif
 
 /*
@@ -307,10 +299,15 @@
 #  define fstat(fdes,stp)            _fstat(fdes, stp)
 #  define stat(fname,stp)            _stat(fname, stp)
 #  define struct_stat                struct _stat
+#  define LSEEK_ERROR                (long)-1
 #endif
 
 #ifndef struct_stat
 #  define struct_stat struct stat
+#endif
+
+#ifndef LSEEK_ERROR
+#  define LSEEK_ERROR (off_t)-1
 #endif
 
 /*
@@ -408,15 +405,53 @@
 #endif
 
 /*
+ * When using WINSOCK, TELNET protocol requires WINSOCK2 API.
+ */
+
+#if defined(USE_WINSOCK) && (USE_WINSOCK != 2)
+#  define CURL_DISABLE_TELNET 1
+#endif
+
+/*
  * msvc 6.0 does not have struct sockaddr_storage and
  * does not define IPPROTO_ESP in winsock2.h. But both
  * are available if PSDK is properly installed.
  */
 
-#ifdef _MSC_VER
-#if !defined(HAVE_WINSOCK2_H) || ((_MSC_VER < 1300) && !defined(IPPROTO_ESP))
-#undef HAVE_STRUCT_SOCKADDR_STORAGE
+#if defined(_MSC_VER) && !defined(__POCC__)
+#  if !defined(HAVE_WINSOCK2_H) || ((_MSC_VER < 1300) && !defined(IPPROTO_ESP))
+#    undef HAVE_STRUCT_SOCKADDR_STORAGE
+#  endif
 #endif
+
+/*
+ * msvc 6.0 requires PSDK in order to have INET6_ADDRSTRLEN
+ * defined in ws2tcpip.h as well as to provide IPv6 support.
+ */
+
+#if defined(_MSC_VER) && !defined(__POCC__)
+#  if !defined(HAVE_WS2TCPIP_H) || ((_MSC_VER < 1300) && !defined(INET6_ADDRSTRLEN))
+#    undef HAVE_FREEADDRINFO
+#    undef HAVE_GETADDRINFO
+#    undef HAVE_GETNAMEINFO
+#    undef ENABLE_IPV6
+#  endif
+#endif
+
+/*
+ * Intentionally fail to build when using msvc 6.0 without PSDK installed.
+ * The brave of heart can circumvent this, defining ALLOW_MSVC6_WITHOUT_PSDK
+ * in lib/config-win32.h although absolutely discouraged and unsupported.
+ */
+
+#if defined(_MSC_VER) && !defined(__POCC__)
+#  if !defined(HAVE_WINDOWS_H) || ((_MSC_VER < 1300) && !defined(_FILETIME_))
+#    if !defined(ALLOW_MSVC6_WITHOUT_PSDK)
+#      error MSVC 6.0 requires 'February 2003 Platform SDK' a.k.a. 'Windows Server 2003 PSDK'
+#    else
+#      define CURL_DISABLE_LDAP 1
+#    endif
+#  endif
 #endif
 
 #ifdef NETWARE

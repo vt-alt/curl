@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: http.c,v 1.424 2009-07-08 07:00:40 bagder Exp $
+ * $Id: http.c,v 1.427 2009-10-30 22:24:48 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -749,6 +749,9 @@ CURLcode Curl_http_input_auth(struct connectdata *conn,
         data->state.authproblem = FALSE;
         /* we received GSS auth info and we dealt with it fine */
         data->state.negotiate.state = GSS_AUTHRECV;
+      }
+      else {
+        data->state.authproblem = TRUE;
       }
     }
   }
@@ -2050,7 +2053,7 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
   struct HTTP *http;
   const char *ppath = data->state.path;
   bool paste_ftp_userpwd = FALSE;
-  char ftp_typecode[sizeof(";type=?")] = "";
+  char ftp_typecode[sizeof("/;type=?")] = "";
   const char *host = conn->host.name;
   const char *te = ""; /* transfer-encoding */
   const char *ptr;
@@ -2292,20 +2295,27 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
     if(checkprefix("ftp://", ppath)) {
       if (data->set.proxy_transfer_mode) {
         /* when doing ftp, append ;type=<a|i> if not present */
-        char *p = strstr(ppath, ";type=");
-        if(p && p[6] && p[7] == 0) {
-          switch (Curl_raw_toupper(p[6])) {
+        char *type = strstr(ppath, ";type=");
+        if(type && type[6] && type[7] == 0) {
+          switch (Curl_raw_toupper(type[6])) {
           case 'A':
           case 'D':
           case 'I':
             break;
           default:
-            p = NULL;
+            type = NULL;
           }
         }
-        if(!p)
-          snprintf(ftp_typecode, sizeof(ftp_typecode), ";type=%c",
+        if(!type) {
+          char *p = ftp_typecode;
+          /* avoid sending invalid URLs like ftp://example.com;type=i if the
+           * user specified ftp://example.com without the slash */
+          if (!*data->state.path && ppath[strlen(ppath) - 1] != '/') {
+            *p++ = '/';
+          }
+          snprintf(p, sizeof(ftp_typecode) - 1, ";type=%c",
                    data->set.prefer_ascii ? 'a' : 'i');
+        }
       }
       if (conn->bits.user_passwd && !conn->bits.userpwd_in_url)
         paste_ftp_userpwd = TRUE;
@@ -2895,7 +2905,17 @@ CURLcode Curl_http(struct connectdata *conn, bool *done)
       if(result)
         return result;
 
-      if(data->set.postfieldsize) {
+      if(data->req.upload_chunky && conn->bits.authneg) {
+        /* Chunky upload is selected and we're negotiating auth still, send
+           end-of-data only */
+        result = add_buffer(req_buffer,
+                            "\x0d\x0a\x30\x0d\x0a\x0d\x0a", 7);
+        /* CR  LF   0  CR  LF  CR  LF */
+        if(result)
+          return result;
+      }
+
+      else if(data->set.postfieldsize) {
         /* set the upload size to the progress meter */
         Curl_pgrsSetUploadSize(data, postsize?postsize:-1);
 

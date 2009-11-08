@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: connect.c,v 1.220 2009-07-09 21:47:24 bagder Exp $
+ * $Id: connect.c,v 1.223 2009-10-01 07:59:45 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -277,7 +277,7 @@ static CURLcode bindlocal(struct connectdata *conn,
        * hostname or ip address.
        */
       if(setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE,
-                    dev, strlen(dev)+1) != 0) {
+                    dev, (curl_socklen_t)strlen(dev)+1) != 0) {
         error = SOCKERRNO;
         infof(data, "SO_BINDTODEVICE %s failed with errno %d: %s;"
               " will do regular bind\n",
@@ -502,7 +502,7 @@ static bool trynextip(struct connectdata *conn,
       /* store the new socket descriptor */
       conn->sock[sockindex] = sockfd;
       conn->ip_addr = ai;
-      break;
+      return FALSE;
     }
     ai = ai->ai_next;
   }
@@ -664,6 +664,13 @@ static void nosigpipe(struct connectdata *conn,
 void Curl_sndbufset(curl_socket_t sockfd)
 {
   int val = CURL_MAX_WRITE_SIZE + 32;
+  int curval = 0;
+  int curlen = sizeof(curval);
+
+  if (getsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, (char *)&curval, &curlen) == 0)
+    if (curval > val)
+      return;
+
   setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, (const char *)&val, sizeof(val));
 }
 #endif
