@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.814 2009-11-17 22:53:55 bagder Exp $
+ * $Id: url.c,v 1.815 2009-11-20 13:27:21 bagder Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -2758,6 +2758,7 @@ ConnectionExists(struct SessionHandle *data,
               is the checked one using the same host, port and type? */
       if(check->bits.proxy &&
          (needle->proxytype == check->proxytype) &&
+         (needle->bits.tunnel_proxy == check->bits.tunnel_proxy) &&
          Curl_raw_equal(needle->proxy.name, check->proxy.name) &&
          needle->port == check->port) {
         /* This is the same proxy connection, use it! */
