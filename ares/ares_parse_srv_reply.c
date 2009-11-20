@@ -1,4 +1,4 @@
-/* $Id: ares_parse_srv_reply.c,v 1.10 2009-11-20 09:06:33 yangtse Exp $ */
+/* $Id: ares_parse_srv_reply.c,v 1.11 2009-11-20 09:57:25 yangtse Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  * Copyright (C) 2009 by Jakub Hrozek <jhrozek@redhat.com>
@@ -93,7 +93,7 @@ ares_parse_srv_reply (const unsigned char *abuf, int alen,
   aptr += len + QFIXEDSZ;
 
   /* Examine each answer resource record (RR) in turn. */
-  for (i = 0; i < (int) ancount; i++)
+  for (i = 0; i < ancount; i++)
     {
       /* Decode the RR up to the data field. */
       status = ares_expand_name (aptr, abuf, alen, &rr_name, &len);
