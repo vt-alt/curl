@@ -1,4 +1,4 @@
-/* $Id: ares_data.c,v 1.1 2009-11-20 08:50:03 yangtse Exp $ */
+/* $Id: ares_data.c,v 1.2 2009-11-20 09:06:33 yangtse Exp $ */
 
 /* Copyright (C) 2009 by Daniel Stenberg
  *
@@ -34,7 +34,8 @@
 ** of c-ares functions returning pointers that must be free'ed using this
 ** function is:
 **
-**   FIXME: specify function list.
+**   ares_parse_srv_reply()
+**   ares_parse_txt_reply()
 */
 
 void ares_free_data(void *dataptr)

@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.68 2009-11-20 08:50:03 yangtse Exp $ */
+/* $Id: ares.h,v 1.69 2009-11-20 09:06:33 yangtse Exp $ */
 
 /* Copyright 1998, 2009 by the Massachusetts Institute of Technology.
  * Copyright (C) 2007-2009 by Daniel Stenberg
@@ -476,13 +476,11 @@ CARES_EXTERN int ares_parse_ns_reply(const unsigned char *abuf,
 
 CARES_EXTERN int ares_parse_srv_reply(const unsigned char* abuf,
                                       int alen,
-                                      struct ares_srv_reply** srv_out,
-                                      int *nsrvreply);
+                                      struct ares_srv_reply** srv_out);
 
 CARES_EXTERN int ares_parse_txt_reply(const unsigned char* abuf,
                                       int alen,
-                                      struct ares_txt_reply** txt_out,
-                                      int *nsrvreply);
+                                      struct ares_txt_reply** txt_out);
 
 CARES_EXTERN void ares_free_string(void *str);
 
