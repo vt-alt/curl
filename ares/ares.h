@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.69 2009-11-20 09:06:33 yangtse Exp $ */
+/* $Id: ares.h,v 1.70 2009-11-20 14:11:06 yangtse Exp $ */
 
 /* Copyright 1998, 2009 by the Massachusetts Institute of Technology.
  * Copyright (C) 2007-2009 by Daniel Stenberg
@@ -314,9 +314,9 @@ CARES_EXTERN void ares_destroy(ares_channel channel);
 
 CARES_EXTERN void ares_cancel(ares_channel channel);
 
-void ares_set_socket_callback(ares_channel channel,
-                              ares_sock_create_callback callback,
-                              void *user_data);
+CARES_EXTERN void ares_set_socket_callback(ares_channel channel,
+                                           ares_sock_create_callback callback,
+                                           void *user_data);
 
 CARES_EXTERN void ares_send(ares_channel channel,
                             const unsigned char *qbuf,
