@@ -3,7 +3,7 @@
  * on 2007-04-11.  Lifted from version 5.2 of the 'Open Mash' project with
  * the modified BSD license, BSD license without the advertising clause.
  *
- * $Id: ares_getopt.c,v 1.8 2009-11-16 20:02:12 yangtse Exp $
+ * $Id: ares_getopt.c,v 1.9 2009-11-22 03:41:26 yangtse Exp $
  */
 
 /*
@@ -51,7 +51,7 @@
 
 int   opterr = 1,     /* if error message should be printed */
       optind = 1;     /* index into parent argv vector */
-static int optopt;    /* character checked for validity */
+int   optopt = 0;     /* character checked for validity */
 static int optreset;  /* reset getopt */
 char  *optarg;        /* argument associated with option */
 
