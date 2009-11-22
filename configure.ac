@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: configure.ac,v 1.439 2009-11-15 15:23:44 kdudka Exp $
+# $Id: configure.ac,v 1.440 2009-11-22 05:31:57 yangtse Exp $
 #***************************************************************************
 dnl Process this file with autoconf to produce a configure script.
 
@@ -94,6 +94,11 @@ fi
 AC_SUBST([AR])
 
 AC_SUBST(libext)
+
+dnl Remove non-configure distributed curlbuild.h
+if test -f ${srcdir}/include/curl/curlbuild.h; then
+  rm -f ${srcdir}/include/curl/curlbuild.h
+fi
 
 dnl figure out the libcurl version
 VERSION=`$SED -ne 's/^#define LIBCURL_VERSION "\(.*\)"/\1/p' ${srcdir}/include/curl/curlver.h`
