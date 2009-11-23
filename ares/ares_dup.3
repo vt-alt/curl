@@ -1,4 +1,4 @@
-.\" $Id: ares_dup.3,v 1.2 2009-05-26 18:00:14 yangtse Exp $
+.\" $Id: ares_dup.3,v 1.3 2009-11-23 00:57:50 yangtse Exp $
 .\"
 .\" Copyright (C) 2004-2009 by Daniel Stenberg
 .\"
@@ -21,12 +21,12 @@ ares_dup \- Duplicate a resolver channel
 .nf
 .B #include <ares.h>
 .PP
-.B int ares_dup(ares_channel *\fIchannel\fP, ares_channel \fIsource\fP)
+.B int ares_dup(ares_channel *\fIdest\fP, ares_channel \fIsource\fP)
 .fi
 .SH DESCRIPTION
 The \fBares_dup(3)\fP function duplicates an existing communications channel
 for name service lookups.  If it returns successfully, \fBares_dup(3)\fP will
-set the variable pointed to by \fIchannel\fP to a handle used to identify the
+set the variable pointed to by \fIdest\fP to a handle used to identify the
 name service channel.  The caller should invoke \fIares_destroy(3)\fP on the
 handle when the channel is no longer needed.
 
