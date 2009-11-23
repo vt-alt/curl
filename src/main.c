@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.541 2009-10-27 16:38:42 yangtse Exp $
+ * $Id: main.c,v 1.542 2009-11-23 13:56:46 bagder Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -3316,9 +3316,15 @@ static size_t my_fwrite(void *buffer, size_t sz, size_t nmemb, void *stream)
     curl_easy_pause(config->easy, CURLPAUSE_CONT);
   }
 
-  if(config->nobuffer)
+  if(config->nobuffer) {
     /* disable output buffering */
-    fflush(out->stream);
+    rc = fflush(out->stream);
+    if(rc) {
+      /* return a value that isn't the same as sz * nmemb */
+      rc = (0 == (sz * nmemb)) ? 1 : 0;
+      return rc; /* failure */
+    }
+  }
 
   return rc;
 }
@@ -5170,8 +5176,14 @@ show_error:
           }
         }
 
-        if (outfile && !curlx_strequal(outfile, "-") && outs.stream)
-          fclose(outs.stream);
+        if (outfile && !curlx_strequal(outfile, "-") && outs.stream) {
+          int rc = fclose(outs.stream);
+          if(!res && rc) {
+            /* something went wrong in the writing process */
+            res = CURLE_WRITE_ERROR;
+            fprintf(config->errors, "(%s) Failed writing body\n", res);
+          }
+        }
 
 #ifdef HAVE_UTIME
         /* Important that we set the time _after_ the file has been
