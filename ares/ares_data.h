@@ -1,4 +1,4 @@
-/* $Id: ares_data.h,v 1.1 2009-11-20 08:50:03 yangtse Exp $ */
+/* $Id: ares_data.h,v 1.2 2009-11-23 12:03:33 yangtse Exp $ */
 
 /* Copyright (C) 2009 by Daniel Stenberg
  *
@@ -16,16 +16,16 @@
  */
 
 typedef enum {
-  ARES_DATATYPE_UNKNOWN = 1,   /* unknown data type     */
+  ARES_DATATYPE_UNKNOWN = 1,  /* unknown data type     - introduced in 1.7.0 */
+  ARES_DATATYPE_SRV_REPLY,    /* struct ares_srv_reply - introduced in 1.7.0 */
+  ARES_DATATYPE_TXT_REPLY,    /* struct ares_txt_reply - introduced in 1.7.0 */
 #if 0
-  ARES_DATATYPE_ADDR6TTL,      /* struct ares_addrttl   */
-  ARES_DATATYPE_ADDRTTL,       /* struct ares_addr6ttl  */
-  ARES_DATATYPE_HOSTENT,       /* struct hostent        */
-  ARES_DATATYPE_OPTIONS,       /* struct ares_options   */
+  ARES_DATATYPE_ADDR6TTL,     /* struct ares_addrttl   */
+  ARES_DATATYPE_ADDRTTL,      /* struct ares_addr6ttl  */
+  ARES_DATATYPE_HOSTENT,      /* struct hostent        */
+  ARES_DATATYPE_OPTIONS,      /* struct ares_options   */
 #endif
-  ARES_DATATYPE_SRV_REPLY,     /* struct ares_srv_reply */
-  ARES_DATATYPE_TXT_REPLY,     /* struct ares_txt_reply */
-  ARES_DATATYPE_LAST           /* not used              */
+  ARES_DATATYPE_LAST          /* not used              - introduced in 1.7.0 */
 } ares_datatype;
 
 #define ARES_DATATYPE_MARK 0xbead

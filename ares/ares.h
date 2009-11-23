@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.71 2009-11-23 01:24:17 yangtse Exp $ */
+/* $Id: ares.h,v 1.72 2009-11-23 12:03:32 yangtse Exp $ */
 
 /* Copyright 1998, 2009 by the Massachusetts Institute of Technology.
  * Copyright (C) 2007-2009 by Daniel Stenberg
@@ -119,14 +119,14 @@ extern "C" {
 #define ARES_EBADHINTS          20
 
 /* Uninitialized library error code */
-#define ARES_ENOTINITIALIZED    21          /* introduced in 1.6.1 */
+#define ARES_ENOTINITIALIZED    21          /* introduced in 1.7.0 */
 
 /* ares_library_init error codes */
-#define ARES_ELOADIPHLPAPI           22     /* introduced in 1.6.1 */
-#define ARES_EADDRGETNETWORKPARAMS   23     /* introduced in 1.6.1 */
+#define ARES_ELOADIPHLPAPI           22     /* introduced in 1.7.0 */
+#define ARES_EADDRGETNETWORKPARAMS   23     /* introduced in 1.7.0 */
 
 /* More error codes */
-#define ARES_ECANCELLED         24          /* introduced in 1.6.1 */
+#define ARES_ECANCELLED         24          /* introduced in 1.7.0 */
 
 /* Flag values */
 #define ARES_FLAG_USEVC         (1 << 0)
@@ -404,10 +404,10 @@ CARES_EXTERN int ares_expand_string(const unsigned char *encoded,
                                     long *enclen);
 
 /*
- * NOTE: before c-ares 1.6.1 we would most often use the system in6_addr
+ * NOTE: before c-ares 1.7.0 we would most often use the system in6_addr
  * struct below when ares itself was built, but many apps would use this
  * private version since the header checked a HAVE_* define for it. Starting
- * with 1.6.1 we always declare and use our own to stop relying on the
+ * with 1.7.0 we always declare and use our own to stop relying on the
  * system's one.
  */
 struct ares_in6_addr {
