@@ -1,4 +1,4 @@
-/* $Id: ares.h,v 1.70 2009-11-20 14:11:06 yangtse Exp $ */
+/* $Id: ares.h,v 1.71 2009-11-23 01:24:17 yangtse Exp $ */
 
 /* Copyright 1998, 2009 by the Massachusetts Institute of Technology.
  * Copyright (C) 2007-2009 by Daniel Stenberg
@@ -416,15 +416,12 @@ struct ares_in6_addr {
   } _S6_un;
 };
 
-/*
- * TODO: the structs 'addrttl' and 'addr6ttl' really should get their names
- * prefixed with ares_ to keep them in our own "name space".
- */
-struct addrttl {
+struct ares_addrttl {
   struct in_addr ipaddr;
   int            ttl;
 };
-struct addr6ttl {
+
+struct ares_addr6ttl {
   struct ares_in6_addr ip6addr;
   int             ttl;
 };
@@ -454,13 +451,13 @@ struct ares_txt_reply {
 CARES_EXTERN int ares_parse_a_reply(const unsigned char *abuf,
                                     int alen,
                                     struct hostent **host,
-                                    struct addrttl *addrttls,
+                                    struct ares_addrttl *addrttls,
                                     int *naddrttls);
 
 CARES_EXTERN int ares_parse_aaaa_reply(const unsigned char *abuf,
                                        int alen,
                                        struct hostent **host,
-                                       struct addr6ttl *addrttls,
+                                       struct ares_addr6ttl *addrttls,
                                        int *naddrttls);
 
 CARES_EXTERN int ares_parse_ptr_reply(const unsigned char *abuf,

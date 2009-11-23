@@ -1,4 +1,4 @@
-/* $Id: ares_parse_a_reply.c,v 1.19 2009-11-02 11:55:53 yangtse Exp $ */
+/* $Id: ares_parse_a_reply.c,v 1.20 2009-11-23 01:24:17 yangtse Exp $ */
 
 /* Copyright 1998 by the Massachusetts Institute of Technology.
  *
@@ -54,7 +54,7 @@
 
 int ares_parse_a_reply(const unsigned char *abuf, int alen,
                        struct hostent **host,
-                       struct addrttl *addrttls, int *naddrttls)
+                       struct ares_addrttl *addrttls, int *naddrttls)
 {
   unsigned int qdcount, ancount;
   int status, i, rr_type, rr_class, rr_len, rr_ttl, naddrs;
@@ -157,7 +157,7 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
             }
           if (naddrs < max_addr_ttls)
             {
-              struct addrttl * const at = &addrttls[naddrs];
+              struct ares_addrttl * const at = &addrttls[naddrs];
               if (aptr + sizeof(struct in_addr) > abuf + alen)
               {
                 status = ARES_EBADRESP;
