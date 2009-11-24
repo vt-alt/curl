@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: configure.ac,v 1.440 2009-11-22 05:31:57 yangtse Exp $
+# $Id: configure.ac,v 1.441 2009-11-24 16:12:22 yangtse Exp $
 #***************************************************************************
 dnl Process this file with autoconf to produce a configure script.
 
@@ -180,6 +180,17 @@ case $host in
     ;;
 esac
 
+AC_MSG_CHECKING([if compiler is icc (to build with PIC)])
+case $CC in
+  icc | */icc)
+    AC_MSG_RESULT([yes])
+    with_pic=yes
+    ;;
+  *)
+    AC_MSG_RESULT([no])
+    ;;
+esac
+
 dnl libtool setup
 AC_PROG_LIBTOOL
 
@@ -244,27 +255,17 @@ CURL_SET_COMPILER_DEBUG_OPTS
 CURL_SET_COMPILER_OPTIMIZE_OPTS
 CURL_SET_COMPILER_WARNING_OPTS
 
-case $host in
+if test "$compiler_id" = "INTEL_UNIX_C"; then
   #
-  x86_64*linux*|amd64*freebsd*|ia64*freebsd*)
-    #
-    if test "$compiler_id" = "INTEL_UNIX_C"; then
-      #
-      if test "$compiler_num" -ge "900" &&
-        test "$compiler_num" -lt "1000"; then
-        dnl icc 9.X specific
-        CFLAGS="$CFLAGS -i-dynamic"
-      fi
-      #
-      if test "$compiler_num" -ge "1000"; then
-        dnl icc 10.X or later
-        CFLAGS="$CFLAGS -shared-intel"
-      fi
-      #
-    fi
-    ;;
+  if test "$compiler_num" -ge "1000"; then
+    dnl icc 10.X or later
+    CFLAGS="$CFLAGS -shared-intel"
+  elif test "$compiler_num" -ge "900"; then
+    dnl icc 9.X specific
+    CFLAGS="$CFLAGS -i-dynamic"
+  fi
   #
-esac
+fi
 
 CURL_CHECK_COMPILER_HALT_ON_ERROR
 CURL_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE
