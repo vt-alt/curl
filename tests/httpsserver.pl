@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# $Id: httpsserver.pl,v 1.15 2009-11-26 22:07:47 yangtse Exp $
+# $Id: httpsserver.pl,v 1.16 2009-11-27 12:00:53 yangtse Exp $
 # This is the HTTPS and FTPS server designed for the curl test suite.
 #
 # It is actually just a layer that runs stunnel properly.
@@ -87,7 +87,7 @@ foreach my $veropt (('-version', '-V')) {
 
 my $cmd;
 if(!$ver_major) {
-    print STDERR "no stunnel or unknown version\n";
+    print "no stunnel or unknown version\n";
 }
 elsif($ver_major < 4) {
     # stunnel version less than 4.00
@@ -132,11 +132,15 @@ if($verbose) {
 	";
 }
 
+# Set file permissions on certificate pem file.
+chmod(0600, $certfile) if(-f $certfile);
+
+
 my $rc = system($cmd);
 
 $rc >>= 8;
 #if($rc) {
-#    print STDERR "stunnel exited with $rc!\n";
+#    print "stunnel exited with $rc!\n";
 #}
 
 unlink $conffile;
