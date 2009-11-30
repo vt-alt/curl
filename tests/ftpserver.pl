@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftpserver.pl,v 1.101 2009-11-26 10:15:08 yangtse Exp $
+# $Id: ftpserver.pl,v 1.102 2009-11-30 13:48:51 yangtse Exp $
 ###########################################################################
 
 # This is the FTP server designed for the curl test suite.
@@ -577,7 +577,7 @@ sub PASV_command {
     my $pasvport;
     my $pidf=".sockdata$ftpdnum$ext.pid";
 
-    my $prev = checkserver($pidf);
+    my $prev = processexists($pidf);
     if($prev > 0) {
         print "kill existing server: $prev\n" if($verbose);
         kill(9, $prev);
