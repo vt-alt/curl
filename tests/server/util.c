@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: util.c,v 1.28 2009-11-26 10:15:09 yangtse Exp $
+ * $Id: util.c,v 1.29 2009-12-09 18:41:44 yangtse Exp $
  ***************************************************************************/
 #include "setup.h" /* portability help from the lib directory */
 
@@ -203,7 +203,7 @@ int wait_ms(int timeout_ms)
     if(r != -1)
       break;
     error = SOCKERRNO;
-    if(error == EINVAL)
+    if(error && (error != EINTR))
       break;
     pending_ms = timeout_ms - (int)curlx_tvdiff(curlx_tvnow(), initial_tv);
     if(pending_ms <= 0)
