@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.543 2009-11-27 23:46:29 bagder Exp $
+ * $Id: main.c,v 1.544 2009-12-10 16:46:21 yangtse Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -3289,6 +3289,7 @@ static void go_sleep(long ms)
 
 static size_t my_fwrite(void *buffer, size_t sz, size_t nmemb, void *stream)
 {
+  int res;
   size_t rc;
   struct OutStruct *out=(struct OutStruct *)stream;
   struct Configurable *config = out->config;
@@ -3323,8 +3324,8 @@ static size_t my_fwrite(void *buffer, size_t sz, size_t nmemb, void *stream)
 
   if(config->nobuffer) {
     /* disable output buffering */
-    rc = fflush(out->stream);
-    if(rc) {
+    res = fflush(out->stream);
+    if(res) {
       /* return a value that isn't the same as sz * nmemb */
       rc = (0 == (sz * nmemb)) ? 1 : 0;
       return rc; /* failure */
