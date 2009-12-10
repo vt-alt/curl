@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.544 2009-12-10 16:46:21 yangtse Exp $
+ * $Id: main.c,v 1.545 2009-12-10 21:02:11 bagder Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -5066,14 +5066,14 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
                 }
               }
             } /* if CURLE_OK */
-            else if(CURLE_LOGIN_DENIED == res) {
+            else if(res) {
               curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
 
-              if(response/100 == 5)
+              if(response/100 == 4)
                 /*
                  * This is typically when the FTP server only allows a certain
-                 * amount of users and we are not one of them. It mostly
-                 * returns 530 in this case, but all 5xx codes are transient.
+                 * amount of users and we are not one of them.  All 4xx codes
+                 * are transient.
                  */
                 retry = RETRY_FTP;
             }
