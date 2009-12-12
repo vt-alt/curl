@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: version.c,v 1.61 2009-06-10 02:49:43 yangtse Exp $
+ * $Id: version.c,v 1.62 2009-12-12 21:54:02 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -156,6 +156,27 @@ static const char * const protocols[] = {
 #ifdef USE_LIBSSH2
   "scp",
   "sftp",
+#endif
+
+#ifndef CURL_DISABLE_IMAP
+  "imap",
+#ifdef USE_SSL
+  "imaps",
+#endif
+#endif
+
+#ifndef CURL_DISABLE_POP3
+  "pop3",
+#ifdef USE_SSL
+  "pop3s",
+#endif
+#endif
+
+#ifndef CURL_DISABLE_SMTP
+  "smtp",
+#ifdef USE_SSL
+  "smtps",
+#endif
 #endif
 
   NULL
