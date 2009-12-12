@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: configure.ac,v 1.442 2009-12-12 22:31:00 bagder Exp $
+# $Id: configure.ac,v 1.443 2009-12-12 22:33:18 bagder Exp $
 #***************************************************************************
 dnl Process this file with autoconf to produce a configure script.
 
@@ -2559,12 +2559,21 @@ if test "x$CURL_DISABLE_TFTP" != "x1"; then
 fi
 if test "x$CURL_DISABLE_POP3" != "x1"; then
   SUPPORT_PROTOCOLS="$SUPPORT_PROTOCOLS POP3"
+  if test "x$SSL_ENABLED" = "x1"; then
+    SUPPORT_PROTOCOLS="$SUPPORT_PROTOCOLS POP3S"
+  fi
 fi
 if test "x$CURL_DISABLE_IMAP" != "x1"; then
   SUPPORT_PROTOCOLS="$SUPPORT_PROTOCOLS IMAP"
+  if test "x$SSL_ENABLED" = "x1"; then
+    SUPPORT_PROTOCOLS="$SUPPORT_PROTOCOLS IMAPS"
+  fi
 fi
 if test "x$CURL_DISABLE_SMTP" != "x1"; then
   SUPPORT_PROTOCOLS="$SUPPORT_PROTOCOLS SMTP"
+  if test "x$SSL_ENABLED" = "x1"; then
+    SUPPORT_PROTOCOLS="$SUPPORT_PROTOCOLS SMTPS"
+  fi
 fi
 if test "x$USE_LIBSSH2" = "x1"; then
   SUPPORT_PROTOCOLS="$SUPPORT_PROTOCOLS SCP"
