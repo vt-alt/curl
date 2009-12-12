@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: configure.ac,v 1.443 2009-12-12 22:33:18 bagder Exp $
+# $Id: configure.ac,v 1.444 2009-12-12 22:39:29 bagder Exp $
 #***************************************************************************
 dnl Process this file with autoconf to produce a configure script.
 
@@ -2653,6 +2653,7 @@ AC_MSG_NOTICE([Configured to build curl/libcurl:
   ca cert path:    ${capath}
   LDAP support:    ${curl_ldap_msg}
   LDAPS support:   ${curl_ldaps_msg}
+  Protocols:       ${SUPPORT_PROTOCOLS}
 ])
 
 if test "x$soname_bump" = "xyes"; then
