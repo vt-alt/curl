@@ -22,7 +22,7 @@
  * RFC2384 POP URL Scheme
  * RFC2595 Using TLS with IMAP, POP3 and ACAP
  *
- * $Id: pop3.c,v 1.1 2009-12-12 21:54:02 bagder Exp $
+ * $Id: pop3.c,v 1.2 2009-12-14 14:02:43 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -427,9 +427,7 @@ static CURLcode pop3_statemach_act(struct connectdata *conn)
       if(data->set.ftp_ssl && !conn->ssl[FIRSTSOCKET].use) {
         /* We don't have a SSL/TLS connection yet, but SSL is requested. Switch
            to TLS connection now */
-        const char *str;
-
-        result = Curl_pp_sendf(&pop3c->pp, "STARTTLS", str);
+        result = Curl_pp_sendf(&pop3c->pp, "STARTTLS", NULL);
         state(conn, POP3_STARTTLS);
       }
       else
@@ -930,7 +928,7 @@ CURLcode Curl_pop3_write(struct connectdata *conn,
   struct pop3_conn *pop3c = &conn->proto.pop3c;
   int checkmax = (nread >= POP3_EOB_LEN?POP3_EOB_LEN:nread);
   int checkleft = POP3_EOB_LEN-pop3c->eob;
-  int check = checkmax>= checkleft?checkleft:checkmax;
+  int check = (checkmax >= checkleft?checkleft:checkmax);
 
   if(!memcmp(POP3_EOB, &str[nread - check], check)) {
     /* substring match */

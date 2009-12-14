@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ftp.c,v 1.534 2009-12-12 21:54:02 bagder Exp $
+ * $Id: ftp.c,v 1.535 2009-12-14 14:02:43 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -381,8 +381,10 @@ static CURLcode ftp_readresp(curl_socket_t sockfd,
                              size_t *size) /* size of the response */
 {
   struct connectdata *conn = pp->conn;
+#if defined(HAVE_KRB4) || defined(HAVE_GSSAPI)
   struct SessionHandle *data = conn->data;
   char * const buf = data->state.buffer;
+#endif
   CURLcode result = CURLE_OK;
   int code;
 

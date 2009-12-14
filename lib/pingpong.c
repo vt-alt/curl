@@ -21,7 +21,7 @@
  *   'pingpong' is for generic back-and-forth support functions used by FTP,
  *   IMAP, POP3, SMTP and whatever more that likes them.
  *
- * $Id: pingpong.c,v 1.1 2009-12-12 21:54:02 bagder Exp $
+ * $Id: pingpong.c,v 1.2 2009-12-14 14:02:43 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -369,7 +369,7 @@ CURLcode Curl_pp_readresp(curl_socket_t sockfd,
       ssize_t clipamount = 0;
       bool restart = FALSE;
 
-      data->req.headerbytecount += gotbytes;
+      data->req.headerbytecount += (long)gotbytes;
 
       pp->nread_resp += gotbytes;
       for(i = 0; i < gotbytes; ptr++, i++) {
