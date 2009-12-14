@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftpserver.pl,v 1.105 2009-12-13 03:44:45 yangtse Exp $
+# $Id: ftpserver.pl,v 1.106 2009-12-14 15:39:15 yangtse Exp $
 ###########################################################################
 
 # This is a server designed for the curl test suite.
@@ -169,13 +169,14 @@ sub sysread_or_die {
         logmsg "Error: ftp$ftpdnum$ext sysread error: $!\n";
         kill(9, $sfpid);
         waitpid($sfpid, 0);
+        logmsg "Exited from sysread_or_die() at $fcaller " .
+               "line $lcaller. ftp$ftpdnum$ext sysread error: $!\n";
         unlink($pidfile);
         if($serverlogslocked) {
             $serverlogslocked = 0;
             clear_advisor_read_lock($SERVERLOGS_LOCK);
         }
-        die "Died in sysread_or_die() at $fcaller " .
-            "line $lcaller. ftp$ftpdnum$ext sysread error: $!\n";
+        exit;
     }
     elsif($result == 0) {
         ($fcaller, $lcaller) = (caller)[1,2];
@@ -183,13 +184,14 @@ sub sysread_or_die {
         logmsg "Error: ftp$ftpdnum$ext read zero\n";
         kill(9, $sfpid);
         waitpid($sfpid, 0);
+        logmsg "Exited from sysread_or_die() at $fcaller " .
+               "line $lcaller. ftp$ftpdnum$ext read zero\n";
         unlink($pidfile);
         if($serverlogslocked) {
             $serverlogslocked = 0;
             clear_advisor_read_lock($SERVERLOGS_LOCK);
         }
-        die "Died in sysread_or_die() at $fcaller " .
-            "line $lcaller. ftp$ftpdnum$ext read zero\n";
+        exit;
     }
 
     return $result;
