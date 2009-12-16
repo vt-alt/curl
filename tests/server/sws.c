@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: sws.c,v 1.143 2009-12-14 13:27:50 yangtse Exp $
+ * $Id: sws.c,v 1.144 2009-12-16 19:55:35 yangtse Exp $
  ***************************************************************************/
 
 /* sws.c: simple (silly?) web server
@@ -927,7 +927,7 @@ static int send_doc(curl_socket_t sock, struct httprequest *req)
       logmsg("Sent off %zd bytes", written);
     }
     /* write to file as well */
-    fwrite(buffer, 1, written, dump);
+    fwrite(buffer, 1, (size_t)written, dump);
     if(got_exit_signal)
       break;
 

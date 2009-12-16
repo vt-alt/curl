@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftp.pm,v 1.15 2009-12-16 15:16:06 yangtse Exp $
+# $Id: ftp.pm,v 1.16 2009-12-16 19:55:35 yangtse Exp $
 ###########################################################################
 
 #######################################################################
@@ -85,7 +85,11 @@ sub killpid {
     # stop it, otherwise reap it if this has not been done yet.
     my @signalled;
     my $prev = 0;
-    my @pids = sort({$a <=> $b} split(/\s+/, $pidlist));
+    my @pids = split(' ', $pidlist);
+    if(scalar(@pids) > 2) {
+        my @sorted = sort({$a <=> $b} @pids);
+        @pids = @sorted;
+    }
     foreach my $tmp (@pids) {
         chomp $tmp;
         if($tmp =~ /^(\d+)$/) {

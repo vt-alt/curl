@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.334 2009-12-16 15:16:06 yangtse Exp $
+# $Id: runtests.pl,v 1.335 2009-12-16 19:55:35 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -2518,7 +2518,7 @@ sub stopservers {
         my $pid;
         my $prev;
 
-        foreach $pid (split(/\s+/, $pids)) {
+        foreach $pid (split(' ', $pids)) {
             if($pid != $prev) {
                 # no need to kill same pid twice!
                 logmsg sprintf("* kill pid for %s => %d\n",
