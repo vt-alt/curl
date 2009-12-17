@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftpserver.pl,v 1.108 2009-12-17 03:50:32 yangtse Exp $
+# $Id: ftpserver.pl,v 1.109 2009-12-17 22:28:40 yangtse Exp $
 ###########################################################################
 
 # This is a server designed for the curl test suite.
@@ -43,11 +43,11 @@ use IPC::Open2;
 require "getpart.pm";
 require "ftp.pm";
 
-BEGIN {
-    if($] > 5.006) {
-        use Time::HiRes qw( gettimeofday );
-    }
-}
+#BEGIN {
+#    if($] > 5.006) {
+#        use Time::HiRes qw( gettimeofday );
+#    }
+#}
 
 my $ftpdnum="";
 
@@ -71,18 +71,18 @@ sub getlogfilename {
 #
 sub logmsg {
     my $now;
-    if($] > 5.006) {
-        my ($seconds, $usec) = gettimeofday();
-        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-            localtime($seconds);
-        $now = sprintf("%02d:%02d:%02d.%06d ", $hour, $min, $sec, $usec);
-    }
-    else {
+#   if($] > 5.006) {
+#       my ($seconds, $usec) = gettimeofday();
+#       my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+#           localtime($seconds);
+#       $now = sprintf("%02d:%02d:%02d.%06d ", $hour, $min, $sec, $usec);
+#   }
+#   else {
         my $seconds = time();
         my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
             localtime($seconds);
         $now = sprintf("%02d:%02d:%02d ", $hour, $min, $sec);
-    }
+#   }
     if(open(LOGFILEFH, ">>$logfilename")) {
         print LOGFILEFH $now;
         print LOGFILEFH @_;
