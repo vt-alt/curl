@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ldap.c,v 1.103 2009-12-17 15:45:04 bagder Exp $
+ * $Id: ldap.c,v 1.104 2009-12-17 20:01:24 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -582,7 +582,7 @@ static int _ldap_url_parse2 (const struct connectdata *conn, LDAPURLDesc *ludp)
   if(!conn->data ||
       !conn->data->state.path ||
       conn->data->state.path[0] != '/' ||
-      !checkprefix(conn->protostr, conn->data->change.url))
+      !checkprefix("LDAP", conn->data->change.url))
     return LDAP_INVALID_SYNTAX;
 
   ludp->lud_scope = LDAP_SCOPE_BASE;
