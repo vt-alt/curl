@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: configure.ac,v 1.444 2009-12-12 22:39:29 bagder Exp $
+# $Id: configure.ac,v 1.445 2009-12-17 13:29:41 bagder Exp $
 #***************************************************************************
 dnl Process this file with autoconf to produce a configure script.
 
@@ -1397,6 +1397,7 @@ if test X"$OPT_SSL" != Xno; then
     AC_CHECK_FUNCS( RAND_status \
                     RAND_screen \
                     RAND_egd \
+                    ENGINE_cleanup \
                     CRYPTO_cleanup_all_ex_data \
                     SSL_get_shutdown )
 

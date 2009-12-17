@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ssluse.c,v 1.248 2009-12-10 20:19:56 bagder Exp $
+ * $Id: ssluse.c,v 1.249 2009-12-17 13:29:41 bagder Exp $
  ***************************************************************************/
 
 /*
@@ -709,7 +709,7 @@ void Curl_ossl_cleanup(void)
   /* EVP_cleanup() removes all ciphers and digests from the table. */
   EVP_cleanup();
 
-#ifdef HAVE_ENGINE_cleanup
+#ifdef HAVE_ENGINE_CLEANUP
   ENGINE_cleanup();
 #endif
 
