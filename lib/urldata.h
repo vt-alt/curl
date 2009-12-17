@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: urldata.h,v 1.426 2009-12-17 15:45:05 bagder Exp $
+ * $Id: urldata.h,v 1.427 2009-12-17 16:03:39 bagder Exp $
  ***************************************************************************/
 
 /* This file is for lib internal stuff */
@@ -679,7 +679,6 @@ struct connectdata {
 #define PROT_EXTMASK 0xfffff
 
 #define PROT_SSL     (1<<25) /* protocol requires SSL */
-#define PROT_MISSING (1<<26)
 
 /* these ones need action before socket close */
 #define PROT_CLOSEACTION (PROT_FTP | PROT_TFTP | PROT_IMAP | PROT_POP3)
