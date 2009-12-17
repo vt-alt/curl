@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftpserver.pl,v 1.107 2009-12-16 15:16:06 yangtse Exp $
+# $Id: ftpserver.pl,v 1.108 2009-12-17 03:50:32 yangtse Exp $
 ###########################################################################
 
 # This is a server designed for the curl test suite.
@@ -44,7 +44,7 @@ require "getpart.pm";
 require "ftp.pm";
 
 BEGIN {
-    if($] >= 5.006) {
+    if($] > 5.006) {
         use Time::HiRes qw( gettimeofday );
     }
 }
@@ -71,7 +71,7 @@ sub getlogfilename {
 #
 sub logmsg {
     my $now;
-    if($] >= 5.006) {
+    if($] > 5.006) {
         my ($seconds, $usec) = gettimeofday();
         my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
             localtime($seconds);
