@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ldap.c,v 1.102 2009-11-18 10:33:54 yangtse Exp $
+ * $Id: ldap.c,v 1.103 2009-12-17 15:45:04 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -200,7 +200,7 @@ static CURLcode Curl_ldap(struct connectdata *conn, bool *done)
   }
 
   /* Get the URL scheme ( either ldap or ldaps ) */
-  if(Curl_raw_equal(conn->protostr, "LDAPS"))
+  if(conn->protocol & PROT_SSL)
     ldap_ssl = 1;
   infof(data, "LDAP local: trying to establish %s connection\n",
           ldap_ssl ? "encrypted" : "cleartext");
