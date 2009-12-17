@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.821 2009-12-17 16:03:39 bagder Exp $
+ * $Id: url.c,v 1.822 2009-12-17 16:07:02 bagder Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -3312,7 +3312,7 @@ static CURLcode parseurlandfillconn(struct SessionHandle *data,
   char protobuf[16];
   const char *protop;
 
-  prot_missing = FALSE;
+  *prot_missing = FALSE;
 
   /*************************************************************
    * Parse the URL.
