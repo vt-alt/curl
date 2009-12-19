@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.339 2009-12-19 13:20:07 yangtse Exp $
+# $Id: runtests.pl,v 1.340 2009-12-19 23:10:33 bagder Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -650,7 +650,7 @@ sub verifyftp {
         logmsg "RUN: Verifying our test ". uc($proto) .
                " server took $took seconds\n";
     }
-    $ftpchecktime = $took?$took:1; # make sure it never is zero
+    $ftpchecktime = $took>=1?$took:1; # make sure it never is below 1
 
     return $pid;
 }
