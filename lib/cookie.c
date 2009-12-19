@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: cookie.c,v 1.112 2009-11-18 10:33:54 yangtse Exp $
+ * $Id: cookie.c,v 1.113 2009-12-19 19:20:26 bagder Exp $
  ***************************************************************************/
 
 /***
@@ -909,7 +909,7 @@ void Curl_cookie_clearsess(struct CookieInfo *cookies)
 {
   struct Cookie *first, *curr, *next, *prev = NULL;
 
-  if(!cookies->cookies || !cookies->cookies)
+  if(!cookies || !cookies->cookies)
     return;
 
   first = curr = prev = cookies->cookies;
