@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: Makefile.am,v 1.49 2009-08-11 21:48:59 bagder Exp $
+# $Id: Makefile.am,v 1.50 2009-12-19 04:15:22 yangtse Exp $
 ###########################################################################
 
 HTMLPAGES = testcurl.html runtests.html
@@ -48,7 +48,7 @@ TEST_T =
 else # if not cross-compiling:
 TEST = srcdir=$(srcdir) $(PERL) $(PERLFLAGS) $(srcdir)/runtests.pl
 TEST_Q = -a -s
-TEST_F = -a -p
+TEST_F = -a -p -r
 TEST_T = -a -t
 endif
 
