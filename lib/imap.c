@@ -21,7 +21,7 @@
  * RFC3501 IMAPv4 protocol
  * RFC5092 IMAP URL Scheme
  *
- * $Id: imap.c,v 1.2 2009-12-14 16:05:57 yangtse Exp $
+ * $Id: imap.c,v 1.3 2009-12-20 11:10:08 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -888,6 +888,8 @@ static CURLcode imap_disconnect(struct connectdata *conn)
   (void)imap_logout(conn); /* ignore errors on the LOGOUT */
 
   Curl_pp_disconnect(&imapc->pp);
+
+  free(imapc->mailbox);
 
   return CURLE_OK;
 }
