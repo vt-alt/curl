@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.341 2009-12-20 03:48:32 yangtse Exp $
+# $Id: runtests.pl,v 1.342 2009-12-20 22:00:23 bagder Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -617,7 +617,7 @@ sub verifyhttp {
 # server runs fine but we cannot talk to it ("Failed to connect to ::1: Can't
 # assign requested address" #
 
-sub verifyftp {
+sub verifyserver {
     my ($proto, $ip, $port) = @_;
     my $pid;
     my $time=time();
@@ -625,7 +625,7 @@ sub verifyftp {
     if($proto eq "ftps") {
     	$extra = "--insecure --ftp-ssl-control ";
     }
-    my $cmd="$VCURL --max-time $server_response_maxtime --silent --verbose --globoff $extra\"$proto://$ip:$port/verifiedserver\" 2>$LOGDIR/verifyftp";
+    my $cmd="$VCURL --max-time $server_response_maxtime --silent --verbose --globoff $extra\"$proto://$ip:$port/verifiedserver\" 2>$LOGDIR/verifyserver";
     # check if this is our server running on this port:
     my @data=runclientoutput($cmd);
     logmsg "RUN: $cmd\n" if($verbose);
@@ -750,12 +750,12 @@ sub verifysocks {
 
 my %protofunc = ('http' => \&verifyhttp,
                  'https' => \&verifyhttp,
-                 'ftp' => \&verifyftp,
-                 'pop3' => \&verifyftp,
-                 'imap' => \&verifyftp,
-                 'smtp' => \&verifyftp,
-                 'ftps' => \&verifyftp,
-                 'tftp' => \&verifyftp,
+                 'ftp' => \&verifyserver,
+                 'pop3' => \&verifyserver,
+                 'imap' => \&verifyserver,
+                 'smtp' => \&verifyserver,
+                 'ftps' => \&verifyserver,
+                 'tftp' => \&verifyserver,
                  'ssh' => \&verifyssh,
                  'socks' => \&verifysocks);
 
