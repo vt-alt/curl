@@ -1,4 +1,4 @@
-$Id: README.OS400,v 1.12 2009-02-17 16:16:07 patrickm Exp $
+$Id: README.OS400,v 1.13 2009-12-21 12:26:48 patrickm Exp $
 
 Implementation notes:
 
@@ -107,6 +107,8 @@ options:
         CURLOPT_PROXYPASSWORD
         CURLOPT_NOPROXY
         CURLOPT_SOCKS5_GSSAPI_SERVICE
+	CURLOPT_MAIL_FROM
+	CURLOPT_MAIL_RCPT
   Else it is the same as for curl_easy_setopt().
   Note that CURLOPT_ERRORBUFFER is not in the list above, since it gives the
 address of an (empty) character buffer, not the address of a string.

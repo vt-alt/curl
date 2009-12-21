@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ccsidcurl.c,v 1.16 2009-08-31 15:22:16 patrickm Exp $
+ * $Id: ccsidcurl.c,v 1.17 2009-12-21 12:26:48 patrickm Exp $
  *
  ***************************************************************************/
 
@@ -1030,7 +1030,7 @@ curl_easy_setopt_ccsid(CURL * curl, CURLoption tag, ...)
   if (testwarn) {
     testwarn = 0;
 
-    if ((int) STRING_LAST != (int) STRING_SOCKS5_GSSAPI_SERVICE + 1)
+    if ((int) STRING_LAST != (int) STRING_MAIL_RCPT + 1)
       curl_mfprintf(stderr,
        "*** WARNING: curl_easy_setopt_ccsid() should be reworked ***\n");
     }
@@ -1083,6 +1083,8 @@ curl_easy_setopt_ccsid(CURL * curl, CURLoption tag, ...)
   /* SSH2 not (yet) implemented on OS400. */
   /* case CURLOPT_SSH_KNOWNHOSTS: */
   case CURLOPT_SOCKS5_GSSAPI_SERVICE:
+  case CURLOPT_MAIL_FROM:
+  case CURLOPT_MAIL_RCPT:
     s = va_arg(arg, char *);
     ccsid = va_arg(arg, unsigned int);
 
