@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftpserver.pl,v 1.113 2009-12-21 14:33:01 yangtse Exp $
+# $Id: ftpserver.pl,v 1.114 2009-12-21 14:43:29 yangtse Exp $
 ###########################################################################
 
 # This is a server designed for the curl test suite.
@@ -108,6 +108,19 @@ sub exit_signal_handler {
         clear_advisor_read_lock($SERVERLOGS_LOCK);
     }
     exit;
+}
+
+#**********************************************************************
+# dead_child_handler takes care of reaping dead child processes.
+#
+sub dead_child_handler {
+    use POSIX ":sys_wait_h";
+    local $!; # preserve errno
+    local $?; # preserve exit status
+    while (waitpid(-1, &WNOHANG) > 0) {
+        select(undef, undef, undef, 0.05);
+    }
+    $SIG{CHLD} = \&dead_child_handler;
 }
 
 #**********************************************************************
@@ -204,6 +217,7 @@ if($proto !~ /^(ftp|imap|pop3|smtp)\z/) {
 
 $SIG{INT} = \&exit_signal_handler;
 $SIG{TERM} = \&exit_signal_handler;
+$SIG{CHLD} = \&dead_child_handler;
 
 sub sysread_or_die {
     my $FH     = shift;
