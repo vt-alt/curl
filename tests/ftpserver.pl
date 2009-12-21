@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftpserver.pl,v 1.111 2009-12-20 22:09:53 yangtse Exp $
+# $Id: ftpserver.pl,v 1.112 2009-12-21 08:33:47 bagder Exp $
 ###########################################################################
 
 # This is a server designed for the curl test suite.
@@ -403,6 +403,14 @@ elsif($proto eq "imap") {
                     'LOGOUT' => ' OK thanks for the fish',
         );
 
+}
+elsif($proto eq "smtp") {
+    %displaytext = ('EHLO' => '230 We are happy you popped in!',
+                    'MAIL' => '200 Note taken',
+                    'RCPT' => '200 Receivers accepted',
+                    'QUIT' => '200 byebye',
+                    'DATA' => '200 hit me',
+        );
 }
 
 
@@ -1015,7 +1023,7 @@ sub customize {
 
 my @welcome;
 
-if($proto eq "ftp") {
+if(($proto eq "ftp") || ($proto eq "smtp")) {
     @welcome=(
         '220-        _   _ ____  _     '."\r\n",
         '220-    ___| | | |  _ \| |    '."\r\n",
