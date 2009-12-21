@@ -1,7 +1,7 @@
 #ifndef __ARES_CONFIG_WIN32_H
 #define __ARES_CONFIG_WIN32_H
 
-/* $Id: config-win32.h,v 1.32 2009-10-27 16:38:42 yangtse Exp $ */
+/* $Id: config-win32.h,v 1.33 2009-12-21 16:55:39 yangtse Exp $ */
 
 /* Copyright (C) 2004 - 2008 by Daniel Stenberg et al
  *
@@ -84,6 +84,9 @@
 /* ---------------------------------------------------------------- */
 /*                             FUNCTIONS                            */
 /* ---------------------------------------------------------------- */
+
+/* Define if you have the closesocket function.  */
+#define HAVE_CLOSESOCKET 1
 
 /* Define if you have the gethostname function.  */
 #define HAVE_GETHOSTNAME 1
