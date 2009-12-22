@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.346 2009-12-21 15:50:24 yangtse Exp $
+# $Id: runtests.pl,v 1.347 2009-12-22 13:46:06 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -58,8 +58,9 @@
 
 BEGIN {
     @INC=(@INC, $ENV{'srcdir'}, ".");
-    # run time statistics needs perl 5.7 or newer
-    if($] >= 5.007003) {
+    # run time statistics needs Time::HiRes
+    eval {
+        no warnings "all";
         require Time::HiRes;
         import  Time::HiRes qw( time );
     }
@@ -3080,8 +3081,8 @@ while(@ARGV) {
         $keepoutfiles=1;
     }
     elsif($ARGV[0] eq "-r") {
-        # run time statistics needs perl 5.7 or newer
-        if($] >= 5.007003) {
+        # run time statistics needs Time::HiRes
+        if($Time::HiRes::VERSION) {
             keys(%timeprepini) = 1000;
             keys(%timesrvrini) = 1000;
             keys(%timesrvrend) = 1000;
@@ -3094,8 +3095,8 @@ while(@ARGV) {
         }
     }
     elsif($ARGV[0] eq "-rf") {
-        # run time statistics needs perl 5.7 or newer
-        if($] >= 5.007003) {
+        # run time statistics needs Time::HiRes
+        if($Time::HiRes::VERSION) {
             keys(%timeprepini) = 1000;
             keys(%timesrvrini) = 1000;
             keys(%timesrvrend) = 1000;
