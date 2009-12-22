@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: sws.c,v 1.144 2009-12-16 19:55:35 yangtse Exp $
+ * $Id: sws.c,v 1.145 2009-12-22 13:45:01 yangtse Exp $
  ***************************************************************************/
 
 /* sws.c: simple (silly?) web server
@@ -975,15 +975,17 @@ static int send_doc(curl_socket_t sock, struct httprequest *req)
             quarters--;
             res = wait_ms(250);
             if(got_exit_signal)
-              quarters = 0;
+              break;
             if(res) {
               /* should not happen */
               error = SOCKERRNO;
               logmsg("wait_ms() failed with error: (%d) %s",
                      error, strerror(error));
-              quarters = 0;
+              break;
             }
           }
+          if(!quarters)
+            logmsg("Continuing after sleeping %d seconds", num);
         }
         else
           logmsg("Unknown command in reply command section");
