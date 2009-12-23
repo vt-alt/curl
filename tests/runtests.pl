@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.347 2009-12-22 13:46:06 yangtse Exp $
+# $Id: runtests.pl,v 1.348 2009-12-23 15:20:20 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -2277,17 +2277,17 @@ sub singletest {
     my @killservers = getpart("client", "killserver");
     foreach my $serv (@killservers) {
         chomp $serv;
+        if($serv =~ /^ftp(\d*)(-ipv6|)/) {
+            my ($id, $ext) = ($1, $2);
+            #print STDERR "SERV $serv $id $ext\n";
+            ftpkillslave($id, $ext, $verbose);
+        }
         if($run{$serv}) {
             stopserver($run{$serv}); # the pid file is in the hash table
             $run{$serv}=0; # clear pid
         }
         else {
             logmsg "RUN: The $serv server is not running\n";
-        }
-        if($serv =~ /^ftp(\d*)(-ipv6|)/) {
-            my ($id, $ext) = ($1, $2);
-            #print STDERR "SERV $serv $id $ext\n";
-            ftpkillslave($id, $ext, $verbose);
         }
     }
 
