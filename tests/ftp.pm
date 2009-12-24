@@ -18,8 +18,11 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftp.pm,v 1.21 2009-12-23 18:46:55 yangtse Exp $
+# $Id: ftp.pm,v 1.22 2009-12-24 12:01:53 yangtse Exp $
 ###########################################################################
+
+use strict;
+use warnings;
 
 #######################################################################
 # pidfromfile returns the pid stored in the given pidfile.  The value

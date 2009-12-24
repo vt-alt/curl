@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftpserver.pl,v 1.118 2009-12-24 12:00:43 yangtse Exp $
+# $Id: ftpserver.pl,v 1.119 2009-12-24 12:01:53 yangtse Exp $
 ###########################################################################
 
 # This is a server designed for the curl test suite.
@@ -38,6 +38,7 @@
 #
 
 use strict;
+use warnings;
 use IPC::Open2;
 
 require "getpart.pm";
