@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.350 2009-12-28 20:00:41 yangtse Exp $
+# $Id: runtests.pl,v 1.351 2009-12-28 20:10:00 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -1391,7 +1391,7 @@ sub runsocksserver {
 
     if($sshpid <= 0 || !kill(0, $sshpid)) {
         # it is NOT alive
-        logmsg "RUN: failed to start the SOCKS server\n";
+        logmsg "RUN: failed to start the $srvrname server\n";
         display_sshlog();
         display_sshconfig();
         display_sshdlog();
@@ -1404,7 +1404,7 @@ sub runsocksserver {
     # Ugly hack but ssh doesn't support pid files
     my $pid3 = verifyserver("socks",$ip,$port);
     if(!$pid3) {
-        logmsg "RUN: SOCKS server failed verification\n";
+        logmsg "RUN: $srvrname server failed verification\n";
         # failed to talk to it properly. Kill the server and return failure
         stopserver("$sshpid $pid2");
         $doesntrun{$pidfile} = 1;
@@ -1413,7 +1413,7 @@ sub runsocksserver {
     $pid2 = $pid3;
 
     if($verbose) {
-        logmsg "RUN: SOCKS server is now running PID $pid2\n";
+        logmsg "RUN: $srvrname server is now running PID $pid2\n";
     }
 
     return ($pid2, $sshpid);
