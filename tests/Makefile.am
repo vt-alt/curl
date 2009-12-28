@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: Makefile.am,v 1.50 2009-12-19 04:15:22 yangtse Exp $
+# $Id: Makefile.am,v 1.51 2009-12-28 20:00:41 yangtse Exp $
 ###########################################################################
 
 HTMLPAGES = testcurl.html runtests.html
@@ -27,7 +27,8 @@ PDFPAGES = testcurl.pdf runtests.pdf
 EXTRA_DIST = ftpserver.pl httpserver.pl httpsserver.pl runtests.pl getpart.pm \
  FILEFORMAT README stunnel.pem memanalyze.pl testcurl.pl valgrind.pm ftp.pm   \
  sshserver.pl sshhelp.pm testcurl.1 runtests.1 $(HTMLPAGES) $(PDFPAGES) \
- CMakeLists.txt certs/scripts/*.sh certs/Server* certs/EdelCurlRoot*
+ CMakeLists.txt certs/scripts/*.sh certs/Server* certs/EdelCurlRoot* \
+ serverhelp.pm
 
 SUBDIRS = data server libtest
 
