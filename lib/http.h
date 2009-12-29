@@ -21,9 +21,11 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: http.h,v 1.39 2009-12-12 22:17:51 bagder Exp $
+ * $Id: http.h,v 1.40 2009-12-29 21:45:03 bagder Exp $
  ***************************************************************************/
 #ifndef CURL_DISABLE_HTTP
+
+struct SingleRequest;
 
 extern const struct Curl_handler Curl_handler_http;
 
@@ -122,5 +124,15 @@ struct HTTP {
   void *send_buffer; /* used if the request couldn't be sent in one chunk,
                         points to an allocated send_buffer struct */
 };
+
+CURLcode Curl_http_header_append(struct SessionHandle *data,
+                                 struct SingleRequest *k,
+                                 size_t length);
+
+CURLcode Curl_http_readwrite_headers(struct SessionHandle *data,
+                                     struct connectdata *conn,
+                                     struct SingleRequest *k,
+                                     ssize_t *nread,
+                                     bool *stop_reading);
 
 #endif
