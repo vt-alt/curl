@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostthre.c,v 1.60 2009-11-18 10:33:54 yangtse Exp $
+ * $Id: hostthre.c,v 1.61 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -44,7 +44,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>     /* for the close() proto */
 #endif
-#ifdef  VMS
+#ifdef __VMS
 #include <in.h>
 #include <inet.h>
 #include <stdlib.h>

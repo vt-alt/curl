@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostares.c,v 1.52 2009-09-15 00:07:25 yangtse Exp $
+ * $Id: hostares.c,v 1.53 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -46,7 +46,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>     /* for the close() proto */
 #endif
-#ifdef  VMS
+#ifdef __VMS
 #include <in.h>
 #include <inet.h>
 #include <stdlib.h>

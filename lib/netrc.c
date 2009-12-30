@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: netrc.c,v 1.46 2009-06-10 02:49:43 yangtse Exp $
+ * $Id: netrc.c,v 1.47 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -33,7 +33,7 @@
 #ifdef HAVE_PWD_H
 #include <pwd.h>
 #endif
-#ifdef VMS
+#ifdef __VMS
 #include <unixlib.h>
 #endif
 
@@ -117,7 +117,7 @@ int Curl_parsenetrc(const char *host,
       struct passwd *pw;
       pw= getpwuid(geteuid());
       if(pw) {
-#ifdef  VMS
+#ifdef __VMS
         home = decc_translate_vms(pw->pw_dir);
 #else
         home = pw->pw_dir;

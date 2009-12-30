@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: nonblock.c,v 1.1 2009-07-09 21:55:26 bagder Exp $
+ * $Id: nonblock.c,v 1.2 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -42,7 +42,7 @@
 #if (defined(HAVE_IOCTL_FIONBIO) && defined(NETWARE))
 #include <sys/filio.h>
 #endif
-#ifdef VMS
+#ifdef __VMS
 #include <in.h>
 #include <inet.h>
 #endif

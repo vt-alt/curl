@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.822 2009-12-17 16:07:02 bagder Exp $
+ * $Id: url.c,v 1.823 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -65,7 +65,7 @@
 #include <sys/param.h>
 #endif
 
-#ifdef VMS
+#ifdef __VMS
 #include <in.h>
 #include <inet.h>
 #endif

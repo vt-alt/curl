@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ssh.c,v 1.142 2009-11-18 10:33:55 yangtse Exp $
+ * $Id: ssh.c,v 1.143 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 /* #define CURL_LIBSSH2_DEBUG */
@@ -66,7 +66,7 @@
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#ifdef  VMS
+#ifdef __VMS
 #include <in.h>
 #include <inet.h>
 #endif

@@ -22,7 +22,7 @@
  * RFC2384 POP URL Scheme
  * RFC2595 Using TLS with IMAP, POP3 and ACAP
  *
- * $Id: pop3.c,v 1.2 2009-12-14 14:02:43 yangtse Exp $
+ * $Id: pop3.c,v 1.3 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -53,7 +53,7 @@
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#ifdef  VMS
+#ifdef __VMS
 #include <in.h>
 #include <inet.h>
 #endif

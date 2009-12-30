@@ -20,7 +20,7 @@
  *
  * RFC2821 SMTP protocol
  *
- * $Id: smtp.c,v 1.4 2009-12-25 22:50:11 bagder Exp $
+ * $Id: smtp.c,v 1.5 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -51,7 +51,7 @@
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#ifdef  VMS
+#ifdef __VMS
 #include <in.h>
 #include <inet.h>
 #endif

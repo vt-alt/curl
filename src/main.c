@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.546 2009-12-12 21:54:02 bagder Exp $
+ * $Id: main.c,v 1.547 2009-12-30 17:59:57 yangtse Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -277,7 +277,7 @@ typedef enum {
  */
 
 #ifndef SIZEOF_OFF_T
-#  if defined(__VMS) && (defined(__alpha) || defined(__ia64))
+#  if defined(__VMS) && !defined(__VAX)
 #    if defined(_LARGEFILE)
 #      define SIZEOF_OFF_T 8
 #    endif

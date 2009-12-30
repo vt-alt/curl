@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: curl_addrinfo.c,v 1.17 2009-05-10 10:24:53 yangtse Exp $
+ * $Id: curl_addrinfo.c,v 1.18 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -38,7 +38,7 @@
 #  include <arpa/inet.h>
 #endif
 
-#ifdef  VMS
+#ifdef __VMS
 #  include <in.h>
 #  include <inet.h>
 #  include <stdlib.h>
@@ -365,7 +365,7 @@ Curl_ip2addr(int af, const void *inaddr, const char *hostname, int port)
 {
   Curl_addrinfo *ai;
 
-#if defined(VMS) && \
+#if defined(__VMS) && \
     defined(__INITIAL_POINTER_SIZE) && (__INITIAL_POINTER_SIZE == 64)
 #pragma pointer_size save
 #pragma pointer_size short
@@ -418,7 +418,7 @@ Curl_ip2addr(int af, const void *inaddr, const char *hostname, int port)
   h->h_addr_list[0] = addrentry;
   h->h_addr_list[1] = NULL; /* terminate list of entries */
 
-#if defined(VMS) && \
+#if defined(__VMS) && \
     defined(__INITIAL_POINTER_SIZE) && (__INITIAL_POINTER_SIZE == 64)
 #pragma pointer_size restore
 #pragma message enable PTRMISMATCH

@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: setup.h,v 1.172 2009-11-14 18:51:37 yangtse Exp $
+ * $Id: setup.h,v 1.173 2009-12-30 17:59:56 yangtse Exp $
  ***************************************************************************/
 
 /*
@@ -326,7 +326,7 @@
  */
 
 #ifndef SIZEOF_OFF_T
-#  if defined(__VMS) && (defined(__alpha) || defined(__ia64))
+#  if defined(__VMS) && !defined(__VAX)
 #    if defined(_LARGEFILE)
 #      define SIZEOF_OFF_T 8
 #    endif
