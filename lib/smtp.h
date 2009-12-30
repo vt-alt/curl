@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: smtp.h,v 1.3 2009-12-30 22:09:43 bagder Exp $
+ * $Id: smtp.h,v 1.4 2009-12-30 22:50:42 bagder Exp $
  ***************************************************************************/
 
 #include "pingpong.h"
@@ -45,9 +45,9 @@ typedef enum {
    struct */
 struct smtp_conn {
   struct pingpong pp;
-  char *domain;      /* what to send in the EHLO */
-  int eob;        /* number of bytes of the EOB (End Of Body) that has been
-                     received thus far */
+  char *domain;    /* what to send in the EHLO */
+  int eob;         /* number of bytes of the EOB (End Of Body) that has been
+                      received thus far */
   smtpstate state; /* always use smtp.c:state() to change state! */
 };
 
