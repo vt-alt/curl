@@ -20,7 +20,7 @@
  *
  * RFC2821 SMTP protocol
  *
- * $Id: smtp.c,v 1.5 2009-12-30 17:59:56 yangtse Exp $
+ * $Id: smtp.c,v 1.6 2009-12-30 21:52:27 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -639,6 +639,7 @@ static CURLcode smtp_done(struct connectdata *conn, CURLcode status,
   struct SessionHandle *data = conn->data;
   struct FTP *smtp = data->state.proto.smtp;
   CURLcode result=CURLE_OK;
+  ssize_t bytes_written;
   (void)premature;
 
   if(!smtp)
@@ -653,6 +654,15 @@ static CURLcode smtp_done(struct connectdata *conn, CURLcode status,
     conn->bits.close = TRUE; /* marked for closure */
     result = status;      /* use the already set error code */
   }
+  else
+    /* TODO: make this work even when the socket is EWOULDBLOCK in this call! */
+
+    /* write to socket (send away data) */
+    result = Curl_write(conn,
+                        conn->writesockfd,  /* socket to send to */
+                        SMTP_EOB,           /* buffer pointer */
+                        SMTP_EOB_LEN,       /* buffer size */
+                        &bytes_written);    /* actually sent away */
 
   /* clear these for next connection */
   smtp->transfer = FTPTRANSFER_BODY;

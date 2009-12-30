@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: smtp.h,v 1.1 2009-12-12 21:54:02 bagder Exp $
+ * $Id: smtp.h,v 1.2 2009-12-30 21:52:27 bagder Exp $
  ***************************************************************************/
 
 #include "pingpong.h"
@@ -57,5 +57,9 @@ extern const struct Curl_handler Curl_handler_smtps;
 /* this is the 5-bytes End-Of-Body marker for SMTP */
 #define SMTP_EOB "\x0d\x0a\x2e\x0d\x0a"
 #define SMTP_EOB_LEN 5
+
+/* if found in data, replace it with this string instead */
+#define SMTP_EOB_REPL "\x0d\x0a\x2e\x2e"
+#define SMTP_EOB_REPL_LEN 4
 
 #endif /* __SMTP_H */
