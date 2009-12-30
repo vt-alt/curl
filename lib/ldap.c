@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ldap.c,v 1.104 2009-12-17 20:01:24 yangtse Exp $
+ * $Id: ldap.c,v 1.105 2009-12-30 15:47:23 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -488,15 +488,15 @@ static void _ldap_trace (const char *fmt, ...)
  */
 static int str2scope (const char *p)
 {
-  if(!stricmp(p, "one"))
+  if(!strequal(p, "one"))
      return LDAP_SCOPE_ONELEVEL;
-  if(!stricmp(p, "onetree"))
+  if(!strequal(p, "onetree"))
      return LDAP_SCOPE_ONELEVEL;
-  if(!stricmp(p, "base"))
+  if(!strequal(p, "base"))
      return LDAP_SCOPE_BASE;
-  if(!stricmp(p, "sub"))
+  if(!strequal(p, "sub"))
      return LDAP_SCOPE_SUBTREE;
-  if(!stricmp( p, "subtree"))
+  if(!strequal( p, "subtree"))
      return LDAP_SCOPE_SUBTREE;
   return (-1);
 }
