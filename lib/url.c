@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.823 2009-12-30 17:59:56 yangtse Exp $
+ * $Id: url.c,v 1.824 2009-12-31 21:52:01 bagder Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -2314,8 +2314,8 @@ CURLcode Curl_setopt(struct SessionHandle *data, CURLoption option,
     break;
 
   case CURLOPT_MAIL_RCPT:
-    result = setstropt(&data->set.str[STRING_MAIL_RCPT],
-                       va_arg(param, char *));
+    /* get a list of mail recipients */
+    data->set.mail_rcpt = va_arg(param, struct curl_slist *);
     break;
 
   default:
