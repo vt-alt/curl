@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: serverhelp.pm,v 1.2 2009-12-31 02:29:55 yangtse Exp $
+# $Id: serverhelp.pm,v 1.3 2009-12-31 15:26:16 yangtse Exp $
 #***************************************************************************
 
 package serverhelp;
@@ -122,6 +122,7 @@ sub server_pidfilename {
 sub server_logfilename {
     my ($logdir, $proto, $ipver, $idnum) = @_;
     my $trailer = '_server.log';
+    $trailer = '_stunnel.log' if(lc($proto) =~ /^(ftp|imap|pop3|smtp)s$/);
     return "${logdir}/". servername_canon($proto, $ipver, $idnum) ."$trailer";
 }
 
