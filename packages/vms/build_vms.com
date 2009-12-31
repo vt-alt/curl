@@ -1,4 +1,4 @@
-$! $Id: build_vms.com,v 1.10 2009-12-30 19:37:53 yangtse Exp $
+$! $Id: build_vms.com,v 1.11 2009-12-31 13:35:24 yangtse Exp $
 $! BUILD_VMS.COM 
 $!
 $! I've taken the original build_vms.com, supplied by Nico Baggus, if
@@ -449,7 +449,7 @@ $ endif
 $!
 $ link 'link_qual' /executable = 'exedir'CURL.EXE -
    'objdir'curlsrc.olb /library /include = (main, curlmsg), -
-   'objdir'curllib.olb /library /include = (vms_misc) -
+   'objdir'curllib.olb /library -
    'ssl_opt' -
    'ldap_opt'
 $!
