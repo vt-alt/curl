@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.824 2009-12-31 21:52:01 bagder Exp $
+ * $Id: url.c,v 1.825 2010-01-01 14:44:45 bagder Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -701,6 +701,7 @@ CURLcode Curl_init_userdefined(struct UserDefined *set)
   set->httpreq = HTTPREQ_GET; /* Default HTTP request */
   set->ftp_use_epsv = TRUE;   /* FTP defaults to EPSV operations */
   set->ftp_use_eprt = TRUE;   /* FTP defaults to EPRT operations */
+  set->ftp_use_pret = FALSE;  /* mainly useful for drftpd servers */
   set->ftp_filemethod = FTPFILE_MULTICWD;
 
   set->dns_cache_timeout = 60; /* Timeout every 60 seconds by default */
@@ -1561,6 +1562,10 @@ CURLcode Curl_setopt(struct SessionHandle *data, CURLoption option,
 
   case CURLOPT_FTP_USE_EPSV:
     data->set.ftp_use_epsv = (bool)(0 != va_arg(param, long));
+    break;
+
+  case CURLOPT_FTP_USE_PRET:
+    data->set.ftp_use_pret = (bool)(0 != va_arg(param, long));
     break;
 
   case CURLOPT_FTP_SSL_CCC:

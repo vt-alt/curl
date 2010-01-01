@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: urldata.h,v 1.428 2009-12-31 21:52:01 bagder Exp $
+ * $Id: urldata.h,v 1.429 2010-01-01 14:44:45 bagder Exp $
  ***************************************************************************/
 
 /* This file is for lib internal stuff */
@@ -1308,6 +1308,7 @@ struct UserDefined {
   bool reuse_fresh;      /* do not re-use an existing connection  */
   bool ftp_use_epsv;     /* if EPSV is to be attempted or not */
   bool ftp_use_eprt;     /* if EPRT is to be attempted or not */
+  bool ftp_use_pret;     /* if PRET is to be used before PASV or not */
 
   curl_usessl ftp_ssl;   /* if AUTH TLS is to be attempted etc, for FTP or
                             IMAP or POP3 or others! */

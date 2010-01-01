@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: strerror.c,v 1.56 2009-07-22 22:49:02 bagder Exp $
+ * $Id: strerror.c,v 1.57 2010-01-01 14:44:45 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -80,6 +80,9 @@ curl_easy_strerror(CURLcode error)
 
   case CURLE_REMOTE_ACCESS_DENIED:
     return "Access denied to remote resource";
+
+  case CURLE_FTP_PRET_FAILED:
+    return "FTP: The server did not accept the PRET command.";
 
   case CURLE_FTP_WEIRD_PASS_REPLY:
     return "FTP: unknown PASS reply";

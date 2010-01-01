@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ftp.h,v 1.27 2009-12-12 21:54:02 bagder Exp $
+ * $Id: ftp.h,v 1.28 2010-01-01 14:44:45 bagder Exp $
  ***************************************************************************/
 
 #include "pingpong.h"
@@ -79,6 +79,7 @@ typedef enum {
   FTP_REST, /* when used to check if the server supports it in head-like */
   FTP_RETR_REST, /* when asking for "resume" in for RETR */
   FTP_PORT, /* generic state for PORT, LPRT and EPRT, check count1 */
+  FTP_PRET, /* generic state for PRET RETR, PRET STOR and PRET LIST/NLST */
   FTP_PASV, /* generic state for PASV and EPSV, check count1 */
   FTP_LIST, /* generic state for LIST, NLST or a custom list command */
   FTP_RETR,
