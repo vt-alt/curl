@@ -6,7 +6,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftpserver.pl,v 1.122 2009-12-30 21:52:28 bagder Exp $
+# $Id: ftpserver.pl,v 1.123 2010-01-01 19:49:44 bagder Exp $
 ###########################################################################
 
 # This is a server designed for the curl test suite.
@@ -510,7 +510,7 @@ sub DATA_smtp {
             print FILE $line if(!$nosave);
 
             $raw .= $line;
-            if($raw =~ /\x0d\x0a\x2e\x0d\x0a\z/) {
+            if($raw =~ /\x0d\x0a\x2e\x0d\x0a/) {
                 # end of data marker!
                 $eob = 1;
             }
