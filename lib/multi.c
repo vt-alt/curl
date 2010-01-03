@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: multi.c,v 1.206 2009-12-10 20:20:15 bagder Exp $
+ * $Id: multi.c,v 1.207 2010-01-03 13:46:37 kdudka Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -1760,7 +1760,6 @@ static void singlesocket(struct Curl_multi *multi,
   struct Curl_one_easy *easy_by_hash;
   bool remove_sock_from_hash;
 
-  memset(&socks, 0, sizeof(socks));
   for(i=0; i< MAX_SOCKSPEREASYHANDLE; i++)
     socks[i] = CURL_SOCKET_BAD;
 
