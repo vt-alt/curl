@@ -18,7 +18,7 @@
 .\" * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 .\" * KIND, either express or implied.
 .\" *
-.\" * $Id: curl_easy_setopt.3,v 1.270 2010-01-01 14:52:50 bagder Exp $
+.\" * $Id: curl_easy_setopt.3,v 1.271 2010-01-06 16:01:48 claesjac Exp $
 .\" **************************************************************************
 .\"
 .TH curl_easy_setopt 3 "1 Jan 2010" "libcurl 7.20.0" "libcurl Manual"
@@ -448,6 +448,9 @@ on which protocols are supported.
 
 The string given to CURLOPT_URL must be url-encoded and follow RFC 2396
 (http://curl.haxx.se/rfc/rfc2396.txt).
+
+Please note that starting with version 7.20.0, the fragment part of the URI will
+not be send as part of the path, which was the case previously.
 
 \fICURLOPT_URL\fP is the only option that \fBmust\fP be set before
 \fIcurl_easy_perform(3)\fP is called.
