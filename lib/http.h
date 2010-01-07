@@ -21,11 +21,9 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: http.h,v 1.41 2010-01-07 14:02:05 bagder Exp $
+ * $Id: http.h,v 1.42 2010-01-07 22:48:28 bagder Exp $
  ***************************************************************************/
 #ifndef CURL_DISABLE_HTTP
-
-struct SingleRequest;
 
 extern const struct Curl_handler Curl_handler_http;
 
@@ -127,7 +125,6 @@ struct HTTP {
 
 CURLcode Curl_http_readwrite_headers(struct SessionHandle *data,
                                      struct connectdata *conn,
-                                     struct SingleRequest *k,
                                      ssize_t *nread,
                                      bool *stop_reading);
 

@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: http.c,v 1.431 2009-12-29 21:45:02 bagder Exp $
+ * $Id: http.c,v 1.432 2010-01-07 22:48:28 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -3080,11 +3080,11 @@ static CURLcode header_append(struct SessionHandle *data,
  */
 CURLcode Curl_http_readwrite_headers(struct SessionHandle *data,
                                      struct connectdata *conn,
-                                     struct SingleRequest *k,
                                      ssize_t *nread,
                                      bool *stop_reading)
 {
   CURLcode result;
+  struct SingleRequest *k = &data->req;
 
   /* header line within buffer loop */
   do {
