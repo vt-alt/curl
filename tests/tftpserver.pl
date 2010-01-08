@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: httpserver.pl,v 1.29 2010-01-08 15:54:07 yangtse Exp $
+# $Id: tftpserver.pl,v 1.1 2010-01-08 15:54:08 yangtse Exp $
 #***************************************************************************
 
 BEGIN {
@@ -35,12 +35,12 @@ use serverhelp qw(
     );
 
 my $verbose = 0;     # set to 1 for debugging
-my $port = 8990;     # just a default
-my $ipvnum = 4;      # default IP version of http server
-my $idnum = 1;       # dafault http server instance number
-my $proto = 'http';  # protocol the http server speaks
-my $pidfile;         # http server pid file
-my $logfile;         # http server log file
+my $port = 8997;     # just a default
+my $ipvnum = 4;      # default IP version of tftp server
+my $idnum = 1;       # dafault tftp server instance number
+my $proto = 'tftp';  # protocol the tftp server speaks
+my $pidfile;         # tftp server pid file
+my $logfile;         # tftp server log file
 my $srcdir;
 my $fork;
 
@@ -88,11 +88,8 @@ while(@ARGV) {
     elsif($ARGV[0] eq '--verbose') {
         $verbose = 1;
     }
-    elsif($ARGV[0] eq '--fork') {
-        $fork = $ARGV[0];
-    }
     else {
-        print STDERR "\nWarning: httpserver.pl unknown parameter: $ARGV[0]\n";
+        print STDERR "\nWarning: tftpserver.pl unknown parameter: $ARGV[0]\n";
     }
     shift @ARGV;
 }
@@ -107,8 +104,7 @@ if(!$logfile) {
     $logfile = server_logfilename($logdir, $proto, $ipvnum, $idnum);
 }
 
-$flags .= "--fork " if(defined($fork));
 $flags .= "--pidfile \"$pidfile\" --logfile \"$logfile\" ";
 $flags .= "--ipv$ipvnum --port $port --srcdir \"$srcdir\"";
 
-exec("server/sws $flags");
+exec("server/tftpd $flags");
