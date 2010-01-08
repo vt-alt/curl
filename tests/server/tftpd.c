@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: tftpd.c,v 1.60 2010-01-08 01:48:54 yangtse Exp $
+ * $Id: tftpd.c,v 1.61 2010-01-08 12:01:35 yangtse Exp $
  *
  * Trivial file transfer protocol server.
  *
@@ -723,7 +723,7 @@ int main(int argc, char **argv)
            " --ipv4\n"
            " --ipv6\n"
            " --port [port]\n"
-           " --srcdir [path]\n");
+           " --srcdir [path]");
       return 0;
     }
   }
