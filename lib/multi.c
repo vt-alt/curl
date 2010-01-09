@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: multi.c,v 1.207 2010-01-03 13:46:37 kdudka Exp $
+ * $Id: multi.c,v 1.208 2010-01-09 00:03:33 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -258,7 +258,6 @@ static void multistate(struct Curl_one_easy *easy, CURLMstate state)
 struct Curl_sh_entry {
   struct SessionHandle *easy;
   time_t timestamp;
-  long inuse;
   int action;  /* what action READ/WRITE this socket waits for */
   curl_socket_t socket; /* mainly to ease debugging */
   void *socketp; /* settable by users with curl_multi_assign() */
