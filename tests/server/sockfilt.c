@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: sockfilt.c,v 1.65 2009-10-10 12:29:33 yangtse Exp $
+ * $Id: sockfilt.c,v 1.66 2010-01-10 04:24:46 yangtse Exp $
  ***************************************************************************/
 
 /* Purpose
@@ -758,7 +758,8 @@ static curl_socket_t sockdaemon(curl_socket_t sock,
 #endif /* ENABLE_IPV6 */
   if(rc) {
     error = SOCKERRNO;
-    logmsg("Error binding socket: (%d) %s", error, strerror(error));
+    logmsg("Error binding socket on port %hu: (%d) %s",
+           *listenport, error, strerror(error));
     sclose(sock);
     return CURL_SOCKET_BAD;
   }
