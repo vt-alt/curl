@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.356 2010-01-11 04:49:14 yangtse Exp $
+# $Id: runtests.pl,v 1.357 2010-01-11 15:50:30 bagder Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -423,6 +423,15 @@ sub checkcmd {
             return "$_/$cmd";
         }
     }
+}
+
+#######################################################################
+# Get the list of tests that the tests/data/Makefile.am knows about!
+#
+my $disttests;
+sub get_disttests {
+    my @dist = `cd $srcdir/data && make show`;
+    $disttests = join("", @dist);
 }
 
 #######################################################################
@@ -1882,6 +1891,11 @@ sub singletest {
     # timestamp test preparation start
     $timeprepini{$testnum} = Time::HiRes::time() if($timestats);
 
+    if($disttests !~ /\Wtest$testnum\W/ ) {
+        print STDERR "NOTICE: data/test$testnum is not present in tests/data/Makefile.am!\n";
+    }
+
+
     # load the test case file definition
     if(loadtest("${TESTDIR}/test${testnum}")) {
         if($verbose) {
@@ -3307,6 +3321,7 @@ mkdir($LOGDIR, 0777);
 #
 
 if(!$listonly) {
+    get_disttests();
     checksystem();
 }
 
