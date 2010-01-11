@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: multi.c,v 1.208 2010-01-09 00:03:33 bagder Exp $
+ * $Id: multi.c,v 1.209 2010-01-11 23:05:35 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -1099,14 +1099,14 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
           else
 #endif
             multistate(easy, CURLM_STATE_PROTOCONNECT);
+
         }
-        else {
+        else
           /* after the connect has completed, go WAITDO or DO */
           multistate(easy, multi->pipelining_enabled?
                      CURLM_STATE_WAITDO:CURLM_STATE_DO);
 
-          result = CURLM_CALL_MULTI_PERFORM;
-        }
+        result = CURLM_CALL_MULTI_PERFORM;
       }
       break;
 
