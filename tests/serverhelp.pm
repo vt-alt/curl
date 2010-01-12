@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: serverhelp.pm,v 1.4 2010-01-08 01:54:29 yangtse Exp $
+# $Id: serverhelp.pm,v 1.5 2010-01-12 22:11:13 yangtse Exp $
 #***************************************************************************
 
 package serverhelp;
@@ -70,7 +70,7 @@ sub servername_str {
 
     $proto = uc($proto) if($proto);
     die "unsupported protocol: $proto" unless($proto &&
-        ($proto =~ /^(((FTP|HTTP|IMAP|POP3|SMTP|TFTP)S?)|(SOCKS|SSH))$/));
+        ($proto =~ /^(((FTP|HTTP|IMAP|POP3|SMTP)S?)|(TFTP|SFTP|SOCKS|SSH))$/));
 
     $ipver = (not $ipver) ? 'ipv4' : lc($ipver);
     die "unsupported IP version: $ipver" unless($ipver &&
