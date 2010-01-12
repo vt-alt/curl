@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.357 2010-01-11 15:50:30 bagder Exp $
+# $Id: runtests.pl,v 1.358 2010-01-12 03:01:00 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -430,7 +430,7 @@ sub checkcmd {
 #
 my $disttests;
 sub get_disttests {
-    my @dist = `cd $srcdir/data && make show`;
+    my @dist = `cd data && make show`;
     $disttests = join("", @dist);
 }
 
@@ -1891,8 +1891,8 @@ sub singletest {
     # timestamp test preparation start
     $timeprepini{$testnum} = Time::HiRes::time() if($timestats);
 
-    if($disttests !~ /\Wtest$testnum\W/ ) {
-        print STDERR "NOTICE: data/test$testnum is not present in tests/data/Makefile.am!\n";
+    if($disttests !~ /test$testnum\W/ ) {
+        print STDERR "Warning: data/test$testnum is not present in tests/data/Makefile.am\n";
     }
 
 
