@@ -18,14 +18,14 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: ftp.pm,v 1.23 2010-01-09 18:35:59 yangtse Exp $
+# $Id: ftp.pm,v 1.24 2010-01-12 14:01:44 yangtse Exp $
 ###########################################################################
 
 use strict;
 use warnings;
 
 use serverhelp qw(
-    servername_str
+    servername_id
     mainsockf_pidfilename
     datasockf_pidfilename
     );
@@ -178,19 +178,19 @@ sub killpid {
 #
 sub killsockfilters {
     my ($proto, $ipvnum, $idnum, $verbose) = @_;
-    my $srvrname;
+    my $server;
     my $pidfile;
     my $pid;
 
     return if($proto !~ /^(ftp|imap|pop3|smtp)$/);
 
-    $srvrname = servername_str($proto, $ipvnum, $idnum) if($verbose);
+    $server = servername_id($proto, $ipvnum, $idnum) if($verbose);
 
-    $pidfile = "./". mainsockf_pidfilename($proto, $ipvnum, $idnum);
+    $pidfile = mainsockf_pidfilename($proto, $ipvnum, $idnum);
     $pid = processexists($pidfile);
     if($pid > 0) {
-        printf("* kill pid for %s => %d\n", "${srvrname}-CTRL", $pid)
-          if($verbose);
+        printf("* kill pid for %s-%s => %d\n", $server,
+            ($proto eq 'ftp')?'ctrl':'filt', $pid) if($verbose);
         kill("KILL", $pid);
         waitpid($pid, 0);
     }
@@ -198,11 +198,11 @@ sub killsockfilters {
 
     return if($proto ne 'ftp');
 
-    $pidfile = "./". datasockf_pidfilename($proto, $ipvnum, $idnum);
+    $pidfile = datasockf_pidfilename($proto, $ipvnum, $idnum);
     $pid = processexists($pidfile);
     if($pid > 0) {
-        printf("* kill pid for %s => %d\n", "${srvrname}-DATA", $pid)
-          if($verbose);
+        printf("* kill pid for %s-data => %d\n", $server,
+            $pid) if($verbose);
         kill("KILL", $pid);
         waitpid($pid, 0);
     }
