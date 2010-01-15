@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.361 2010-01-15 18:55:01 yangtse Exp $
+# $Id: runtests.pl,v 1.362 2010-01-15 20:14:37 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -84,6 +84,7 @@ use sshhelp qw(
     $sftpexe
     $sshconfig
     $sftpconfig
+    $sshdlog
     $sshlog
     $sftplog
     $sftpcmds
