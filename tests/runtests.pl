@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.363 2010-01-17 02:45:24 yangtse Exp $
+# $Id: runtests.pl,v 1.364 2010-01-17 02:50:48 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -72,6 +72,7 @@ use Cwd;
 
 # Subs imported from serverhelp module
 use serverhelp qw(
+    servername_id
     servername_str
     server_pidfilename
     server_logfilename
