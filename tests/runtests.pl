@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.372 2010-01-18 17:03:59 yangtse Exp $
+# $Id: runtests.pl,v 1.373 2010-01-18 17:47:01 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -728,7 +728,7 @@ sub verifyhttp {
 sub verifyftp {
     my ($proto, $ipvnum, $idnum, $ip, $port) = @_;
     my $server = servername_id($proto, $ipvnum, $idnum);
-    my $pid;
+    my $pid = 0;
     my $time=time();
     my $extra="";
     if($proto eq "ftps") {
@@ -755,7 +755,7 @@ sub verifyftp {
             last;
         }
     }
-    if($pid <= 0 && $data[0]) {
+    if($pid <= 0 && @data && $data[0]) {
         # this is not a known server
         logmsg "RUN: Unknown server on our ". uc($proto) ." port: $port\n";
         return 0;
