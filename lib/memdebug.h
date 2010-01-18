@@ -21,7 +21,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: memdebug.h,v 1.41 2009-10-29 04:02:21 yangtse Exp $
+ * $Id: memdebug.h,v 1.42 2010-01-18 20:22:04 yangtse Exp $
  ***************************************************************************/
 
 /*
@@ -54,6 +54,7 @@ CURL_EXTERN void curl_dofree(void *ptr, int line, const char *source);
 CURL_EXTERN char *curl_dostrdup(const char *str, int line, const char *source);
 CURL_EXTERN void curl_memdebug(const char *logname);
 CURL_EXTERN void curl_memlimit(long limit);
+CURL_EXTERN void curl_memlog(const char *format, ...);
 
 /* file descriptor manipulators */
 CURL_EXTERN int curl_socket(int domain, int type, int protocol, int line , const char *);
