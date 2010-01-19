@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ftp.c,v 1.538 2010-01-01 14:52:52 bagder Exp $
+ * $Id: ftp.c,v 1.539 2010-01-19 21:39:11 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -2204,6 +2204,8 @@ static CURLcode ftp_state_get_resp(struct connectdata *conn,
 
     if(size > data->req.maxdownload && data->req.maxdownload > 0)
       size = data->req.size = data->req.maxdownload;
+    else if((instate != FTP_LIST) && (data->set.prefer_ascii))
+      size = -1; /* kludge for servers that understate ASCII mode file size */
 
     infof(data, "Maxdownload = %" FORMAT_OFF_T "\n", data->req.maxdownload);
 
