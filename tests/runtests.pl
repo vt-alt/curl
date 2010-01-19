@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.375 2010-01-19 17:40:15 yangtse Exp $
+# $Id: runtests.pl,v 1.376 2010-01-19 21:20:24 bagder Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -2864,7 +2864,7 @@ sub singletest {
             closedir(DIR);
             logmsg "DEBUG: No valgrind files\n" unless(@files);
             my $f;
-            my $l;
+            my $l="";
             foreach $f (@files) {
                 logmsg "DEBUG: valgrind file: $f\n";
                 if($f =~ /^valgrind$testnum\./) {
