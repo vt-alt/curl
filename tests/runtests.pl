@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.373 2010-01-18 17:47:01 yangtse Exp $
+# $Id: runtests.pl,v 1.374 2010-01-19 02:01:01 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -632,9 +632,9 @@ sub stopserver {
     foreach my $server (@killservers) {
         if($run{$server}) {
             $pidlist .= "$run{$server} ";
-            $runcert{$server} = 0;
             $run{$server} = 0;
         }
+        $runcert{$server} = 0 if($runcert{$server});
     }
     killpid($verbose, $pidlist);
     #
@@ -2542,9 +2542,9 @@ sub singletest {
         foreach my $server (@killservers) {
             if($run{$server}) {
                 $pidlist .= "$run{$server} ";
-                $runcert{$server} = 0;
                 $run{$server} = 0;
             }
+            $runcert{$server} = 0 if($runcert{$server});
         }
         killpid($verbose, $pidlist);
         #
@@ -2920,9 +2920,9 @@ sub stopservers {
                 }
             }
             $pidlist .= "$run{$server} ";
-            $runcert{$server} = 0;
             $run{$server} = 0;
         }
+        $runcert{$server} = 0 if($runcert{$server});
     }
     killpid($verbose, $pidlist);
     #
