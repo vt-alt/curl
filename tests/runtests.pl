@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.378 2010-01-20 20:08:50 yangtse Exp $
+# $Id: runtests.pl,v 1.379 2010-01-20 21:16:32 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -285,7 +285,7 @@ sub catch_zap {
     die "Somebody sent me a SIG$signame";
 }
 $SIG{INT} = \&catch_zap;
-$SIG{KILL} = \&catch_zap;
+$SIG{TERM} = \&catch_zap;
 
 ##########################################################################
 # Clear all possible '*_proxy' environment variables for various protocols
