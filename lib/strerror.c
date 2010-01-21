@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: strerror.c,v 1.58 2010-01-01 14:52:52 bagder Exp $
+ * $Id: strerror.c,v 1.59 2010-01-21 13:58:31 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -269,6 +269,12 @@ curl_easy_strerror(CURLcode error)
 
   case CURLE_AGAIN:
     return "Socket not ready for send/recv";
+
+  case CURLE_RTSP_CSEQ_ERROR:
+    return "RTSP CSeq mismatch or invalid CSeq";
+
+  case CURLE_RTSP_SESSION_ERROR:
+    return "RTSP session error";
 
     /* error codes not used by current libcurl */
   case CURLE_OBSOLETE4:

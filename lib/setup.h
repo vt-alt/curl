@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: setup.h,v 1.173 2009-12-30 17:59:56 yangtse Exp $
+ * $Id: setup.h,v 1.174 2010-01-21 13:58:31 bagder Exp $
  ***************************************************************************/
 
 /*
@@ -169,6 +169,7 @@
 #  define CURL_DISABLE_TELNET
 #  define CURL_DISABLE_DICT
 #  define CURL_DISABLE_FILE
+#  define CURL_DISABLE_RTSP
 #endif
 
 /* ================================================================ */
