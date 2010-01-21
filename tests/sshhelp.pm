@@ -18,7 +18,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: sshhelp.pm,v 1.5 2010-01-15 18:55:01 yangtse Exp $
+# $Id: sshhelp.pm,v 1.6 2010-01-21 14:26:32 yangtse Exp $
 #***************************************************************************
 
 package sshhelp;
@@ -90,6 +90,7 @@ use vars qw(
     display_sshlog
     display_sftplog
     dump_array
+    exe_ext
     find_sshd
     find_ssh
     find_sftpsrv
