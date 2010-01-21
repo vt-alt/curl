@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: http.c,v 1.433 2010-01-21 13:58:30 bagder Exp $
+ * $Id: http.c,v 1.434 2010-01-21 19:27:32 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -3381,7 +3381,7 @@ CURLcode Curl_http_readwrite_headers(struct SessionHandle *data,
          or else we consider this to be the body right away! */
       int httpversion_major;
       int rtspversion_major;
-      int nc;
+      int nc = 0;
 #ifdef CURL_DOES_CONVERSIONS
 #define HEADER1 scratch
 #define SCRATCHSIZE 21
