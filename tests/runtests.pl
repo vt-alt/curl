@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.380 2010-01-21 14:25:41 yangtse Exp $
+# $Id: runtests.pl,v 1.381 2010-01-21 14:29:04 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -97,6 +97,7 @@ use sshhelp qw(
     display_sshdlog
     display_sshlog
     display_sftplog
+    exe_ext
     find_sshd
     find_ssh
     find_sftp
@@ -133,7 +134,7 @@ my $SMTPPORT; # SMTP
 my $SMTP6PORT; # SMTP IPv6 server port
 
 my $srcdir = $ENV{'srcdir'} || '.';
-my $CURL="../src/curl"; # what curl executable to run on the tests
+my $CURL="../src/curl".exe_ext(); # what curl executable to run on the tests
 my $VCURL=$CURL;   # what curl binary to use to verify the servers with
                    # VCURL is handy to set to the system one when the one you
                    # just built hangs or crashes and thus prevent verification
