@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: curl.h,v 1.402 2010-01-01 14:52:51 bagder Exp $
+ * $Id: curl.h,v 1.403 2010-01-21 11:48:48 bagder Exp $
  ***************************************************************************/
 
 /*
@@ -241,14 +241,6 @@ typedef curl_socket_t
 (*curl_opensocket_callback)(void *clientp,
                             curlsocktype purpose,
                             struct curl_sockaddr *address);
-
-#ifndef CURL_NO_OLDIES
-  /* not used since 7.10.8, will be removed in a future release */
-typedef int (*curl_passwd_callback)(void *clientp,
-                                    const char *prompt,
-                                    char *buffer,
-                                    int buflen);
-#endif
 
 typedef enum {
   CURLIOE_OK,            /* I/O operation successful */
