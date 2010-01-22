@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.829 2010-01-21 19:27:32 yangtse Exp $
+ * $Id: url.c,v 1.830 2010-01-22 12:17:03 bagder Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -2430,10 +2430,10 @@ CURLcode Curl_setopt(struct SessionHandle *data, CURLoption option,
     data->state.rtsp_next_client_CSeq = va_arg(param, long);
     break;
 
-  case CURLOPT_RTPDATA:
+  case CURLOPT_INTERLEAVEDATA:
     data->set.rtp_out = va_arg(param, void *);
     break;
-  case CURLOPT_RTPFUNCTION:
+  case CURLOPT_INTERLEAVEFUNCTION:
     /* Set the user defined RTP write function */
     data->set.fwrite_rtp = va_arg(param, curl_write_callback);
     break;
