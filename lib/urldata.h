@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: urldata.h,v 1.431 2010-01-21 13:58:31 bagder Exp $
+ * $Id: urldata.h,v 1.432 2010-01-22 20:27:48 yangtse Exp $
  ***************************************************************************/
 
 /* This file is for lib internal stuff */
@@ -436,8 +436,7 @@ typedef enum {
 } zlibInitState;
 #endif
 
-#if defined(USE_ARES) || defined(USE_THREADING_GETHOSTBYNAME) || \
-    defined(USE_THREADING_GETADDRINFO)
+#ifdef CURLRES_ASYNCH
 struct Curl_async {
   char *hostname;
   int port;
@@ -813,8 +812,7 @@ struct connectdata {
 
   char syserr_buf [256]; /* buffer for Curl_strerror() */
 
-#if defined(USE_ARES) || defined(USE_THREADING_GETHOSTBYNAME) || \
-    defined(USE_THREADING_GETADDRINFO)
+#ifdef CURLRES_ASYNCH
   /* data used for the asynch name resolve callback */
   struct Curl_async async;
 #endif

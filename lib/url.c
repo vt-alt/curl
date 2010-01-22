@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.830 2010-01-22 12:17:03 bagder Exp $
+ * $Id: url.c,v 1.831 2010-01-22 20:27:48 yangtse Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -5044,8 +5044,7 @@ CURLcode Curl_connect(struct SessionHandle *data,
 CURLcode Curl_async_resolved(struct connectdata *conn,
                              bool *protocol_done)
 {
-#if defined(USE_ARES) || defined(USE_THREADING_GETHOSTBYNAME) || \
-    defined(USE_THREADING_GETADDRINFO)
+#ifdef CURLRES_ASYNCH
   CURLcode code;
 
   if(conn->async.dns) {
