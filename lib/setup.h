@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: setup.h,v 1.175 2010-01-22 14:20:08 yangtse Exp $
+ * $Id: setup.h,v 1.176 2010-01-22 15:15:08 yangtse Exp $
  ***************************************************************************/
 
 /*
@@ -176,7 +176,7 @@
  * When http is disabled rtsp is not supported.
  */
 
-#ifdef CURL_DISABLE_HTTP
+#if defined(CURL_DISABLE_HTTP) && !defined(CURL_DISABLE_RTSP)
 #  define CURL_DISABLE_RTSP
 #endif
 
