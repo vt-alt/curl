@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostip.c,v 1.223 2010-01-22 06:36:52 yangtse Exp $
+ * $Id: hostip.c,v 1.224 2010-01-22 23:21:40 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -189,12 +189,14 @@ Curl_printable_address(const Curl_addrinfo *ai, char *buf, size_t bufsize)
     case AF_INET:
       sa4 = (const void *)ai->ai_addr;
       ipaddr4 = &sa4->sin_addr;
-      return Curl_inet_ntop(ai->ai_family, (const void *)ipaddr4, buf, bufsize);
+      return Curl_inet_ntop(ai->ai_family, (const void *)ipaddr4, buf,
+                            bufsize);
 #ifdef ENABLE_IPV6
     case AF_INET6:
       sa6 = (const void *)ai->ai_addr;
       ipaddr6 = &sa6->sin6_addr;
-      return Curl_inet_ntop(ai->ai_family, (const void *)ipaddr6, buf, bufsize);
+      return Curl_inet_ntop(ai->ai_family, (const void *)ipaddr6, buf,
+                            bufsize);
 #endif
     default:
       break;

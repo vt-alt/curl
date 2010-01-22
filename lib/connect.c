@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: connect.c,v 1.225 2010-01-11 21:38:13 bagder Exp $
+ * $Id: connect.c,v 1.226 2010-01-22 23:21:39 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -734,12 +734,13 @@ singleipconnect(struct connectdata *conn,
 
   if(data->set.fopensocket)
    /*
-    * If the opensocket callback is set, all the destination address information
-    * is passed to the callback. Depending on this information the callback may
-    * opt to abort the connection, this is indicated returning CURL_SOCKET_BAD;
-    * otherwise it will return a not-connected socket. When the callback returns
-    * a valid socket the destination address information might have been changed
-    * and this 'new' address will actually be used here to connect.
+    * If the opensocket callback is set, all the destination address
+    * information is passed to the callback. Depending on this information the
+    * callback may opt to abort the connection, this is indicated returning
+    * CURL_SOCKET_BAD; otherwise it will return a not-connected socket. When
+    * the callback returns a valid socket the destination address information
+    * might have been changed and this 'new' address will actually be used
+    * here to connect.
     */
     sockfd = data->set.fopensocket(data->set.opensocket_client,
                                    CURLSOCKTYPE_IPCXN,

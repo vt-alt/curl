@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: formdata.c,v 1.123 2009-11-18 10:33:54 yangtse Exp $
+ * $Id: formdata.c,v 1.124 2010-01-22 23:21:39 bagder Exp $
  ***************************************************************************/
 
 /*
@@ -998,7 +998,8 @@ int curl_formget(struct curl_httppost *form, void *arg,
           return -1;
         }
       } while(nread == sizeof(buffer));
-    } else {
+    }
+    else {
       if(ptr->length != append(arg, ptr->line, ptr->length)) {
         Curl_formclean(&data);
         return -1;

@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: sendf.c,v 1.160 2010-01-21 13:58:31 bagder Exp $
+ * $Id: sendf.c,v 1.161 2010-01-22 23:21:40 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -511,7 +511,8 @@ int Curl_read(struct connectdata *conn, /* connection data */
 
   /* If session can pipeline, check connection buffer  */
   if(pipelining) {
-    size_t bytestocopy = CURLMIN(conn->buf_len - conn->read_pos, sizerequested);
+    size_t bytestocopy = CURLMIN(conn->buf_len - conn->read_pos,
+                                 sizerequested);
 
     /* Copy from our master buffer first if we have some unread data there*/
     if(bytestocopy > 0) {
@@ -528,8 +529,9 @@ int Curl_read(struct connectdata *conn, /* connection data */
     buffertofill = conn->master_buffer;
   }
   else {
-    bytesfromsocket = CURLMIN((long)sizerequested, conn->data->set.buffer_size ?
-                          conn->data->set.buffer_size : BUFSIZE);
+    bytesfromsocket = CURLMIN((long)sizerequested,
+                              conn->data->set.buffer_size ?
+                              conn->data->set.buffer_size : BUFSIZE);
     buffertofill = buf;
   }
 
