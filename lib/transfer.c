@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: transfer.c,v 1.449 2010-01-21 13:58:31 bagder Exp $
+ * $Id: transfer.c,v 1.450 2010-01-22 13:52:35 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -1124,15 +1124,13 @@ int Curl_single_getsock(const struct connectdata *conn,
 /*
  * Transfer()
  *
- * This function is what performs the actual transfer. It is capable of
- * doing both ways simultaneously.
- * The transfer must already have been setup by a call to Curl_setup_transfer().
+ * This function is what performs the actual transfer. It is capable of doing
+ * both ways simultaneously.  The transfer must already have been setup by a
+ * call to Curl_setup_transfer().
  *
  * Note that headers are created in a preallocated buffer of a default size.
  * That buffer can be enlarged on demand, but it is never shrunken again.
  *
- * Parts of this function was once written by the friendly Mark Butler
- * <butlerm@xmission.com>.
  */
 
 static CURLcode
