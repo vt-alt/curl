@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostip6.c,v 1.51 2010-01-18 20:22:04 yangtse Exp $
+ * $Id: hostip6.c,v 1.52 2010-01-22 06:36:52 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -75,20 +75,6 @@
  **********************************************************************/
 #ifdef CURLRES_IPV6
 
-#ifndef CURLRES_ARES
-#ifdef CURLRES_ASYNCH
-/*
- * Curl_addrinfo_copy() is used by the asynch callback to copy a given
- * address. But this is an ipv6 build and then we don't copy the address, we
- * just return the same pointer!
- */
-Curl_addrinfo *Curl_addrinfo_copy(const void *orig, int port)
-{
-  (void) port;
-  return (Curl_addrinfo*)orig;
-}
-#endif  /* CURLRES_ASYNCH */
-#endif  /* CURLRES_ARES */
 
 #if defined(CURLDEBUG) && defined(HAVE_GETNAMEINFO)
 /* These are strictly for memory tracing and are using the same style as the
@@ -249,5 +235,5 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
   return res;
 }
 #endif /* !USE_THREADING_GETADDRINFO && !CURLRES_ARES */
-#endif /* ipv6 */
+#endif /* CURLRES_IPV6 */
 
