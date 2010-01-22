@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: http.c,v 1.434 2010-01-21 19:27:32 yangtse Exp $
+ * $Id: http.c,v 1.435 2010-01-22 14:20:56 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -3065,10 +3065,6 @@ checkprotoprefix(struct SessionHandle *data, struct connectdata *conn,
   return checkhttpprefix(data, s);
 }
 
-#endif
-
-
-
 /*
  * header_append() copies a chunk of data to the end of the already received
  * header. We make sure that the full string fit in the allocated header
@@ -3805,3 +3801,4 @@ CURLcode Curl_http_readwrite_headers(struct SessionHandle *data,
   return CURLE_OK;
 }
 
+#endif /* CURL_DISABLE_HTTP */
