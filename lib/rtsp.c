@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: rtsp.c,v 1.2 2010-01-22 14:21:28 yangtse Exp $
+ * $Id: rtsp.c,v 1.3 2010-01-23 10:04:04 danf Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -36,6 +36,7 @@
 #include "progress.h"
 #include "rtsp.h"
 #include "rawstr.h"
+#include "curl_memory.h"
 
 #define _MPRINTF_REPLACE /* use our functions only */
 #include <curl/mprintf.h>
