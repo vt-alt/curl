@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: tftpd.c,v 1.61 2010-01-08 12:01:35 yangtse Exp $
+ * $Id: tftpd.c,v 1.62 2010-01-23 13:51:53 yangtse Exp $
  *
  * Trivial file transfer protocol server.
  *
@@ -103,7 +103,9 @@
 *                      STRUCT DECLARATIONS AND DEFINES                       *
 *****************************************************************************/
 
+#ifndef PKTSIZE
 #define PKTSIZE (SEGSIZE + 4)  /* SEGSIZE defined in arpa/tftp.h */
+#endif
 
 struct testcase {
   char *buffer;   /* holds the file data to send to the client */
