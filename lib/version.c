@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: version.c,v 1.64 2010-01-22 13:06:50 bagder Exp $
+ * $Id: version.c,v 1.65 2010-01-23 13:53:33 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -217,7 +217,7 @@ static curl_version_info_data version_info = {
 #ifdef CURLDEBUG
   | CURL_VERSION_CURLDEBUG
 #endif
-#ifdef USE_ARES
+#ifdef CURLRES_ASYNCH
   | CURL_VERSION_ASYNCHDNS
 #endif
 #ifdef HAVE_SPNEGO

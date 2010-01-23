@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.832 2010-01-22 23:21:40 bagder Exp $
+ * $Id: url.c,v 1.833 2010-01-23 13:53:33 yangtse Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -2489,11 +2489,12 @@ static void conn_free(struct connectdata *conn)
   Curl_llist_destroy(conn->done_pipe, NULL);
 
   /* possible left-overs from the async name resolvers */
-#if defined(USE_ARES)
+#if defined(CURLRES_ASYNCH)
   Curl_safefree(conn->async.hostname);
   Curl_safefree(conn->async.os_specific);
-#elif defined(CURLRES_THREADED)
+#if defined(CURLRES_THREADED)
   Curl_destroy_thread_data(&conn->async);
+#endif
 #endif
 
   Curl_free_ssl_config(&conn->ssl_config);

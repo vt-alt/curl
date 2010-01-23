@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostip.c,v 1.224 2010-01-22 23:21:40 bagder Exp $
+ * $Id: hostip.c,v 1.225 2010-01-23 13:53:33 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -76,8 +76,8 @@
 /* The last #include file should be: */
 #include "memdebug.h"
 
-#if defined(HAVE_ALARM) && defined(SIGALRM) && defined(HAVE_SIGSETJMP) \
-    && !defined(USE_ARES)
+#if defined(CURLRES_SYNCH) && \
+    defined(HAVE_ALARM) && defined(SIGALRM) && defined(HAVE_SIGSETJMP)
 /* alarm-based timeouts can only be used with all the dependencies satisfied */
 #define USE_ALARM_TIMEOUT
 #endif
