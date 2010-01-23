@@ -18,7 +18,7 @@
 .\" * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 .\" * KIND, either express or implied.
 .\" *
-.\" * $Id: curl.1,v 1.285 2010-01-02 22:09:31 bagder Exp $
+.\" * $Id: curl.1,v 1.286 2010-01-23 20:07:12 zagor Exp $
 .\" **************************************************************************
 .\"
 .TH curl 1 "28 November 2009" "Curl 7.20.0" "Curl Manual"
@@ -608,6 +608,9 @@ time only.
 make it discard all "session cookies". This will basically have the same effect
 as if a new session is started. Typical browsers always discard session
 cookies when they're closed down.
+.IP "-J/--remote-header-name"
+(HTTP) This option tells the -O/--remote-name option to use the server-specified
+Content-Disposition filename instead of extracting a filename from the URL.
 .IP "-k/--insecure"
 (SSL) This option explicitly allows curl to perform "insecure" SSL connections
 and transfers. All SSL connections are attempted to be made secure by using
