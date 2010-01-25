@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: transfer.c,v 1.450 2010-01-22 13:52:35 bagder Exp $
+ * $Id: transfer.c,v 1.451 2010-01-25 04:36:14 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -369,7 +369,6 @@ static CURLcode readwrite_data(struct SessionHandle *data,
   CURLcode result = CURLE_OK;
   ssize_t nread; /* number of bytes read */
   bool is_empty_data = FALSE;
-  bool readmore = FALSE; /* used by RTP to signal for more data */
 
   *done = FALSE;
 
@@ -439,7 +438,7 @@ static CURLcode readwrite_data(struct SessionHandle *data,
 
 #ifndef CURL_DISABLE_RTSP
     if(conn->protocol & PROT_RTSP) {
-      readmore = FALSE;
+      bool readmore = FALSE;
       result = Curl_rtsp_rtp_readwrite(data, conn, &nread, &readmore, done);
       if(result)
         return result;

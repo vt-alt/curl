@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: rtsp.c,v 1.3 2010-01-23 10:04:04 danf Exp $
+ * $Id: rtsp.c,v 1.4 2010-01-25 04:36:14 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -650,6 +650,7 @@ CURLcode Curl_rtsp_rtp_readwrite(struct SessionHandle *data,
   return CURLE_OK;
 }
 
+static
 CURLcode rtp_client_write(struct connectdata *conn, char *ptr, size_t len)
 {
   struct SessionHandle *data = conn->data;

@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.553 2010-01-23 20:07:12 zagor Exp $
+ * $Id: main.c,v 1.554 2010-01-25 04:36:14 yangtse Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -4134,7 +4134,7 @@ header_callback(void *ptr, size_t size, size_t nmemb, void *stream)
     while (1) {
       char *filename;
 
-      while (p < end && !isalpha(*p))
+      while (*p && (p < end) && !ISALPHA(*p))
         p++;
       if (p > end-9)
         break;
