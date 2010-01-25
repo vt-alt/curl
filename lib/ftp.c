@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ftp.c,v 1.540 2010-01-22 23:21:40 bagder Exp $
+ * $Id: ftp.c,v 1.541 2010-01-25 23:41:02 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -201,7 +201,7 @@ const struct Curl_handler Curl_handler_ftps = {
  * HTTP-proxyed FTP protocol handler.
  */
 
-const struct Curl_handler Curl_handler_ftp_proxy = {
+static const struct Curl_handler Curl_handler_ftp_proxy = {
   "FTP",                                /* scheme */
   ZERO_NULL,                            /* setup_connection */
   Curl_http,                            /* do_it */
@@ -224,7 +224,7 @@ const struct Curl_handler Curl_handler_ftp_proxy = {
  * HTTP-proxyed FTPS protocol handler.
  */
 
-const struct Curl_handler Curl_handler_ftps_proxy = {
+static const struct Curl_handler Curl_handler_ftps_proxy = {
   "FTPS",                               /* scheme */
   ZERO_NULL,                            /* setup_connection */
   Curl_http,                            /* do_it */

@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -21,7 +21,7 @@
  * RFC3501 IMAPv4 protocol
  * RFC5092 IMAP URL Scheme
  *
- * $Id: imap.c,v 1.4 2009-12-30 17:59:56 yangtse Exp $
+ * $Id: imap.c,v 1.5 2010-01-25 23:41:02 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -160,7 +160,7 @@ const struct Curl_handler Curl_handler_imaps = {
  * HTTP-proxyed IMAP protocol handler.
  */
 
-const struct Curl_handler Curl_handler_imap_proxy = {
+static const struct Curl_handler Curl_handler_imap_proxy = {
   "IMAP",                               /* scheme */
   ZERO_NULL,                            /* setup_connection */
   Curl_http,                            /* do_it */
@@ -183,7 +183,7 @@ const struct Curl_handler Curl_handler_imap_proxy = {
  * HTTP-proxyed IMAPS protocol handler.
  */
 
-const struct Curl_handler Curl_handler_imaps_proxy = {
+static const struct Curl_handler Curl_handler_imaps_proxy = {
   "IMAPS",                              /* scheme */
   ZERO_NULL,                            /* setup_connection */
   Curl_http,                            /* do_it */

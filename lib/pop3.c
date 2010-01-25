@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -22,7 +22,7 @@
  * RFC2384 POP URL Scheme
  * RFC2595 Using TLS with IMAP, POP3 and ACAP
  *
- * $Id: pop3.c,v 1.3 2009-12-30 17:59:56 yangtse Exp $
+ * $Id: pop3.c,v 1.4 2010-01-25 23:41:02 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -161,7 +161,7 @@ const struct Curl_handler Curl_handler_pop3s = {
  * HTTP-proxyed POP3 protocol handler.
  */
 
-const struct Curl_handler Curl_handler_pop3_proxy = {
+static const struct Curl_handler Curl_handler_pop3_proxy = {
   "POP3",                               /* scheme */
   ZERO_NULL,                            /* setup_connection */
   Curl_http,                            /* do_it */
@@ -184,7 +184,7 @@ const struct Curl_handler Curl_handler_pop3_proxy = {
  * HTTP-proxyed POP3S protocol handler.
  */
 
-const struct Curl_handler Curl_handler_pop3s_proxy = {
+static const struct Curl_handler Curl_handler_pop3s_proxy = {
   "POP3S",                              /* scheme */
   ZERO_NULL,                            /* setup_connection */
   Curl_http,                            /* do_it */

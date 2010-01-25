@@ -1,5 +1,5 @@
-#ifndef __FTP_H
-#define __FTP_H
+#ifndef HEADER_CURL_FTP_H
+#define HEADER_CURL_FTP_H
 /***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
@@ -20,7 +20,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ftp.h,v 1.29 2010-01-01 14:52:52 bagder Exp $
+ * $Id: ftp.h,v 1.30 2010-01-25 23:41:02 yangtse Exp $
  ***************************************************************************/
 
 #include "pingpong.h"
@@ -30,14 +30,6 @@ extern const struct Curl_handler Curl_handler_ftp;
 
 #ifdef USE_SSL
 extern const struct Curl_handler Curl_handler_ftps;
-#endif
-
-#ifndef CURL_DISABLE_HTTP
-extern const struct Curl_handler Curl_handler_ftp_proxy;
-
-# ifdef USE_SSL
-extern const struct Curl_handler Curl_handler_ftps_proxy;
-# endif
 #endif
 
 CURLcode Curl_ftpsendf(struct connectdata *, const char *fmt, ...);
@@ -146,4 +138,4 @@ struct ftp_conn {
   char * server_os;     /* The target server operating system. */
 };
 
-#endif /* __FTP_H */
+#endif /* HEADER_CURL_FTP_H */
