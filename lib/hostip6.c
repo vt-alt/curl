@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostip6.c,v 1.52 2010-01-22 06:36:52 yangtse Exp $
+ * $Id: hostip6.c,v 1.53 2010-01-25 23:50:13 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -126,7 +126,7 @@ bool Curl_ipvalid(struct SessionHandle *data)
   return TRUE;
 }
 
-#if !defined(USE_THREADING_GETADDRINFO) && !defined(CURLRES_ARES)
+#if defined(CURLRES_SYNCH)
 
 #ifdef DEBUG_ADDRINFO
 static void dump_addrinfo(struct connectdata *conn, const Curl_addrinfo *ai)
@@ -170,7 +170,7 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
   int pf;
   struct SessionHandle *data = conn->data;
 
-  *waitp=0; /* don't wait, we have the response now */
+  *waitp = 0; /* synchronous response only */
 
   /*
    * Check if a limited name resolve has been requested.
@@ -234,6 +234,6 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
 
   return res;
 }
-#endif /* !USE_THREADING_GETADDRINFO && !CURLRES_ARES */
+#endif /* CURLRES_SYNCH */
 #endif /* CURLRES_IPV6 */
 
