@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostthre.c,v 1.63 2010-01-25 23:50:13 yangtse Exp $
+ * $Id: hostthre.c,v 1.64 2010-01-26 08:43:21 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -83,10 +83,6 @@
 #include "curl_memory.h"
 /* The last #include file should be: */
 #include "memdebug.h"
-
-#if defined(_MSC_VER) && defined(CURL_NO__BEGINTHREADEX)
-#pragma message ("No _beginthreadex() available in this RTL")
-#endif
 
 /***********************************************************************
  * Only for threaded name resolves builds
