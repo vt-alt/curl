@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.554 2010-01-25 04:36:14 yangtse Exp $
+ * $Id: main.c,v 1.555 2010-01-27 03:43:34 yangtse Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -4073,7 +4073,8 @@ static void dumpeasycode(struct Configurable *config)
 
 static bool stdin_upload(const char *uploadfile)
 {
-  return curlx_strequal(uploadfile, "-") || curlx_strequal(uploadfile, ".");
+  return (bool)(curlx_strequal(uploadfile, "-") ||
+                curlx_strequal(uploadfile, "."));
 }
 
 static char*

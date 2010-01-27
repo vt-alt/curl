@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: cookie.c,v 1.114 2010-01-19 23:19:59 bagder Exp $
+ * $Id: cookie.c,v 1.115 2010-01-27 03:43:34 yangtse Exp $
  ***************************************************************************/
 
 /***
@@ -783,7 +783,7 @@ static int cookie_sort(const void *p1, const void *p2)
   size_t l1 = c1->path?strlen(c1->path):0;
   size_t l2 = c2->path?strlen(c2->path):0;
 
-  return l2 - l1;
+  return (int)(l2 - l1);
 }
 
 /*****************************************************************************
@@ -806,7 +806,7 @@ struct Cookie *Curl_cookie_getlist(struct CookieInfo *c,
   struct Cookie *co;
   time_t now = time(NULL);
   struct Cookie *mainco=NULL;
-  int matches=0;
+  size_t matches = 0;
 
   if(!c || !c->cookies)
     return NULL; /* no cookie struct or no cookies in the struct */
@@ -872,7 +872,7 @@ struct Cookie *Curl_cookie_getlist(struct CookieInfo *c,
        once, the longest specified path version comes first. To make this
        the swiftest way, we just sort them all based on path length. */
     struct Cookie **array;
-    int i;
+    size_t i;
 
     /* alloc an array and store all cookie pointers */
     array = (struct Cookie **)malloc(sizeof(struct Cookie *) * matches);
