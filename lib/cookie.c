@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: cookie.c,v 1.115 2010-01-27 03:43:34 yangtse Exp $
+ * $Id: cookie.c,v 1.116 2010-01-28 15:34:18 yangtse Exp $
  ***************************************************************************/
 
 /***
@@ -681,7 +681,8 @@ Curl_cookie_add(struct SessionHandle *data,
 
   if(c->running)
     /* Only show this when NOT reading the cookies from a file */
-    infof(data, "%s cookie %s=\"%s\" for domain %s, path %s, expire %d\n",
+    infof(data, "%s cookie %s=\"%s\" for domain %s, path %s, "
+          "expire %" FORMAT_OFF_T "\n",
           replace_old?"Replaced":"Added", co->name, co->value,
           co->domain, co->path, co->expires);
 

@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: rtsp.c,v 1.5 2010-01-28 01:39:16 yangtse Exp $
+ * $Id: rtsp.c,v 1.6 2010-01-28 15:34:18 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -380,7 +380,7 @@ CURLcode Curl_rtsp(struct connectdata *conn, bool *done)
   result =
     Curl_add_bufferf(req_buffer,
                      "%s %s RTSP/1.0\r\n" /* Request Stream-URI RTSP/1.0 */
-                     "CSeq: %d\r\n", /* CSeq */
+                     "CSeq: %ld\r\n", /* CSeq */
                      (p_request ? p_request : ""), p_stream_uri,
                      rtsp->CSeq_sent);
   if(result)

@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ssluse.c,v 1.250 2010-01-08 23:45:23 bagder Exp $
+ * $Id: ssluse.c,v 1.251 2010-01-28 15:34:18 yangtse Exp $
  ***************************************************************************/
 
 /*
@@ -483,8 +483,7 @@ int cert_stuff(struct connectdata *conn,
             return 0;
           }
           if (!SSL_CTX_add_client_CA(ctx, sk_X509_value(ca, i))) {
-            failf(data, "cannot add certificate to client CA list",
-                  cert_file);
+            failf(data, "cannot add certificate to client CA list");
             EVP_PKEY_free(pri);
             X509_free(x509);
             return 0;
@@ -1735,7 +1734,7 @@ ossl_connect_step2(struct connectdata *conn, int sockindex)
        * the SO_ERROR is also lost.
        */
       if(CURLE_SSL_CONNECT_ERROR == rc && errdetail == 0) {
-        failf(data, "Unknown SSL protocol error in connection to %s:%d ",
+        failf(data, "Unknown SSL protocol error in connection to %s:%ld ",
               conn->host.name, conn->port);
         return rc;
       }

@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: transfer.c,v 1.453 2010-01-28 07:52:12 yangtse Exp $
+ * $Id: transfer.c,v 1.454 2010-01-28 15:34:18 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -1617,7 +1617,7 @@ CURLcode Curl_follow(struct SessionHandle *data,
   if(type == FOLLOW_REDIR) {
     if((data->set.maxredirs != -1) &&
         (data->set.followlocation >= data->set.maxredirs)) {
-      failf(data,"Maximum (%d) redirects followed", data->set.maxredirs);
+      failf(data,"Maximum (%ld) redirects followed", data->set.maxredirs);
       return CURLE_TOO_MANY_REDIRECTS;
     }
 
