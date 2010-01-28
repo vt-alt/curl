@@ -21,17 +21,23 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: rtsp.h,v 1.2 2010-01-22 14:20:56 yangtse Exp $
+ * $Id: rtsp.h,v 1.3 2010-01-28 01:39:16 yangtse Exp $
  ***************************************************************************/
 #ifndef CURL_DISABLE_RTSP
 
 extern const struct Curl_handler Curl_handler_rtsp;
 
+/*
+ * Parse and write out any available RTP data.
+ *
+ * nread: amount of data left after k->str. will be modified if RTP
+ *        data is parsed and k->str is moved up
+ * readmore: whether or not the RTP parser needs more data right away
+ */
 CURLcode Curl_rtsp_rtp_readwrite(struct SessionHandle *data,
                                  struct connectdata *conn,
                                  ssize_t *nread,
-                                 bool *readmore,
-                                 bool *done);
+                                 bool *readmore);
 
 
 /* protocol-specific functions set up to be called by the main engine */
