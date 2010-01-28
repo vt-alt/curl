@@ -1,7 +1,7 @@
 #ifndef HEADER_CONFIG_VMS_H
 #define HEADER_CONFIG_VMS_H
 
-/* $Id: config-vms.h,v 1.28 2009-12-30 17:59:10 yangtse Exp $ */
+/* $Id: config-vms.h,v 1.29 2010-01-28 10:56:43 yangtse Exp $ */
 /*                                                                         */
 /* MSK, 02/05/04, Hand edited for trail build on Alpha V7.3, DEC C 6.5-003 */
 /* MSK, 03/09/04, Seems to work for all platforms I've built on so far.    */
@@ -286,7 +286,7 @@
 #define GETNAMEINFO_TYPE_ARG1 struct sockaddr *
 
 /* Define to the type of arg 2 for getnameinfo. */
-#define GETNAMEINFO_TYPE_ARG2 FIXME
+#define GETNAMEINFO_TYPE_ARG2 size_t
 
 /* Define to the type of args 4 and 6 for getnameinfo. */
 #define GETNAMEINFO_TYPE_ARG46 size_t
