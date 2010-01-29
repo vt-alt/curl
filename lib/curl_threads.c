@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: curl_threads.c,v 1.1 2010-01-25 23:46:27 yangtse Exp $
+ * $Id: curl_threads.c,v 1.2 2010-01-29 17:47:54 yangtse Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -101,7 +101,11 @@ curl_thread_t Curl_thread_create(unsigned int (CURL_STDCALL *func) (void*), void
 #ifdef _WIN32_WCE
   return CreateThread(NULL, 0, func, arg, 0, NULL);
 #else
-  return (curl_thread_t)_beginthreadex(NULL, 0, func, arg, 0, NULL);
+  curl_thread_t t;
+  t = (curl_thread_t)_beginthreadex(NULL, 0, func, arg, 0, NULL);
+  if((t == 0) || (t == (curl_thread_t)-1L))
+    return curl_thread_t_null;
+  return t;
 #endif
 }
 
