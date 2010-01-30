@@ -22,7 +22,7 @@
  * RFC2384 POP URL Scheme
  * RFC2595 Using TLS with IMAP, POP3 and ACAP
  *
- * $Id: pop3.c,v 1.4 2010-01-25 23:41:02 yangtse Exp $
+ * $Id: pop3.c,v 1.5 2010-01-30 05:22:30 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -935,6 +935,7 @@ CURLcode Curl_pop3_write(struct connectdata *conn,
     pop3c->eob += check;
     if(pop3c->eob == POP3_EOB_LEN) {
       /* full match, the transfer is done! */
+      str[nread - check] = '\0';
       nread -= check;
       k->keepon &= ~KEEP_RECV;
       pop3c->eob = 0;
