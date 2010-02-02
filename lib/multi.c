@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: multi.c,v 1.211 2010-02-01 21:42:44 bagder Exp $
+ * $Id: multi.c,v 1.212 2010-02-02 16:23:01 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -1201,7 +1201,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
             disconnect_conn = TRUE;
           }
           else
-            retry = newurl?TRUE:FALSE;
+            retry = (bool)(newurl?TRUE:FALSE);
 
           Curl_posttransfer(easy->easy_handle);
           drc = Curl_done(&easy->easy_conn, easy->result, FALSE);
@@ -1393,7 +1393,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
 
         easy->result = Curl_retry_request(easy->easy_conn, &newurl);
         if(!easy->result)
-          retry = newurl?TRUE:FALSE;
+          retry = (bool)(newurl?TRUE:FALSE);
 
         /* call this even if the readwrite function returned error */
         Curl_posttransfer(easy->easy_handle);
