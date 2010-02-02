@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostthre.c,v 1.64 2010-01-26 08:43:21 yangtse Exp $
+ * $Id: hostthre.c,v 1.65 2010-02-02 16:23:42 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -356,7 +356,7 @@ CURLcode Curl_wait_for_resolv(struct connectdata *conn,
 {
   struct thread_data   *td = (struct thread_data*) conn->async.os_specific;
   struct SessionHandle *data = conn->data;
-  CURLcode rc;
+  CURLcode rc = CURLE_OK;
 
   DEBUGASSERT(conn && td);
 
