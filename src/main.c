@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.556 2010-01-29 12:29:26 yangtse Exp $
+ * $Id: main.c,v 1.557 2010-02-02 16:21:37 yangtse Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -2300,7 +2300,7 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
       }
       break;
     case '#': /* --progress-bar */
-      config->progressmode = toggle?CURL_PROGRESS_BAR:0;
+      config->progressmode = (bool)(toggle?CURL_PROGRESS_BAR:0);
       break;
     case '0':
       /* HTTP version 1.0 */
@@ -4137,7 +4137,7 @@ header_callback(void *ptr, size_t size, size_t nmemb, void *stream)
 
     /* look for the 'filename=' parameter
        (encoded filenames (*=) are not supported) */
-    while (1) {
+    for(;;) {
       char *filename;
 
       while (*p && (p < end) && !ISALPHA(*p))
@@ -5170,7 +5170,7 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
 
         retrystart = cutil_tvnow();
 
-        do {
+        for(;;) {
           res = curl_easy_perform(curl);
           if (!curl_slist_append(easycode, "ret = curl_easy_perform(hnd);")) {
             res = CURLE_OUT_OF_MEMORY;
@@ -5292,7 +5292,7 @@ operate(struct Configurable *config, int argc, argv_item_t argv[])
           retry_sleep = retry_sleep_default;
           break;
 
-        } while(1);
+        }
 
         if((config->progressmode == CURL_PROGRESS_BAR) &&
            progressbar.calls)
