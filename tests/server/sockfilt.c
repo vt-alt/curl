@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2009, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2010, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: sockfilt.c,v 1.66 2010-01-10 04:24:46 yangtse Exp $
+ * $Id: sockfilt.c,v 1.67 2010-02-02 12:39:10 yangtse Exp $
  ***************************************************************************/
 
 /* Purpose
@@ -79,6 +79,8 @@
  * that for increased portability and reliability the program must be coded as
  * if no signal was being ignored or handled at all.  Enjoy it!
  */
+
+#define CURL_NO_OLDIES
 
 #include "setup.h" /* portability help from the lib directory */
 

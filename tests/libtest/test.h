@@ -5,13 +5,15 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: test.h,v 1.23 2009-07-14 13:25:15 gknauf Exp $
+ * $Id: test.h,v 1.24 2010-02-02 12:39:10 yangtse Exp $
  */
 
 /* Now include the setup.h file from libcurl's private libdir (the source
    version, but that might include "curl_config.h" from the build dir so we
    need both of them in the include path), so that we get good in-depth
    knowledge about the system we're building this on */
+
+#define CURL_NO_OLDIES
 
 #include "setup.h"
 

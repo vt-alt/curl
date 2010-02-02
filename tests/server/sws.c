@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: sws.c,v 1.146 2010-01-08 01:48:54 yangtse Exp $
+ * $Id: sws.c,v 1.147 2010-02-02 12:39:10 yangtse Exp $
  ***************************************************************************/
 
 /* sws.c: simple (silly?) web server
@@ -27,6 +27,9 @@
    Wilke. Thanks a bunch!
 
  */
+
+#define CURL_NO_OLDIES
+
 #include "setup.h" /* portability help from the lib directory */
 
 #ifdef HAVE_SIGNAL_H

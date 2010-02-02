@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: tftpd.c,v 1.62 2010-01-23 13:51:53 yangtse Exp $
+ * $Id: tftpd.c,v 1.63 2010-02-02 12:39:10 yangtse Exp $
  *
  * Trivial file transfer protocol server.
  *
@@ -47,6 +47,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
+#define CURL_NO_OLDIES
 
 #include "setup.h" /* portability help from the lib directory */
 

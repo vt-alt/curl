@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: rtspd.c,v 1.1 2010-02-01 12:05:08 yangtse Exp $
+ * $Id: rtspd.c,v 1.2 2010-02-02 12:39:10 yangtse Exp $
  ***************************************************************************/
 
 /*
@@ -26,6 +26,8 @@
  *
  * This source file was started based on curl's HTTP test suite server.
  */
+
+#define CURL_NO_OLDIES
 
 #include "setup.h" /* portability help from the lib directory */
 
