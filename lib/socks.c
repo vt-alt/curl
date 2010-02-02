@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: socks.c,v 1.33 2009-08-29 03:57:28 gknauf Exp $
+ * $Id: socks.c,v 1.34 2010-02-02 16:25:07 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -72,7 +72,7 @@ int Curl_blockread_all(struct connectdata *conn, /* connection data */
   struct timeval tvnow;
   long conntime;
   *n = 0;
-  do {
+  for(;;) {
     tvnow = Curl_tvnow();
     /* calculating how long connection is establishing */
     conntime = Curl_tvdiff(tvnow, conn->created);
@@ -104,7 +104,7 @@ int Curl_blockread_all(struct connectdata *conn, /* connection data */
     buffersize -= nread;
     buf += nread;
     allread += nread;
-  } while(1);
+  }
   return result;
 }
 

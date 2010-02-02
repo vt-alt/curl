@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ftp.c,v 1.543 2010-02-02 08:48:58 bagder Exp $
+ * $Id: ftp.c,v 1.544 2010-02-02 16:25:07 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -3488,7 +3488,7 @@ CURLcode Curl_ftpsendf(struct connectdata *conn,
   }
 #endif /* CURL_DOES_CONVERSIONS */
 
-  while(1) {
+  for(;;) {
 #if defined(HAVE_KRB4) || defined(HAVE_GSSAPI)
     conn->data_prot = prot_cmd;
 #endif

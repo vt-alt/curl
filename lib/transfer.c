@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: transfer.c,v 1.455 2010-01-29 01:16:23 yangtse Exp $
+ * $Id: transfer.c,v 1.456 2010-02-02 16:25:07 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -1949,7 +1949,7 @@ CURLcode Curl_perform(struct SessionHandle *data)
    * performed after this do-while loop.
    */
 
-  do {
+  for(;;) {
     res = connect_host(data, &conn);   /* primary connection */
 
     if(res == CURLE_OK) {
@@ -2052,7 +2052,7 @@ CURLcode Curl_perform(struct SessionHandle *data)
     }
     break; /* it only reaches here when this shouldn't loop */
 
-  } while(1); /* loop if Location: */
+  } /* loop if Location: */
 
   if(newurl)
     free(newurl);
