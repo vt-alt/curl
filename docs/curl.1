@@ -18,7 +18,7 @@
 .\" * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 .\" * KIND, either express or implied.
 .\" *
-.\" * $Id: curl.1,v 1.286 2010-01-23 20:07:12 zagor Exp $
+.\" * $Id: curl.1,v 1.287 2010-02-02 12:27:12 kdudka Exp $
 .\" **************************************************************************
 .\"
 .TH curl 1 "28 November 2009" "Curl 7.20.0" "Curl Manual"
@@ -1170,6 +1170,8 @@ mutually exclusive.
 If this option is used several times, the last one will be used. (This option
 was previously wrongly documented and used as --socks without the number
 appended.)
+
+This option (as well as \fI--socks4\fP) does not work with IPV6, FTPS or LDAP.
 .IP "--socks5-gssapi-service <servicename>"
 The default service name for a socks server is rcmd/server-fqdn. This option
 allows you to change it.
