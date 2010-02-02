@@ -5,12 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib543.c,v 1.3 2009-04-14 12:53:54 yangtse Exp $
+ * $Id: lib543.c,v 1.4 2010-02-02 12:36:16 yangtse Exp $
  *
  * Based on Alex Fishman's bug report on September 30, 2007
  */
 
-#include "setup.h"
 #include "test.h"
 
 #include "memdebug.h"

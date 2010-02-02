@@ -5,10 +5,9 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib562.c,v 1.1 2009-04-30 09:02:39 bagder Exp $
+ * $Id: lib562.c,v 1.2 2010-02-02 12:36:16 yangtse Exp $
  */
 
-#include "setup.h" /* struct_stat etc. */
 #include "test.h"
 
 #ifdef HAVE_SYS_SOCKET_H
