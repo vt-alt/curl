@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: main.c,v 1.557 2010-02-02 16:21:37 yangtse Exp $
+ * $Id: main.c,v 1.558 2010-02-03 10:57:42 yangtse Exp $
  ***************************************************************************/
 #include "setup.h"
 
@@ -546,7 +546,7 @@ struct Configurable {
   trace tracetype;
   bool tracetime; /* include timestamp? */
   long httpversion;
-  bool progressmode;
+  int progressmode;
   bool nobuffer;
   bool readbusy; /* set when reading input returns EAGAIN */
   bool globoff;
@@ -2300,7 +2300,10 @@ static ParameterError getparameter(char *flag, /* f or -long-flag */
       }
       break;
     case '#': /* --progress-bar */
-      config->progressmode = (bool)(toggle?CURL_PROGRESS_BAR:0);
+      if(toggle)
+        config->progressmode = CURL_PROGRESS_BAR;
+      else
+        config->progressmode = CURL_PROGRESS_STATS;
       break;
     case '0':
       /* HTTP version 1.0 */
