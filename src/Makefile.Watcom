@@ -2,7 +2,7 @@
 #  Watcom / OpenWatcom / Win32 makefile for cURL.
 #  G. Vanem <gvanem@broadpark.no>
 #
-# $Id: Makefile.Watcom,v 1.16 2009-07-15 21:49:48 danf Exp $
+# $Id: Makefile.Watcom,v 1.17 2010-02-03 23:07:11 danf Exp $
 
 CC = wcc386
 
@@ -12,10 +12,15 @@ CFLAGS = -3r -mf -d3 -hc -zff -zgf -zq -zm -s -fr=con -w2 -fpi -oilrtfm &
 
 OBJ_DIR = WC_Win32.obj
 
-OBJS = $(OBJ_DIR)\getpass.obj  $(OBJ_DIR)\homedir.obj  $(OBJ_DIR)\hugehelp.obj &
-       $(OBJ_DIR)\main.obj     $(OBJ_DIR)\urlglob.obj  $(OBJ_DIR)\writeenv.obj &
-       $(OBJ_DIR)\writeout.obj $(OBJ_DIR)\curlutil.obj $(OBJ_DIR)\rawstr.obj   &
-       $(OBJ_DIR)\os-specific.obj
+# Unfortunately, we can't include Makefile.inc here because wmake doesn't
+# use backslash as the line continuation character by default
+CURL_SOURCES = main.c hugehelp.c urlglob.c writeout.c writeenv.c &
+	getpass.c homedir.c curlutil.c os-specific.c
+
+CURLX_SOURCES = rawstr.c
+
+OBJS = $(CURL_SOURCES:.c=.obj) $(CURLX_SOURCES:.c=.obj)
+OBJS = $OBJ_DIR\$(OBJS: = $OBJ_DIR\)
 
 RESOURCE = $(OBJ_DIR)\curl.res
 
