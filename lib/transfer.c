@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: transfer.c,v 1.456 2010-02-02 16:25:07 yangtse Exp $
+ * $Id: transfer.c,v 1.457 2010-02-03 06:44:18 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -1970,7 +1970,7 @@ CURLcode Curl_perform(struct SessionHandle *data)
           if(rc)
             res = rc;
           else
-            retry = newurl?TRUE:FALSE;
+            retry = (bool)(newurl?TRUE:FALSE);
 
           if(retry) {
             res = CURLE_OK;
