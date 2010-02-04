@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: sendf.c,v 1.162 2010-02-02 16:25:07 yangtse Exp $
+ * $Id: sendf.c,v 1.163 2010-02-04 19:44:31 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -343,8 +343,8 @@ static CURLcode pausewrite(struct SessionHandle *data,
   /* mark the connection as RECV paused */
   k->keepon |= KEEP_RECV_PAUSE;
 
-  DEBUGF(infof(data, "Pausing with %d bytes in buffer for type %02x\n",
-               (int)len, type));
+  DEBUGF(infof(data, "Pausing with %zu bytes in buffer for type %02x\n",
+               len, type));
 
   return CURLE_OK;
 }
@@ -426,7 +426,7 @@ CURLcode Curl_client_write(struct connectdata *conn,
       return pausewrite(data, type, ptr, len);
 
     if(wrote != len) {
-      failf(data, "Failed writing body (%d != %d)", (int)wrote, (int)len);
+      failf(data, "Failed writing body (%zu != %zu)", wrote, len);
       return CURLE_WRITE_ERROR;
     }
   }

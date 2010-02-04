@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: url.c,v 1.835 2010-01-28 15:34:18 yangtse Exp $
+ * $Id: url.c,v 1.836 2010-02-04 19:44:31 yangtse Exp $
  ***************************************************************************/
 
 /* -- WIN32 approved -- */
@@ -4234,7 +4234,7 @@ static CURLcode parse_remote_port(struct SessionHandle *data,
        * are stripped off. It would be better to work directly from the
        * original URL and simply replace the port part of it.
        */
-      url = aprintf("%s://%s%s%s:%d%s%s", conn->handler->scheme,
+      url = aprintf("%s://%s%s%s:%hu%s%s", conn->handler->scheme,
                     conn->bits.ipv6_ip?"[":"", conn->host.name,
                     conn->bits.ipv6_ip?"]":"", conn->remote_port,
                     isftp?"/":"", data->state.path);

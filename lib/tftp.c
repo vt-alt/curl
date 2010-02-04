@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: tftp.c,v 1.99 2010-01-28 15:34:18 yangtse Exp $
+ * $Id: tftp.c,v 1.100 2010-02-04 19:44:31 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -274,7 +274,7 @@ static CURLcode tftp_set_timeouts(tftp_state_data_t *state)
 
   infof(state->conn->data,
         "set timeouts for state %d; Total %ld, retry %d maxtry %d\n",
-        state->state, (long)(state->max_time-state->start_time),
+        (int)state->state, (long)(state->max_time-state->start_time),
         state->retry_time, state->retry_max);
 
   /* init RX time */

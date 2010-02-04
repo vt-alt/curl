@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: telnet.c,v 1.115 2010-02-02 16:25:07 yangtse Exp $
+ * $Id: telnet.c,v 1.116 2010-02-04 19:44:31 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -729,7 +729,7 @@ static void printsub(struct SessionHandle *data,
           else if(CURL_TELCMD_OK(i))
             infof(data, "%s ", CURL_TELCMD(i));
           else
-            infof(data, "%d ", i);
+            infof(data, "%u ", i);
           if(CURL_TELOPT_OK(j))
             infof(data, "%s", CURL_TELOPT(j));
           else if(CURL_TELCMD_OK(j))

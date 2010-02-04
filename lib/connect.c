@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: connect.c,v 1.228 2010-02-02 16:25:07 yangtse Exp $
+ * $Id: connect.c,v 1.229 2010-02-04 19:44:31 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -397,13 +397,13 @@ static CURLcode bindlocal(struct connectdata *conn,
               error, Curl_strerror(conn, error));
         return CURLE_INTERFACE_FAILED;
       }
-      infof(data, "Local port: %d\n", port);
+      infof(data, "Local port: %hu\n", port);
       conn->bits.bound = TRUE;
       return CURLE_OK;
     }
 
     if(--portnum > 0) {
-      infof(data, "Bind to local port %d failed, trying next\n", port);
+      infof(data, "Bind to local port %hu failed, trying next\n", port);
       port++; /* try next port */
       /* We re-use/clobber the port variable here below */
       if(sock->sa_family == AF_INET)
