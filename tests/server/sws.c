@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: sws.c,v 1.147 2010-02-02 12:39:10 yangtse Exp $
+ * $Id: sws.c,v 1.148 2010-02-04 17:17:19 yangtse Exp $
  ***************************************************************************/
 
 /* sws.c: simple (silly?) web server
@@ -1082,7 +1082,16 @@ int main(int argc, char *argv[])
     else if(!strcmp("--port", argv[arg])) {
       arg++;
       if(argc>arg) {
-        port = (unsigned short)atoi(argv[arg]);
+        char *endptr;
+        long lnum = -1;
+        lnum = strtol(argv[arg], &endptr, 10);
+        if((endptr != argv[arg] + strlen(argv[arg])) ||
+           (lnum < 1025L) || (lnum > 65535L)) {
+          fprintf(stderr, "sws: invalid --port argument (%s)\n",
+                  argv[arg]);
+          return 0;
+        }
+        port = (unsigned short)(lnum & 0xFFFFL);
         arg++;
       }
     }
