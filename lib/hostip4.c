@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: hostip4.c,v 1.53 2010-02-02 09:15:52 yangtse Exp $
+ * $Id: hostip4.c,v 1.54 2010-02-04 10:08:39 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -136,7 +136,7 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
 Curl_addrinfo *Curl_ipv4_resolve_r(const char *hostname,
                                    int port)
 {
-#if defined(HAVE_GETHOSTBYNAME_R_3)
+#if !defined(HAVE_GETADDRINFO_THREADSAFE) && defined(HAVE_GETHOSTBYNAME_R_3)
   int res;
 #endif
   Curl_addrinfo *ai = NULL;
