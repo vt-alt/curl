@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib557.c,v 1.8 2010-02-04 14:41:01 yangtse Exp $
+ * $Id: lib557.c,v 1.9 2010-02-04 14:50:58 yangtse Exp $
  */
 
 /*
@@ -219,7 +219,7 @@ static int test_signed_short_formatting(void)
 
 #if (SIZEOF_SHORT == 1)
 
-  i++; ss_test[i].num = 0x7F; ss_test[i].expected = "127";
+  i=1; ss_test[i].num = 0x7F; ss_test[i].expected = "127";
 
   i++; ss_test[i].num = 0x70; ss_test[i].expected = "112";
   i++; ss_test[i].num = 0x07; ss_test[i].expected = "7";
