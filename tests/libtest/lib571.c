@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib571.c,v 1.6 2010-02-05 18:07:20 yangtse Exp $
+ * $Id: lib571.c,v 1.7 2010-02-05 19:19:34 yangtse Exp $
  */
 
 #include "test.h"
@@ -89,7 +89,7 @@ static char *suburl(const char *base, int i)
 
 int test(char *URL)
 {
-  CURLcode res;
+  int res;
   CURL *curl;
   char *stream_uri = NULL;
   int request=1;
@@ -189,6 +189,6 @@ test_cleanup:
   curl_easy_cleanup(curl);
   curl_global_cleanup();
 
-  return (int)res;
+  return res;
 }
 

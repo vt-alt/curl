@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib530.c,v 1.19 2010-02-05 18:07:20 yangtse Exp $
+ * $Id: lib530.c,v 1.20 2010-02-05 19:19:34 yangtse Exp $
  */
 
 #include "test.h"
@@ -197,7 +197,7 @@ int test(char *URL)
     res = TEST_ERR_RUNS_FOREVER;
   }
 
-test_cleanup:
+/* test_cleanup: */
 
   /* cleanup NUM_HANDLES easy handles */
   for(i=0; i < NUM_HANDLES; i++) {

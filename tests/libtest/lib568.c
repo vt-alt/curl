@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib568.c,v 1.3 2010-02-05 18:07:20 yangtse Exp $
+ * $Id: lib568.c,v 1.4 2010-02-05 19:19:34 yangtse Exp $
  */
 
 #include "test.h"
@@ -32,7 +32,7 @@ static char *suburl(const char *base, int i)
  */
 int test(char *URL)
 {
-  CURLcode res;
+  int res;
   CURL *curl;
   int sdp;
   FILE *sdpf = NULL;
