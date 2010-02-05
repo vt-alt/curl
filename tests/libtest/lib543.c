@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib543.c,v 1.4 2010-02-02 12:36:16 yangtse Exp $
+ * $Id: lib543.c,v 1.5 2010-02-05 18:07:20 yangtse Exp $
  *
  * Based on Alex Fishman's bug report on September 30, 2007
  */
@@ -20,10 +20,19 @@ int test(char *URL)
                        0xe0, 0xd8, 0x7c,  0x20, 0xb7, 0xef, 0x53, 0x29, 0xfa,
                        0x1d, 0x57, 0xe1};
 
-  CURL* easy  = curl_easy_init();
-  int asize = (int)sizeof(a);
-  char* s = curl_easy_escape(easy, (char*)a, asize);
+  CURL *easy;
+  int asize;
+  char *s;
   (void)URL;
+
+  if ((easy = curl_easy_init()) == NULL) {
+    fprintf(stderr, "curl_easy_init() failed\n");
+    return TEST_ERR_MAJOR_BAD;
+  }
+
+  asize = (int)sizeof(a);
+
+  s = curl_easy_escape(easy, (char*)a, asize);
 
   printf("%s\n", s);
 

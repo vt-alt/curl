@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib556.c,v 1.7 2009-05-08 02:14:50 yangtse Exp $
+ * $Id: lib556.c,v 1.8 2010-02-05 18:07:20 yangtse Exp $
  */
 
 #include "test.h"
@@ -39,8 +39,8 @@ int test(char *URL)
     return TEST_ERR_MAJOR_BAD;
   }
 
-  curl_easy_setopt(curl, CURLOPT_URL, URL);
-  curl_easy_setopt(curl, CURLOPT_CONNECT_ONLY, 1L);
+  test_setopt(curl, CURLOPT_URL, URL);
+  test_setopt(curl, CURLOPT_CONNECT_ONLY, 1L);
 
   res = curl_easy_perform(curl);
 
@@ -82,6 +82,7 @@ int test(char *URL)
     }
   }
 
+test_cleanup:
 
   curl_easy_cleanup(curl);
   curl_global_cleanup();

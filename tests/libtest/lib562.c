@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib562.c,v 1.2 2010-02-02 12:36:16 yangtse Exp $
+ * $Id: lib562.c,v 1.3 2010-02-05 18:07:20 yangtse Exp $
  */
 
 #include "test.h"
@@ -55,16 +55,18 @@ int test(char *URL)
   }
 
   /* enable verbose */
-  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+  test_setopt(curl, CURLOPT_VERBOSE, 1L);
 
   /* set port number */
-  curl_easy_setopt(curl, CURLOPT_PORT, atoi(libtest_arg2) );
+  test_setopt(curl, CURLOPT_PORT, atoi(libtest_arg2) );
 
   /* specify target */
-  curl_easy_setopt(curl,CURLOPT_URL, URL);
+  test_setopt(curl,CURLOPT_URL, URL);
 
   /* Now run off and do what you've been told! */
   res = curl_easy_perform(curl);
+
+test_cleanup:
 
   curl_easy_cleanup(curl);
   curl_global_cleanup();

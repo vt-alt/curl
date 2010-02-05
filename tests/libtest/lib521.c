@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib521.c,v 1.6 2008-09-20 04:26:57 yangtse Exp $
+ * $Id: lib521.c,v 1.7 2010-02-05 18:07:19 yangtse Exp $
  */
 
 #include "test.h"
@@ -28,12 +28,14 @@ int test(char *URL)
     return TEST_ERR_MAJOR_BAD;
   }
 
-  curl_easy_setopt(curl, CURLOPT_URL, URL);
-  curl_easy_setopt(curl, CURLOPT_PORT, atoi(libtest_arg2));
-  curl_easy_setopt(curl, CURLOPT_USERPWD, "xxx:yyy");
-  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+  test_setopt(curl, CURLOPT_URL, URL);
+  test_setopt(curl, CURLOPT_PORT, atoi(libtest_arg2));
+  test_setopt(curl, CURLOPT_USERPWD, "xxx:yyy");
+  test_setopt(curl, CURLOPT_VERBOSE, 1L);
 
   res = curl_easy_perform(curl);
+
+test_cleanup:
 
   curl_easy_cleanup(curl);
   curl_global_cleanup();

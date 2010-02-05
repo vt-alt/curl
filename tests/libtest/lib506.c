@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib506.c,v 1.23 2009-05-08 02:14:50 yangtse Exp $
+ * $Id: lib506.c,v 1.24 2010-02-05 18:07:19 yangtse Exp $
  */
 
 #include "test.h"
@@ -224,12 +224,12 @@ int test(char *URL)
 
   url = suburl( URL, i );
   headers = sethost( NULL );
-  curl_easy_setopt( curl, CURLOPT_HTTPHEADER, headers );
-  curl_easy_setopt( curl, CURLOPT_URL,        url );
+  test_setopt( curl, CURLOPT_HTTPHEADER, headers );
+  test_setopt( curl, CURLOPT_URL,        url );
   printf( "CURLOPT_SHARE\n" );
-  curl_easy_setopt( curl, CURLOPT_SHARE,      share );
+  test_setopt( curl, CURLOPT_SHARE,      share );
   printf( "CURLOPT_COOKIEJAR\n" );
-  curl_easy_setopt( curl, CURLOPT_COOKIEJAR,  JAR );
+  test_setopt( curl, CURLOPT_COOKIEJAR,  JAR );
 
   printf( "PERFORM\n" );
   curl_easy_perform( curl );
@@ -244,6 +244,8 @@ int test(char *URL)
   } else {
     printf( "SHARE_CLEANUP failed, correct\n" );
   }
+
+test_cleanup:
 
   /* clean up last handle */
   printf( "CLEANUP\n" );

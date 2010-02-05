@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: test.h,v 1.24 2010-02-02 12:39:10 yangtse Exp $
+ * $Id: test.h,v 1.25 2010-02-05 18:07:20 yangtse Exp $
  */
 
 /* Now include the setup.h file from libcurl's private libdir (the source
@@ -41,6 +41,9 @@
 
 #define TEST_ERR_MAJOR_BAD     100
 #define TEST_ERR_RUNS_FOREVER   99
+
+#define test_setopt(A,B,C) \
+  if((res = curl_easy_setopt((A),(B),(C))) != CURLE_OK) goto test_cleanup
 
 extern char *libtest_arg2; /* set by first.c to the argv[2] or NULL */
 extern char *libtest_arg3; /* set by first.c to the argv[3] or NULL */
