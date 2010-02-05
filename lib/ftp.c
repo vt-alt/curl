@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: ftp.c,v 1.545 2010-02-04 19:44:31 yangtse Exp $
+ * $Id: ftp.c,v 1.546 2010-02-05 09:32:11 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -2807,9 +2807,18 @@ static CURLcode ftp_easy_statemach(struct connectdata *conn)
  * Allocate and initialize the struct FTP for the current SessionHandle.  If
  * need be.
  */
+
+#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER == 910) && \
+    defined(__OPTIMIZE__) && defined(__unix__) && defined(__i386__)
+  /* workaround icc 9.1 optimizer issue */
+# define vqualifier volatile
+#else
+# define vqualifier
+#endif
+
 static CURLcode ftp_init(struct connectdata *conn)
 {
-  struct FTP *ftp;
+  struct FTP *vqualifier ftp;
 
   if(NULL == conn->data->state.proto.ftp) {
     conn->data->state.proto.ftp = malloc(sizeof(struct FTP));
