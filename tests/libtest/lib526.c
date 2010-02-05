@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib526.c,v 1.17 2010-02-05 19:19:34 yangtse Exp $
+ * $Id: lib526.c,v 1.18 2010-02-05 19:24:22 yangtse Exp $
  */
 
 /*
@@ -215,7 +215,9 @@ int test(char *URL)
     res = TEST_ERR_RUNS_FOREVER;
   }
 
-/* test_cleanup: */
+#ifdef LIB532
+test_cleanup:
+#endif
 
 #ifndef LIB527
   /* get NUM_HANDLES easy handles */
