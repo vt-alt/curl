@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib569.c,v 1.4 2010-02-05 19:19:34 yangtse Exp $
+ * $Id: lib569.c,v 1.5 2010-02-05 20:52:00 yangtse Exp $
  */
 
 #include "test.h"
@@ -27,7 +27,7 @@ int test(char *URL)
 {
   int res;
   CURL *curl;
-  char *stream_uri;
+  char *stream_uri = NULL;
   char *rtsp_session_id;
   int request=1;
   int i;
