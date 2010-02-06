@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: rtsp.c,v 1.10 2010-02-06 13:21:45 yangtse Exp $
+ * $Id: rtsp.c,v 1.11 2010-02-06 17:30:06 yangtse Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -461,15 +461,17 @@ CURLcode Curl_rtsp(struct connectdata *conn, bool *done)
       if(!Curl_checkheaders(data, "Content-Type:")) {
         result = Curl_add_bufferf(req_buffer,
                                   "Content-Type: text/parameters\r\n");
+        if(result)
+          return result;
       }
-      if(result)
-        return result;
     }
 
     if(rtspreq == RTSPREQ_ANNOUNCE) {
       if(!Curl_checkheaders(data, "Content-Type:")) {
         result = Curl_add_bufferf(req_buffer,
                                   "Content-Type: application/sdp\r\n");
+        if(result)
+          return result;
       }
     }
 
