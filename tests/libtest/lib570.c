@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * $Id: lib570.c,v 1.3 2010-02-05 19:19:34 yangtse Exp $
+ * $Id: lib570.c,v 1.4 2010-02-06 13:21:45 yangtse Exp $
  */
 
 #include "test.h"
@@ -94,6 +94,9 @@ int test(char *URL)
   }
 
 test_cleanup:
+
+  if(stream_uri)
+    free(stream_uri);
 
   curl_easy_cleanup(curl);
   curl_global_cleanup();
