@@ -19,7 +19,7 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
-# $Id: runtests.pl,v 1.382 2010-02-01 12:05:08 yangtse Exp $
+# $Id: runtests.pl,v 1.383 2010-02-06 17:31:09 yangtse Exp $
 ###########################################################################
 
 # Experimental hooks are available to run tests remotely on machines that
@@ -543,7 +543,7 @@ sub torture {
 
         logmsg "*** Alloc number $limit is now set to fail ***\n" if($gdbthis);
 
-        my $ret;
+        my $ret = 0;
         if($gdbthis) {
             runclient($gdbline)
         }
