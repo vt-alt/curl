@@ -18,7 +18,7 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: content_encoding.c,v 1.35 2010-01-22 23:21:39 bagder Exp $
+ * $Id: content_encoding.c,v 1.36 2010-02-09 09:35:48 bagder Exp $
  ***************************************************************************/
 
 #include "setup.h"
@@ -40,7 +40,7 @@
    (doing so will reduce code size slightly). */
 #define OLD_ZLIB_SUPPORT 1
 
-#define DSIZ 0x10000             /* buffer size for decompressed data */
+#define DSIZ CURL_MAX_WRITE_SIZE /* buffer size for decompressed data */
 
 #define GZIP_MAGIC_0 0x1f
 #define GZIP_MAGIC_1 0x8b
