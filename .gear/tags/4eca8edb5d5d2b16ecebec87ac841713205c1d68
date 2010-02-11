@@ -1,0 +1,13 @@
+object d05f2fa366a66d598e32ce9c06c9f3e68632a7cc
+type commit
+tag v7.19.7
+tagger Anton Farygin <rider@altlinux.com> 1257671491 +0300
+
+7.19.7
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.13 (GNU/Linux)
+
+iEUEABECAAYFAkr2i0oACgkQqohfd2vlwKtftgCeLEoXpzAaJ3G7S44aUWY/392k
+1mMAljFQBeIlp6rneyuwEqf957KI7ME=
+=viXP
+-----END PGP SIGNATURE-----
