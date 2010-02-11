@@ -1,6 +1,6 @@
 %undefine __libtoolize
 Name: curl
-Version: 7.19.7
+Version: 7.20.0
 Release: alt1
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
@@ -142,6 +142,9 @@ Lib%name - это библиотека функций для отправки и
 %_libdir/*.a
 
 %changelog
+* Thu Feb 11 2010 Anton Farygin <rider@altlinux.ru> 7.20.0-alt1
+- new version
+
 * Sun Nov 08 2009 Anton Farygin <rider@altlinux.ru> 7.19.7-alt1
 - new version
 
