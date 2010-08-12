@@ -1,6 +1,6 @@
 %undefine __libtoolize
 Name: curl
-Version: 7.21.0
+Version: 7.21.1
 Release: alt1
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
@@ -15,7 +15,7 @@ Patch0: curl-%version-%release.patch
 Requires: lib%name = %version-%release
 
 # Automatically added by buildreq on Fri Feb 09 2007
-BuildRequires: gcc-c++ glibc-devel-static groff-base libidn-devel libssl-devel zlib-devel libcares-devel
+BuildRequires: gcc-c++ glibc-devel-static groff-base libidn-devel libssl-devel zlib-devel libcares-devel >= 1.7.3-alt1 libssh2-devel
 
 %package -n lib%name
 Summary: The shared library for file transfer
@@ -24,6 +24,7 @@ Group: System/Libraries
 Provides: %name-lib = %version
 Obsoletes: %name-lib
 Requires: ca-certificates
+Requires: libcares >= 1.7.3-alt1
 
 %package -n lib%name-devel
 Summary: Header files for lib%name
@@ -142,6 +143,10 @@ Lib%name - это библиотека функций для отправки и
 %_libdir/*.a
 
 %changelog
+* Thu Aug 12 2010 Anton Farygin <rider@altlinux.ru> 7.21.1-alt1
+- new version
+- enabled build with libssh2
+
 * Tue Jun 29 2010 Anton Farygin <rider@altlinux.ru> 7.21.0-alt1
 - new version
 
