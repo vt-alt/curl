@@ -24,7 +24,6 @@ Group: System/Libraries
 Provides: %name-lib = %version
 Obsoletes: %name-lib
 Requires: ca-certificates
-Requires: libcares >= 1.7.3-alt1
 
 %package -n lib%name-devel
 Summary: Header files for lib%name
