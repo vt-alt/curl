@@ -117,6 +117,9 @@ applications that utilize lib%name.
 %install
 %makeinstall_std
 
+%check
+%make_build -k test
+
 %files
 %_bindir/curl
 %_man1dir/curl.1*
