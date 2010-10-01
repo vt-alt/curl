@@ -50,55 +50,51 @@ authentication, ftp upload, HTTP post, file transfer resume and more.
 NOTE: This version is compiled with SSL (https) support.
 
 %description -l ru_RU.UTF-8
-Curl - это клиент для получения файлов или документов с серверов, используя 
-один из поддерживаемых протоколов. Команда сделана таким образом, что бы работала 
-без вмешательства пользователя (или с вмешательством пользователя).
+Curl - это клиент для получения файлов или документов с серверов,
+используя один из поддерживаемых протоколов.  Утилита спроектирована
+для работы в неинтерактивном режиме.
 
-Curl позволяет делать операции над сетевыми файлами, используя поддержку Прокси, 
-авторизацию пользователя, докачку файлов и многое другое.
+Curl позволяет выполнять различные операции над сетевыми файлами,
+реализуя поддержку прокси, авторизацию пользователя, докачку файлов и
+многое другое.
 
 %description -n lib%name
-Lib%name is a library of functions for sending and receiving files through
-various protocols, including http and ftp.
-
-You should install this package if you plan to use any applications that
-use lib%name.
+This package contains lib%name shared library of functions for
+sending and receiving files through various protocols, including
+http and ftp.
 
 %description -n lib%name -l ru_RU.UTF-8
-Lib%name - это библиотека функций для отправки или получения файлов через 
-различные сетевые протоколы, включая http и ftp.
-
-Вам нужно установить этот пакет, если вы планируете использовать приложения 
-с использованием lib%name.
+Этот пакет содержит разделяемую библиотеку функций для отправки или
+получения файлов через различные сетевые протоколы, включая http и ftp.
 
 %description -n lib%name-devel
-Lib%name is a library of functions for sending and receiving files through
-various protocols, including http and ftp.
+This package contains lib%name development library of functions for
+sending and receiving files through various protocols, including
+http and ftp.
 
-You should install this package if you wish to develop applications that
+This package is required for development of applications that
 utilize lib%name.
 
 %description -n lib%name-devel -l ru_RU.UTF-8
-Lib%name - это библиотека функций для отправки или получения файлов через
-различные сетевые протоколы, включая http и ftp.  
+Этот пакет содержит девелоперскую библиотеку функций для отправки или
+получения файлов через различные сетевые протоколы, включая http и ftp.
 
-Вам нужно установить этот пакет, если вы планируете разрабатывать приложения
-с использованием lib%name.
-
+Этот пакет необходим для разработки приложений, использующих lib%name.
 
 %description -n lib%name-devel-static
-Lib%name is a library of functions for sending and receiving files through
-various protocols, including http and ftp.
+This package contains lib%name static library of functions for
+sending and receiving files through various protocols, including
+http and ftp.
 
-You should install this package if you wish to develop statically linked
+This package is required for development of statically linked
 applications that utilize lib%name.
 
 %description -n lib%name-devel-static -l ru_RU.UTF-8
-Lib%name - это библиотека функций для отправки или получения файлов через
-различные сетевые протоколы, включая http и ftp.
+Этот пакет содержит статическую библиотеку функций для отправки или
+получения файлов через различные сетевые протоколы, включая http и ftp.
 
-Вам нужно установить этот пакет, если вы планируете разрабатывать статически
-скомпилированные  приложения с использованием lib%name.
+Этот пакет необходим для разработки статически слинкованных приложений,
+использующих lib%name.
 
 %prep
 %setup -q
@@ -106,14 +102,15 @@ Lib%name - это библиотека функций для отправки и
 
 %build
 ./buildconf
-%configure --with-ssl \
-	    --with-libidn \
-	    --enable-ipv6 \
-	    --disable-rpat \
-	    --disable-ldap \
-	    --enable-threaded-resolver \
-	    --without-gssapi \
-	    --with-ca-bundle=%_datadir/ca-certificates/ca-bundle.crt
+%configure \
+	--with-ssl \
+	--with-libidn \
+	--enable-ipv6 \
+	--disable-rpat \
+	--disable-ldap \
+	--enable-threaded-resolver \
+	--without-gssapi \
+	--with-ca-bundle=%_datadir/ca-certificates/ca-bundle.crt
 
 %make_build
 
