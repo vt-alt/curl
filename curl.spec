@@ -118,7 +118,7 @@ Lib%name - это библиотека функций для отправки и
 %make_build
 
 %install
-%make install DESTDIR=$RPM_BUILD_ROOT
+%makeinstall_std
 
 %files
 %_bindir/curl
