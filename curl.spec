@@ -1,7 +1,7 @@
 %undefine __libtoolize
 Name: curl
 Version: 7.21.1
-Release: alt2
+Release: alt3
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -142,6 +142,12 @@ applications that utilize lib%name.
 %_libdir/*.a
 
 %changelog
+* Fri Oct 01 2010 Dmitry V. Levin <ldv@altlinux.org> 7.21.1-alt3
+- Removed unused requirement on libcares.
+- Cleaned up package descriptions.
+- Enabled test suite.
+- Built with libssl.so.10.
+
 * Fri Aug 20 2010 Anton Farygin <rider@altlinux.ru> 7.21.1-alt2
 - build without libcares (fixed #23891,#23486)
 
