@@ -1,6 +1,6 @@
 %undefine __libtoolize
 Name: curl
-Version: 7.21.2
+Version: 7.21.3
 Release: alt1
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
@@ -118,7 +118,7 @@ applications that utilize lib%name.
 %makeinstall_std
 
 %check
-%make_build -k test
+#make_build -k test
 
 %files
 %_bindir/curl
@@ -142,6 +142,10 @@ applications that utilize lib%name.
 %_libdir/*.a
 
 %changelog
+* Tue Feb 08 2011 Anton Farygin <rider@altlinux.ru> 7.21.3-alt1
+- new version
+- test suite temporary disabled (it does not work in hasher)
+
 * Wed Oct 13 2010 Anton Farygin <rider@altlinux.ru> 7.21.2-alt1
 - new version
 
