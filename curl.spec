@@ -29,7 +29,7 @@ Requires: ca-certificates
 Summary: Header files for lib%name
 Summary(ru_RU.UTF-8): Заголовочные файлы для lib%name
 Group: Development/C
-Requires: lib%name = %version-%release libidn-devel libssl-devel zlib-devel
+Requires: lib%name = %version-%release
 Provides: %name-devel = %version
 Obsoletes: %name-devel
 
