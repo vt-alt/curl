@@ -1,7 +1,6 @@
-%undefine __libtoolize
 Name: curl
 Version: 7.21.4
-Release: alt1
+Release: alt2
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -14,15 +13,15 @@ Patch0: curl-%version-%release.patch
 
 Requires: lib%name = %version-%release
 
-# Automatically added by buildreq on Fri Feb 09 2007
-BuildRequires: gcc-c++ glibc-devel-static groff-base libidn-devel libssl-devel zlib-devel libssh2-devel
+# Automatically added by buildreq on Tue Mar 15 2011
+BuildRequires: glibc-devel-static groff-base libidn-devel libssh2-devel libssl-devel zlib-devel
 
 %package -n lib%name
 Summary: The shared library for file transfer
 Summary(ru_RU.UTF-8): Библиотеки для передачи файлов
 Group: System/Libraries
 Provides: %name-lib = %version
-Obsoletes: %name-lib
+Obsoletes: %name-lib < %version
 Requires: ca-certificates
 
 %package -n lib%name-devel
@@ -31,7 +30,7 @@ Summary(ru_RU.UTF-8): Заголовочные файлы для lib%name
 Group: Development/C
 Requires: lib%name = %version-%release
 Provides: %name-devel = %version
-Obsoletes: %name-devel
+Obsoletes: %name-devel < %version
 
 %package -n lib%name-devel-static
 Summary: Static libraries for lib%name
@@ -142,6 +141,10 @@ applications that utilize lib%name.
 %_libdir/*.a
 
 %changelog
+* Tue Mar 15 2011 Alexey Tourbin <at@altlinux.ru> 7.21.4-alt2
+- libcurl-devel: removed dependencies on libidn-devel libssl-devel zlib-devel
+- applied debug.patch from Fedora to enable -g in CFLAGS
+
 * Sat Feb 26 2011 Anton Farygin <rider@altlinux.ru> 7.21.4-alt1
 - new version
 - enabled test check
