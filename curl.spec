@@ -28,7 +28,7 @@ Requires: ca-certificates
 Summary: Header files for lib%name
 Summary(ru_RU.UTF-8): Заголовочные файлы для lib%name
 Group: Development/C
-Requires: lib%name = %version-%release
+Requires: lib%name = %version-%release bc
 Provides: %name-devel = %version
 Obsoletes: %name-devel < %version
 
@@ -143,6 +143,11 @@ applications that utilize lib%name.
 %changelog
 * Sat Apr 23 2011 Anton Farygin <rider@altlinux.ru> 7.21.6-alt1
 - new version
+
+* Mon Apr 18 2011 Gleb F-Malinovskiy <glebfm@altlinux.org> 7.21.5-alt2
+- fix curl-config script:
+ + version: replace VERSION with CURLVERSION
+ + checkfor: add Requires: bc
 
 * Mon Apr 18 2011 Anton Farygin <rider@altlinux.ru> 7.21.5-alt1
 - new version
