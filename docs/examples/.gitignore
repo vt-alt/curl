@@ -18,12 +18,15 @@ http-post
 httpcustomheader
 httpput
 https
+imap
 multi-app
 multi-debugcallback
 multi-double
 multi-post
 multi-single
 persistant
+pop3s
+pop3slist
 post-callback
 postit2
 progressfunc
@@ -37,3 +40,4 @@ simplesmtp
 simplessl
 smtp-multi
 smtp-tls
+url2file
