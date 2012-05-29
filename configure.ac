@@ -5,7 +5,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) 1998 - 2012, Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -35,7 +35,7 @@ This configure script may be copied, distributed and modified under the
 terms of the curl license; see COPYING for more details])
 
 AC_CONFIG_SRCDIR([lib/urldata.h])
-AM_CONFIG_HEADER(lib/curl_config.h src/curl_config.h include/curl/curlbuild.h)
+AM_CONFIG_HEADER(lib/curl_config.h include/curl/curlbuild.h)
 AC_CONFIG_MACRO_DIR([m4])
 AM_MAINTAINER_MODE
 
@@ -44,6 +44,7 @@ CURL_CHECK_OPTION_OPTIMIZE
 CURL_CHECK_OPTION_WARNINGS
 CURL_CHECK_OPTION_WERROR
 CURL_CHECK_OPTION_CURLDEBUG
+CURL_CHECK_OPTION_SYMBOL_HIDING
 CURL_CHECK_OPTION_ARES
 
 CURL_CHECK_PATH_SEPARATOR_REQUIRED
@@ -155,6 +156,7 @@ curl_tls_srp_msg="no      (--enable-tls-srp)"
    curl_ipv6_msg="no      (--enable-ipv6)"
     curl_idn_msg="no      (--with-libidn)"
  curl_manual_msg="no      (--enable-manual)"
+curl_libcurl_msg="enabled (--disable-libcurl-option)"
 curl_verbose_msg="enabled (--disable-verbose)"
    curl_sspi_msg="no      (--enable-sspi)"
    curl_ldap_msg="no      (--enable-ldap / --with-ldap-lib / --with-lber-lib)"
@@ -235,21 +237,18 @@ esac
 AC_MSG_RESULT($mimpure)
 AM_CONDITIONAL(MIMPURE, test x$mimpure = xyes)
 
-dnl 'STATICLIB' is, in spite of its name, not generic but only for static-only
-dnl builds on Windows
-AM_CONDITIONAL(STATICLIB, false)
-
 AC_MSG_CHECKING([if we need BUILDING_LIBCURL])
+use_cppflag_building_libcurl="no"
+use_cppflag_curl_staticlib="no"
 case $host in
   *-*-mingw*)
-    AC_DEFINE(BUILDING_LIBCURL, 1, [when building libcurl itself])
     AC_MSG_RESULT(yes)
+    use_cppflag_building_libcurl="yes"
     AC_MSG_CHECKING([if we need CURL_STATICLIB])
     if test "X$enable_shared" = "Xno"
     then
-      AC_DEFINE(CURL_STATICLIB, 1, [when not building a shared library])
       AC_MSG_RESULT(yes)
-      AM_CONDITIONAL(STATICLIB, true)
+      use_cppflag_curl_staticlib="yes"
     else
       AC_MSG_RESULT(no)
     fi
@@ -258,6 +257,8 @@ case $host in
     AC_MSG_RESULT(no)
     ;;
 esac
+AM_CONDITIONAL(USE_CPPFLAG_BUILDING_LIBCURL, test x$use_cppflag_building_libcurl = xyes)
+AM_CONDITIONAL(USE_CPPFLAG_CURL_STATICLIB, test x$use_cppflag_curl_staticlib = xyes)
 
 # Determine whether all dependent libraries must be specified when linking
 if test "X$enable_shared" = "Xyes" -a "X$link_all_deplibs" = "Xno"
@@ -299,6 +300,7 @@ fi
 
 CURL_CHECK_COMPILER_HALT_ON_ERROR
 CURL_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE
+CURL_CHECK_COMPILER_SYMBOL_HIDING
 
 CURL_CHECK_NO_UNDEFINED
 AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
@@ -651,6 +653,25 @@ AC_HELP_STRING([--disable-manual],[Disable built-in manual]),
 dnl The actual use of the USE_MANUAL variable is done much later in this
 dnl script to allow other actions to disable it as well.
 
+dnl ************************************************************
+dnl disable C code generation support
+dnl
+AC_MSG_CHECKING([whether to enable generation of C code])
+AC_ARG_ENABLE(libcurl_option,
+AC_HELP_STRING([--enable-libcurl-option],[Enable --libcurl C code generation support])
+AC_HELP_STRING([--disable-libcurl-option],[Disable --libcurl C code generation support]),
+[ case "$enableval" in
+  no)
+       AC_MSG_RESULT(no)
+       AC_DEFINE(CURL_DISABLE_LIBCURL_OPTION, 1, [to disable --libcurl C code generation option])
+       curl_libcurl_msg="no"
+       ;;
+  *)   AC_MSG_RESULT(yes)
+       ;;
+  esac ],
+       AC_MSG_RESULT(yes)
+)
+
 dnl **********************************************************************
 dnl Checks for libraries.
 dnl **********************************************************************
@@ -673,6 +694,17 @@ then
   AC_CHECK_LIB(socket, gethostbyname,
                [HAVE_GETHOSTBYNAME="1"
                LIBS="$LIBS -lsocket"
+               ])
+fi
+
+if test "$HAVE_GETHOSTBYNAME" != "1"
+then
+  dnl gethostbyname in the watt lib?
+  AC_CHECK_LIB(watt, gethostbyname,
+               [HAVE_GETHOSTBYNAME="1"
+               CPPFLAGS="-I/dev/env/WATT_ROOT/inc"
+               LDFLAGS="-L/dev/env/WATT_ROOT/lib"
+               LIBS="$LIBS -lwatt"
                ])
 fi
 
@@ -1548,10 +1580,11 @@ if test X"$OPT_SSL" != Xno; then
        dnl when the ssl shared libs were found in a path that the run-time
        dnl linker doesn't search through, we need to add it to LD_LIBRARY_PATH
        dnl to prevent further configure tests to fail due to this
-
-       LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$LIB_OPENSSL"
-       export LD_LIBRARY_PATH
-       AC_MSG_NOTICE([Added $LIB_OPENSSL to LD_LIBRARY_PATH])
+       if test "x$cross_compiling" != "xyes"; then
+         LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$LIB_OPENSSL"
+         export LD_LIBRARY_PATH
+         AC_MSG_NOTICE([Added $LIB_OPENSSL to LD_LIBRARY_PATH])
+       fi
     fi
     CURL_CHECK_OPENSSL_API
   fi
@@ -1787,10 +1820,11 @@ if test "$OPENSSL_ENABLED" != "1"; then
           dnl linker doesn't search through, we need to add it to
           dnl LD_LIBRARY_PATH to prevent further configure tests to fail
           dnl due to this
-
-          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$gtlslib"
-          export LD_LIBRARY_PATH
-          AC_MSG_NOTICE([Added $gtlslib to LD_LIBRARY_PATH])
+          if test "x$cross_compiling" != "xyes"; then 
+            LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$gtlslib"
+            export LD_LIBRARY_PATH
+            AC_MSG_NOTICE([Added $gtlslib to LD_LIBRARY_PATH])
+          fi
         fi
       fi
 
@@ -1824,6 +1858,9 @@ if test "$GNUTLS_ENABLED" = "1"; then
   if test "$USE_GNUTLS_NETTLE" = "1"; then
     AC_DEFINE(USE_GNUTLS_NETTLE, 1, [if GnuTLS uses nettle as crypto backend])
     AC_SUBST(USE_GNUTLS_NETTLE, [1])
+    LIBS="$LIBS -lnettle"
+  else
+    LIBS="$LIBS -lgcrypt"
   fi
 fi
 
@@ -1910,12 +1947,12 @@ if test "$OPENSSL_ENABLED" != "1"; then
         dnl linker doesn't search through, we need to add it to
         dnl LD_LIBRARY_PATH to prevent further configure tests to fail
         dnl due to this
-
-        LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$polarssllib"
-        export LD_LIBRARY_PATH
-        AC_MSG_NOTICE([Added $polarssllib to LD_LIBRARY_PATH])
+        if test "x$cross_compiling" != "xyes"; then
+          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$polarssllib"
+          export LD_LIBRARY_PATH
+          AC_MSG_NOTICE([Added $polarssllib to LD_LIBRARY_PATH])
+        fi
       fi
-
     fi
 
   fi dnl PolarSSL not disabled
@@ -1932,7 +1969,7 @@ OPT_CYASSL=no
 _cppflags=$CPPFLAGS
 _ldflags=$LDFLAGS
 AC_ARG_WITH(cyassl,dnl
-AC_HELP_STRING([--with-cyassl=PATH],[where to look for CyaSSL, PATH points to the installation root (default: /usr/local/cyassl)])
+AC_HELP_STRING([--with-cyassl=PATH],[where to look for CyaSSL, PATH points to the installation root (default: system lib default)])
 AC_HELP_STRING([--without-cyassl], [disable CyaSSL detection]),
   OPT_CYASSL=$withval)
 
@@ -1945,14 +1982,9 @@ if test "$OPENSSL_ENABLED" != "1"; then
     fi
 
     if test -z "$OPT_CYASSL" ; then
-      dnl check for lib in default first
+      dnl check for lib in system default first
 
-      trycyassldir="/usr/local/cyassl"
-
-      LDFLAGS="$LDFLAGS -L$trycyassldir/lib"
-      CPPFLAGS="$CPPFLAGS -I$trycyassldir/include"
-
-      AC_CHECK_LIB(cyassl, InitCyaSSL,
+      AC_CHECK_LIB(cyassl, CyaSSL_Init,
       dnl libcyassl found, set the variable
        [
          AC_DEFINE(USE_CYASSL, 1, [if CyaSSL is enabled])
@@ -1974,7 +2006,7 @@ if test "$OPENSSL_ENABLED" != "1"; then
          CPPFLAGS="$CPPFLAGS $addcflags"
       fi
 
-      AC_CHECK_LIB(cyassl, InitCyaSSL,
+      AC_CHECK_LIB(cyassl, CyaSSL_Init,
        [
        AC_DEFINE(USE_CYASSL, 1, [if CyaSSL is enabled])
        AC_SUBST(USE_CYASSL, [1])
@@ -1999,10 +2031,11 @@ if test "$OPENSSL_ENABLED" != "1"; then
         dnl linker doesn't search through, we need to add it to
         dnl LD_LIBRARY_PATH to prevent further configure tests to fail
         dnl due to this
-
-        LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$cyassllib"
-        export LD_LIBRARY_PATH
-        AC_MSG_NOTICE([Added $cyassllib to LD_LIBRARY_PATH])
+        if test "x$cross_compiling" != "xyes"; then
+          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$cyassllib"
+          export LD_LIBRARY_PATH
+          AC_MSG_NOTICE([Added $cyassllib to LD_LIBRARY_PATH])
+        fi
       fi
 
     fi
@@ -2058,13 +2091,6 @@ if test "$OPENSSL_ENABLED" != "1" -a "$GNUTLS_ENABLED" != "1"; then
         nssprefix=$OPT_NSS
     fi
 
-    dnl Check for functionPK11_CreateGenericObject
-    dnl this is needed for using the PEM PKCS#11 module
-    AC_CHECK_LIB(nss3, PK11_CreateGenericObject,
-     [
-     AC_DEFINE(HAVE_PK11_CREATEGENERICOBJECT, 1, [if you have the function PK11_CreateGenericObject])
-     AC_SUBST(HAVE_PK11_CREATEGENERICOBJECT, [1])
-     ])
     if test -n "$addlib"; then
 
       CLEANLIBS="$LIBS"
@@ -2075,7 +2101,8 @@ if test "$OPENSSL_ENABLED" != "1" -a "$GNUTLS_ENABLED" != "1"; then
          CPPFLAGS="$CPPFLAGS $addcflags"
       fi
 
-      AC_CHECK_LIB(nss3, NSS_Initialize,
+      dnl The function PK11_CreateGenericObject is needed to load libnsspem.so
+      AC_CHECK_LIB(nss3, PK11_CreateGenericObject,
        [
        AC_DEFINE(USE_NSS, 1, [if NSS is enabled])
        AC_SUBST(USE_NSS, [1])
@@ -2091,14 +2118,23 @@ if test "$OPENSSL_ENABLED" != "1" -a "$GNUTLS_ENABLED" != "1"; then
       if test "x$USE_NSS" = "xyes"; then
         AC_MSG_NOTICE([detected NSS version $version])
 
+        dnl NSS_InitContext() was introduced in NSS 3.12.5 and helps to prevent
+        dnl collisions on NSS initialization/shutdown with other libraries
+        AC_CHECK_FUNC(NSS_InitContext,
+        [
+          AC_DEFINE(HAVE_NSS_INITCONTEXT, 1, [if you have the NSS_InitContext function])
+          AC_SUBST(HAVE_NSS_INITCONTEXT, [1])
+        ])
+
         dnl when shared libs were found in a path that the run-time
         dnl linker doesn't search through, we need to add it to
         dnl LD_LIBRARY_PATH to prevent further configure tests to fail
         dnl due to this
-
-        LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$nssprefix/lib$libsuff"
-        export LD_LIBRARY_PATH
-        AC_MSG_NOTICE([Added $nssprefix/lib$libsuff to LD_LIBRARY_PATH])
+        if test "x$cross_compiling" != "xyes"; then
+          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$nssprefix/lib$libsuff"
+          export LD_LIBRARY_PATH
+          AC_MSG_NOTICE([Added $nssprefix/lib$libsuff to LD_LIBRARY_PATH])
+        fi
       fi
 
     fi
@@ -2255,10 +2291,11 @@ if test X"$OPT_LIBSSH2" != Xno; then
        dnl libssh2_session_handshake was added in 1.2.8
        AC_CHECK_FUNCS( libssh2_version libssh2_init libssh2_exit \
                        libssh2_scp_send64 libssh2_session_handshake)
-
-       LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$DIR_SSH2"
-       export LD_LIBRARY_PATH
-       AC_MSG_NOTICE([Added $DIR_SSH2 to LD_LIBRARY_PATH])
+       if test "x$cross_compiling" != "xyes"; then
+         LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$DIR_SSH2"
+         export LD_LIBRARY_PATH
+         AC_MSG_NOTICE([Added $DIR_SSH2 to LD_LIBRARY_PATH])
+       fi
     fi
   else
     dnl no libssh2, revert back to clean variables
@@ -2350,41 +2387,37 @@ dnl **********************************************************************
 dnl Check for linker switch for versioned symbols
 dnl **********************************************************************
 
-AC_MSG_CHECKING([if libraries can be versioned])
-GLD=`$LD --help < /dev/null 2>/dev/null | grep version-script`
-if test -z "$GLD"; then
-    versioned_symbols_flavour=
-    AC_MSG_RESULT(no)
-    AC_MSG_WARN(***
-*** You need an ld version supporting the --version-script option.
-)
-else
-    AC_MSG_RESULT(yes)
-
-AC_MSG_CHECKING([whether versioned symbols are wanted])
 versioned_symbols_flavour=
-
+AC_MSG_CHECKING([whether versioned symbols are wanted])
 AC_ARG_ENABLE(versioned-symbols,
 AC_HELP_STRING([--enable-versioned-symbols], [Enable versioned symbols in shared library])
 AC_HELP_STRING([--disable-versioned-symbols], [Disable versioned symbols in shared library]),
 [ case "$enableval" in
   yes) AC_MSG_RESULT(yes)
-    if test "x$OPENSSL_ENABLED" = "x1"; then
-      versioned_symbols_flavour="OPENSSL_"
-    elif test "x$GNUTLS_ENABLED" == "x1"; then
-      versioned_symbols_flavour="GNUTLS_"
-    elif test "x$NSS_ENABLED" == "x1"; then
-      versioned_symbols_flavour="NSS_"
-    elif test "x$POLARSSL_ENABLED" == "x1"; then
-      versioned_symbols_flavour="POLARSSL_"
-    elif test "x$CYASSL_ENABLED" == "x1"; then
-      versioned_symbols_flavour="CYASSL_"
-    elif test "x$AXTLS_ENABLED" == "x1"; then
-      versioned_symbols_flavour="AXTLS_"
+    AC_MSG_CHECKING([if libraries can be versioned])
+    GLD=`$LD --help < /dev/null 2>/dev/null | grep version-script`
+    if test -z "$GLD"; then
+        AC_MSG_RESULT(no)
+        AC_MSG_WARN([You need an ld version supporting the --version-script option])
     else
-      versioned_symbols_flavour=""
+        AC_MSG_RESULT(yes)
+        if test "x$OPENSSL_ENABLED" = "x1"; then
+          versioned_symbols_flavour="OPENSSL_"
+        elif test "x$GNUTLS_ENABLED" == "x1"; then
+          versioned_symbols_flavour="GNUTLS_"
+        elif test "x$NSS_ENABLED" == "x1"; then
+          versioned_symbols_flavour="NSS_"
+        elif test "x$POLARSSL_ENABLED" == "x1"; then
+          versioned_symbols_flavour="POLARSSL_"
+        elif test "x$CYASSL_ENABLED" == "x1"; then
+          versioned_symbols_flavour="CYASSL_"
+        elif test "x$AXTLS_ENABLED" == "x1"; then
+          versioned_symbols_flavour="AXTLS_"
+        else
+          versioned_symbols_flavour=""
+        fi
+        versioned_symbols="yes"
     fi
-    versioned_symbols="yes"
     ;;
 
   *)   AC_MSG_RESULT(no)
@@ -2394,7 +2427,6 @@ AC_HELP_STRING([--disable-versioned-symbols], [Disable versioned symbols in shar
 AC_MSG_RESULT(no)
 ]
 )
-fi
 
 AC_SUBST(VERSIONED_FLAVOUR, ["$versioned_symbols_flavour"])
 AM_CONDITIONAL(VERSIONED_SYMBOLS, test "x$versioned_symbols" = "xyes")
@@ -3027,48 +3059,9 @@ AC_HELP_STRING([--disable-cookies],[Disable cookies support]),
 )
 
 dnl ************************************************************
-dnl Enable hiding of internal symbols in library to reduce its size and
-dnl speed dynamic linking of applications.  This currently is only supported
-dnl on gcc >= 4.0 and SunPro C.
+dnl hiding of library internal symbols
 dnl
-AC_MSG_CHECKING([whether to enable hidden symbols in the library])
-AC_ARG_ENABLE(hidden-symbols,
-AC_HELP_STRING([--enable-hidden-symbols],[Hide internal symbols in library])
-AC_HELP_STRING([--disable-hidden-symbols],[Leave all symbols with default visibility in library]),
-[ case "$enableval" in
-  no)
-       AC_MSG_RESULT(no)
-       ;;
-  *)
-       AC_MSG_CHECKING([whether $CC supports it])
-       if test "$GCC" = yes ; then
-         if $CC --help --verbose 2>&1 | grep fvisibility= > /dev/null ||
-           dnl clang always supports -fvisibility= but it doesn't show up
-           dnl under --help.
-           test "$compiler_id" = "CLANG"; then
-           AC_MSG_RESULT(yes)
-           AC_DEFINE(CURL_HIDDEN_SYMBOLS, 1, [to enable hidden symbols])
-           AC_DEFINE(CURL_EXTERN_SYMBOL, [__attribute__ ((visibility ("default")))], [to make a symbol visible])
-           CFLAGS="$CFLAGS -fvisibility=hidden"
-         else
-            AC_MSG_RESULT(no)
-          fi
-
-       else
-         dnl Test for SunPro cc
-         if $CC 2>&1 | grep flags >/dev/null && $CC -flags | grep xldscope= >/dev/null ; then
-           AC_MSG_RESULT(yes)
-           AC_DEFINE(CURL_HIDDEN_SYMBOLS, 1, [to enable hidden symbols])
-           AC_DEFINE(CURL_EXTERN_SYMBOL, [__global], [to make a symbol visible])
-           CFLAGS="$CFLAGS -xldscope=hidden"
-         else
-           AC_MSG_RESULT(no)
-         fi
-       fi
-       ;;
-  esac ],
-       AC_MSG_RESULT(no)
-)
+CURL_CONFIGURE_SYMBOL_HIDING
 
 dnl ************************************************************
 dnl enforce SONAME bump
@@ -3298,31 +3291,32 @@ CURL_GENERATE_CONFIGUREHELP_PM
 
 AC_MSG_NOTICE([Configured to build curl/libcurl:
 
-  curl version:    ${CURLVERSION}
-  Host setup:      ${host}
-  Install prefix:  ${prefix}
-  Compiler:        ${CC}
-  SSL support:     ${curl_ssl_msg}
-  SSH support:     ${curl_ssh_msg}
-  zlib support:    ${curl_zlib_msg}
-  krb4 support:    ${curl_krb4_msg}
-  GSSAPI support:  ${curl_gss_msg}
-  SPNEGO support:  ${curl_spnego_msg}
-  TLS-SRP support: ${curl_tls_srp_msg}
-  resolver:        ${curl_res_msg}
-  ipv6 support:    ${curl_ipv6_msg}
-  IDN support:     ${curl_idn_msg}
-  Build libcurl:   Shared=${enable_shared}, Static=${enable_static}
-  Built-in manual: ${curl_manual_msg}
-  Verbose errors:  ${curl_verbose_msg}
-  SSPI support:    ${curl_sspi_msg}
-  ca cert bundle:  ${ca}
-  ca cert path:    ${capath}
-  LDAP support:    ${curl_ldap_msg}
-  LDAPS support:   ${curl_ldaps_msg}
-  RTSP support:    ${curl_rtsp_msg}
-  RTMP support:    ${curl_rtmp_msg}
-  Protocols:       ${SUPPORT_PROTOCOLS}
+  curl version:     ${CURLVERSION}
+  Host setup:       ${host}
+  Install prefix:   ${prefix}
+  Compiler:         ${CC}
+  SSL support:      ${curl_ssl_msg}
+  SSH support:      ${curl_ssh_msg}
+  zlib support:     ${curl_zlib_msg}
+  krb4 support:     ${curl_krb4_msg}
+  GSSAPI support:   ${curl_gss_msg}
+  SPNEGO support:   ${curl_spnego_msg}
+  TLS-SRP support:  ${curl_tls_srp_msg}
+  resolver:         ${curl_res_msg}
+  ipv6 support:     ${curl_ipv6_msg}
+  IDN support:      ${curl_idn_msg}
+  Build libcurl:    Shared=${enable_shared}, Static=${enable_static}
+  Built-in manual:  ${curl_manual_msg}
+  --libcurl option: ${curl_libcurl_msg}
+  Verbose errors:   ${curl_verbose_msg}
+  SSPI support:     ${curl_sspi_msg}
+  ca cert bundle:   ${ca}
+  ca cert path:     ${capath}
+  LDAP support:     ${curl_ldap_msg}
+  LDAPS support:    ${curl_ldaps_msg}
+  RTSP support:     ${curl_rtsp_msg}
+  RTMP support:     ${curl_rtmp_msg}
+  Protocols:        ${SUPPORT_PROTOCOLS}
 ])
 
 if test "x$soname_bump" = "xyes"; then

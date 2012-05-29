@@ -19,6 +19,7 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
+#include "server_setup.h"
 
 /* sws.c: simple (silly?) web server
 
@@ -26,10 +27,6 @@
    Wilke. Thanks a bunch!
 
  */
-
-#define CURL_NO_OLDIES
-
-#include "setup.h" /* portability help from the lib directory */
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
@@ -1944,7 +1941,11 @@ int main(int argc, char *argv[])
 
       if(DOCNUMBER_CONNECT == req.testno) {
         /* a CONNECT request, setup and talk the tunnel */
-        http_connect(&msgsock, sock, &req, hostport);
+        if(!is_proxy) {
+          logmsg("received CONNECT but isn't running as proxy! EXIT");
+        }
+        else
+          http_connect(&msgsock, sock, &req, hostport);
         break;
       }
 

@@ -22,7 +22,6 @@ CURL_CFILES = hugehelp.c \
 	tool_cb_prg.c \
 	tool_cb_rea.c \
 	tool_cb_see.c \
-	tool_cb_skt.c \
 	tool_cb_wrt.c \
 	tool_cfgable.c \
 	tool_convert.c \
@@ -53,8 +52,7 @@ CURL_CFILES = hugehelp.c \
 	tool_writeout.c \
 	tool_xattr.c
 
-CURL_HFILES = hugehelp.h setup.h config-win32.h config-mac.h \
-	config-riscos.h \
+CURL_HFILES = hugehelp.h \
 	tool_binmode.h \
 	tool_bname.h \
 	tool_cb_dbg.h \
@@ -62,7 +60,6 @@ CURL_HFILES = hugehelp.h setup.h config-win32.h config-mac.h \
 	tool_cb_prg.h \
 	tool_cb_rea.h \
 	tool_cb_see.h \
-	tool_cb_skt.h \
 	tool_cb_wrt.h \
 	tool_cfgable.h \
 	tool_convert.h \
@@ -86,6 +83,7 @@ CURL_HFILES = hugehelp.h setup.h config-win32.h config-mac.h \
 	tool_parsecfg.h \
 	tool_sdecls.h \
 	tool_setopt.h \
+	tool_setup.h \
 	tool_sleep.h \
 	tool_urlglob.h \
 	tool_util.h \

@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2012, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -19,9 +19,7 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
-#include "setup.h"
-
-#include <curl/curl.h>
+#include "tool_setup.h"
 
 #include "rawstr.h"
 
@@ -151,8 +149,6 @@ void cleanarg(char *str)
  * Parse the string and write the integer in the given address. Return
  * non-zero on failure, zero on success.
  *
- * The string must start with a digit to be valid.
- *
  * Since this function gets called with the 'nextarg' pointer from within the
  * getparameter a lot, we must check it for NULL before accessing the str
  * data.
@@ -160,7 +156,7 @@ void cleanarg(char *str)
 
 int str2num(long *val, const char *str)
 {
-  if(str && ISDIGIT(*str)) {
+  if(str) {
     char *endptr;
     long num = strtol(str, &endptr, 10);
     if((endptr != str) && (endptr == str + strlen(str))) {

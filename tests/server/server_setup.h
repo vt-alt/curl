@@ -1,5 +1,5 @@
-#ifndef HEADER_CURL_TOOL_CB_SKT_H
-#define HEADER_CURL_TOOL_CB_SKT_H
+#ifndef HEADER_CURL_SERVER_SETUP_H
+#define HEADER_CURL_SERVER_SETUP_H
 /***************************************************************************
  *                                  _   _ ____  _
  *  Project                     ___| | | |  _ \| |
@@ -7,7 +7,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2012, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -21,15 +21,9 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
-#include "setup.h"
 
-/*
-** callback for CURLOPT_SOCKOPTFUNCTION
-*/
+#define CURL_NO_OLDIES
 
-int tool_sockopt_cb(void *userdata,
-                    curl_socket_t curlfd,
-                    curlsocktype purpose);
+#include "setup.h" /* portability help from the lib directory */
 
-#endif /* HEADER_CURL_TOOL_CB_SKT_H */
-
+#endif /* HEADER_CURL_SERVER_SETUP_H */
