@@ -11,6 +11,7 @@ ftp-wildcard
 ftpget
 ftpgetinfo
 ftpgetresp
+ftpsget
 ftpupload
 getinfo
 getinmemory
@@ -34,6 +35,7 @@ resolve
 rtsp
 sendrecv
 sepheaders
+sftpget
 simple
 simplepost
 simplesmtp
