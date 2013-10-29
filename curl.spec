@@ -1,6 +1,6 @@
 Name: curl
 Version: 7.31.0
-Release: alt1
+Release: alt1.M70C.1
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -141,6 +141,9 @@ applications that utilize lib%name.
 %_libdir/*.a
 
 %changelog
+* Tue Oct 29 2013 Anton V. Boyarshinov <boyarsh@altlinux.ru> 7.31.0-alt1.M70C.1
+- rebuild for c7
+
 * Mon Jun 24 2013 Anton Farygin <rider@altlinux.ru> 7.31.0-alt1
 - new version
 
