@@ -9,6 +9,7 @@ Group: Networking/File transfer
 Url: http://curl.haxx.se
 
 Source: %url/download/%name-%version.tar
+Source1: %name.watch
 Patch0: curl-%version-%release.patch
 
 Requires: lib%name = %version-%release
@@ -143,6 +144,7 @@ applications that utilize lib%name.
 %changelog
 * Wed Mar 26 2014 Anton Farygin <rider@altlinux.ru> 7.36.0-alt1
 - new version
+- added watch file
 
 * Fri Feb 14 2014 Anton Farygin <rider@altlinux.ru> 7.35.0-alt2
 - test172 fixed by upstream
