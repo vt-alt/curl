@@ -1,0 +1,13 @@
+object 63c230ae4dab058115b86c47eeec62f4d06c8fc1
+type commit
+tag v7.43.0
+tagger Anton Farygin <rider@altlinux.com> 1434716829 +0300
+
+7.43.0
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEABECAAYFAlWECqEACgkQqohfd2vlwKtG9wCgpWH9YPPC5ptGIQjyJO5u/HlQ
+5eAAoJgFRXsaNUd3Azm13GW0b/v4fddY
+=10ac
+-----END PGP SIGNATURE-----
