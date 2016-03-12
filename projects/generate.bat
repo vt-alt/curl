@@ -10,7 +10,7 @@ rem * Copyright (C) 2014 - 2015, Steve Holme, <steve_holme@hotmail.com>.
 rem *
 rem * This software is licensed as described in the file COPYING, which
 rem * you should have received as part of this distribution. The terms
-rem * are also available at http://curl.haxx.se/docs/copyright.html.
+rem * are also available at https://curl.haxx.se/docs/copyright.html.
 rem *
 rem * You may opt to use, copy, modify, merge, publish, distribute and/or sell
 rem * copies of the Software, and permit persons to whom the Software is
@@ -25,7 +25,7 @@ rem NOTES
 rem
 rem Do not set %ERRORLEVEL% to anything. %ERRORLEVEL% is a special variable
 rem that only contains errorlevel when %ERRORLEVEL% is not set. Same for %CD%.
-rem http://blogs.msdn.com/b/oldnewthing/archive/2008/09/26/8965755.aspx
+rem https://blogs.msdn.microsoft.com/oldnewthing/20080926-00/?p=20743/
 rem If you need to set the errorlevel do this instead: CALL :seterr [#]
 
 :begin
