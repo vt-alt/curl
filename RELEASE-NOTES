@@ -1,30 +1,53 @@
-Curl and libcurl 7.49.1
+Curl and libcurl 7.50.0
 
- Public curl releases:         155
+ Public curl releases:         156
  Command line options:         185
  curl_easy_setopt() options:   224
  Public functions in libcurl:  61
  Contributors:                 1404
 
+This release includes the following changes:
+
+ o http: add CURLINFO_HTTP_VERSION and %{http_version} [3]
+
 This release includes the following bugfixes:
 
- o Windows: prevent DLL hijacking, CVE-2016-4802 [11]
- o dist: include manpage-scan.pl, nroff-scan.pl and CHECKSRC.md [1]
- o schannel: fix compile break with MSVC XP toolset [2]
- o curlbuild.h.dist: check __LP64__ as well to fix MIPS build [3]
- o dist: include curl_multi_socket_all.3 [4]
- o http2: use HTTP/2 in the HTTP/1.1-alike response
- o openssl: ERR_remove_thread_state() is deprecated in latest 1.1.0
- o CURLOPT_CONNECT_TO.3: user must not free the list prematurely [5]
- o libcurl.m4: Avoid obsolete warning [6]
- o winbuild/Makefile.vc: Fix check on SSL, MBEDTLS, WINSSL exclusivity [7]
- o curl_multibyte: fix compiler error
- o openssl: cleanup must free compression methods (memory leak) [8]
- o mbedtls: fix includes so snprintf() works [9]
- o checksrc.pl: Added variants of strcat() & strncat() to banned function list
- o contributors.sh: better grep pattern and show GitHub username [10]
- o ssh: fix build for libssh2 before 1.2.6 [12]
- o curl_share_setopt.3: Add min ver needed for ssl session lock [13]
+ o memdebug: fix MSVC crash with -DMEMDEBUG_LOG_SYNC [1]
+ o openssl: fix build with OPENSSL_NO_COMP [2]
+ o mbedtls: removed unused variables [4]
+ o cmake: Added missing mbedTLS support [5]
+ o URL parser: allow URLs to use one, two or three slashes [6]
+ o curl: fix -q [regression] [7]
+ o openssl: Use correct buffer sizes for error messages [8]
+ o curl: fix SIGSEGV while parsing URL with too many globs [9]
+ o schannel: add CURLOPT_CERTINFO support [10]
+ o vtls: fix ssl session cache race condition [11]
+ o http: Fix HTTP/2 connection reuse [regression] [12]
+ o checksrc: Add LoadLibrary to the banned functions list
+ o schannel: Disable ALPN on Windows < 8.1 [13]
+ o configure: occasional ignorance of --enable-symbol-hiding with GCC
+ o http2: test17xx are the first real HTTP/2 tests
+ o resolve: add support for IPv6 DNS64/NAT64 Networks on OS X + iOS [14]
+ o curl_multi_socket_action.3: rewording [15]
+ o CURLOPT_POSTFIELDS.3: Clarify what happens when set empty [16]
+ o cmake: Fix build with winldap [17]
+ o openssl: fix cert check with non-DNS name fields present [18]
+ o curl.1: mention the units for the progress meter [20]
+ o openssl: use more 'const' to fix build warnings with 1.1.0 branch
+ o cmake: now using BUILD_TESTING=ON/OFF [19]
+ o vtls: Only call add/getsession if session id is enabled
+ o headers: forward declare CURL, CURLM and CURLSH as structs [21]
+ o configure: improve detection of CA bundle path on FreeBSD [22]
+ o SFTP: set a generic error when no SFTP one exists [23]
+ o curl_global_init.3: expand on the SSL and WIN32 bits purpose [24]
+ o conn: don't free easy handle data in handler->disconnect [25]
+ o cookie.c: Fix misleading indentation [26]
+ o library: Fix memory leaks found during static analysis [27]
+ o CURLMOPT_SOCKETFUNCTION.3: fix typo [28]
+ o curl_global_init: moved the "IPv6 works" check here [29]
+ o connect: disable TFO on Linux when using SSL [30]
+ o vauth: Fixed memory leak due to function returning without free [31]
+ o winbuild: fix embedded manifest option
 
 This release includes the following known bugs:
 
@@ -33,25 +56,48 @@ This release includes the following known bugs:
 This release would not have looked like this without help, code, reports and
 advice from friends like these:
 
-  Alexander Traud, Daniel Stenberg, Gisle Vanem, Jan Ehrhardt,
-  jveazey on github, Marcel Raad, Michael Kaufmann, Michael Wallner,
-  Moti Avrahami, Paul Howarth, Ray Satiro, Steve Holme, Tomas Jakobsson,
-  (13 contributors)
+  Andrew Kurushin, Andrew Robbins, Askar Safin, Benjamin Kircher, Brad King,
+  Brian Prodoehl, Dan Fandrich, Daniel Seither, Daniel Stenberg, Fabian Ruff,
+  Frank Gevaerts, Gisle Vanem, Gou Lingfeng, Ivan Avdeev, Joel Depooter,
+  Kamil Dudka, Luo Jinghua, Marcel Raad, Michael Kaufmann, Michael Osipov,
+  Michael Wallner, Miroslav Franc, Patrick Monnerat, Ray Satiro, Reinhard Max,
+  Renaud Lehoux, Richard Gray, Romain Coltel, Saurav Babu, Sergei Nikulov,
+  Stefan Kanthak, Steve Holme, Timothy Polich, vanillajonathan on github,
+  Viktor Szakáts,
+  (35 contributors)
 
         Thanks! (and sorry if I forgot to mention someone)
 
 References to bug reports and discussions on issues:
 
- [1] = https://curl.haxx.se/mail/lib-2016-05/0113.html
- [2] = https://curl.haxx.se/bug/?i=812
- [3] = https://curl.haxx.se/bug/?i=813
- [4] = https://curl.haxx.se/bug/?i=816
- [5] = https://curl.haxx.se/bug/?i=819
- [6] = https://curl.haxx.se/bug/?i=821
- [7] = https://curl.haxx.se/bug/?i=818
- [8] = https://curl.haxx.se/bug/?i=817
- [9] = https://curl.haxx.se/mail/lib-2016-05/0196.html
- [10] = https://curl.haxx.se/bug/?i=824
- [11] = https://curl.haxx.se/docs/adv_20160527.html
- [12] = https://curl.haxx.se/bug/?i=831
- [13] = https://github.com/curl/curl/issues/826
+ [1] = https://curl.haxx.se/bug/?i=828
+ [2] = https://curl.haxx.se/bug/?i=836
+ [3] = https://curl.haxx.se/bug/?i=799
+ [4] = https://curl.haxx.se/bug/?i=838
+ [5] = https://curl.haxx.se/bug/?i=837
+ [6] = https://curl.haxx.se/bug/?i=791
+ [7] = https://curl.haxx.se/bug/?i=842
+ [8] = https://curl.haxx.se/bug/?i=844
+ [9] = https://bugzilla.redhat.com/1340757
+ [10] = https://curl.haxx.se/bug/?i=822
+ [11] = https://curl.haxx.se/bug/?i=815
+ [12] = https://curl.haxx.se/bug/?i=855
+ [13] = https://curl.haxx.se/bug/?i=840
+ [14] = https://curl.haxx.se/bug/?i=863
+ [15] = https://curl.haxx.se/bug/?i=865
+ [16] = https://curl.haxx.se/bug/?i=862
+ [17] = https://curl.haxx.se/bug/?i=874
+ [18] = https://curl.haxx.se/bug/?i=875
+ [19] = https://curl.haxx.se/bug/?i=882
+ [20] = https://curl.haxx.se/bug/?i=883
+ [21] = https://curl.haxx.se/mail/lib-2016-06/0100.html
+ [22] = https://curl.haxx.se/bug/?i=894
+ [23] = https://curl.haxx.se/mail/lib-2016-06/0052.html
+ [24] = https://curl.haxx.se/mail/lib-2016-06/0136.html
+ [25] = https://curl.haxx.se/mail/lib-2016-06/0139.html
+ [26] = https://curl.haxx.se/bug/?i=911
+ [27] = https://curl.haxx.se/bug/?i=913
+ [28] = https://curl.haxx.se/bug/?i=914
+ [29] = https://curl.haxx.se/bug/?i=915
+ [30] = https://curl.haxx.se/bug/?i=907
+ [31] = https://curl.haxx.se/mail/lib-2016-07/0054.html
