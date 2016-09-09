@@ -2,20 +2,33 @@
 <info>
 <keywords>
 HTTP
-HTTP GET
-HTTP proxy
+HTTP HEAD
 </keywords>
 </info>
+
 #
 # Server-side
 <reply>
 <data>
-HTTP/1.1 407 Needs proxy authentication
-Server: test-server/fake swsclose yesyes
-Proxy-Authenticate: Basic "oh please"
-Connection: close
+No headers at all, just data swsclose
 
-bing
+Let's get
+
+a little
+
+so that
+
+we
+
+have
+
+some
+
+test
+
+data to
+
+verify
 </data>
 </reply>
 
@@ -26,10 +39,10 @@ bing
 http
 </server>
  <name>
-HTTP GET with failed proxy auth
+HTTP HEAD, receive no headers only body
  </name>
  <command>
-http://%HOSTIP:%HTTPPORT/93 -x %HOSTIP:%HTTPPORT
+-I http://%HOSTIP:%HTTPPORT/1144
 </command>
 </client>
 
@@ -40,10 +53,9 @@ http://%HOSTIP:%HTTPPORT/93 -x %HOSTIP:%HTTPPORT
 ^User-Agent:.*
 </strip>
 <protocol>
-GET http://%HOSTIP:%HTTPPORT/93 HTTP/1.1
+HEAD /1144 HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
 Accept: */*
-Proxy-Connection: Keep-Alive
 
 </protocol>
 </verify>
