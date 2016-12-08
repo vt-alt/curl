@@ -10,7 +10,7 @@ Url: http://curl.haxx.se
 
 Source: %url/download/%name-%version.tar
 Source1: %name.watch
-Patch0: curl-%version-%release.patch
+Patch0: curl-%version-alt.patch
 
 Requires: lib%name = %version-%release
 
