@@ -14,8 +14,7 @@ Patch0: curl-%version-alt.patch
 
 Requires: lib%name = %version-%release
 
-# Automatically added by buildreq on Tue Mar 15 2011
-BuildRequires: glibc-devel-static groff-base libidn-devel libssh2-devel libssl-devel zlib-devel python-modules libnghttp2-devel
+BuildRequires: glibc-devel-static groff-base libidn-devel libssh2-devel libssl-devel zlib-devel python-modules libnghttp2-devel python-modules-logging
 BuildRequires(pre):rpm-build-ubt
 
 %package -n lib%name
