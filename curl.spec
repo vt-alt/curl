@@ -1,5 +1,5 @@
 Name: curl
-Version: 7.54.1
+Version: 7.55.0
 Release: alt1%ubt
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
@@ -117,6 +117,7 @@ applications that utilize lib%name.
 
 %install
 %makeinstall_std
+%makeinstall_std -C docs/libcurl
 
 %check
 %make_build -k test
@@ -144,6 +145,12 @@ applications that utilize lib%name.
 %_libdir/*.a
 
 %changelog
+* Wed Aug 09 2017 Anton Farygin <rider@altlinux.ru> 7.55.0-alt1%ubt
+- new version with following security fixes:
+   * CVE-2017-1000101 glob: do not parse after a strtoul() overflow range
+   * CVE-2017-1000100 tftp: reject file name lengths that don't fit
+   * CVE-2017-1000099 file: output the correct buffer to the user
+
 * Wed Jun 14 2017 Anton Farygin <rider@altlinux.ru> 7.54.1-alt1%ubt
 - new version with security fixes:
   CVE-2017-9502: URL file scheme drive letter buffer overflow 
