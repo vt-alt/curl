@@ -18,13 +18,22 @@ addons:
             - stunnel4
             - libidn2-0-dev
             - libssh2-1-dev
+            - krb5-user
 
 matrix:
     include:
         - os: linux
           compiler: gcc
           dist: trusty
-          env: T=normal
+          env: T=normal C=--with-gssapi
+        - os: linux
+          compiler: gcc
+          dist: trusty
+          env: T=normal C="--disable-http --disable-smtp --disable-imap"
+        - os: linux
+          compiler: gcc
+          dist: trusty
+          env: T=normal C=--enable-ares
         - os: linux
           compiler: clang
           dist: trusty
@@ -34,13 +43,16 @@ matrix:
           env: T=debug
         - os: osx
           compiler: gcc
-          env: T=debug C=--with-ssl=/usr/local/opt/openssl
+          env: T=debug C=--enable-ares
         - os: osx
           compiler: gcc
-          env: T=debug C=--with-ssl=/usr/local/opt/libressl
+          env: T=debug C="--with-ssl=/usr/local/opt/openssl --with-libmetalink"
+        - os: osx
+          compiler: gcc
+          env: T=debug C="--with-ssl=/usr/local/opt/libressl --with-libmetalink"
         - os: osx
           compiler: clang
-          env: T=debug C="--without-ssl --with-darwinssl"
+          env: T=debug C="--without-ssl --with-darwinssl --with-libmetalink"
         - os: osx
           compiler: clang
           env: T=normal
@@ -60,12 +72,16 @@ matrix:
           compiler: gcc
           dist: trusty
           env: T=distcheck
+        - os: linux
+          compiler: clang
+          dist: trusty
+          env: T=fuzzer
 
 install:
   - pip install --user cpp-coveralls
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update > /dev/null; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew reinstall libtool > /dev/null; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install openssl libidn rtmpdump libssh2 c-ares libmetalink libressl nghttp2; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install rtmpdump libssh2 c-ares libmetalink libressl nghttp2 libmetalink; fi
   - if [ $TRAVIS_OS_NAME = linux ]; then
       curl -L https://github.com/nghttp2/nghttp2/releases/download/v1.24.0/nghttp2-1.24.0.tar.gz |
          tar xzf - &&
@@ -85,18 +101,19 @@ script:
              tests="1 2 3 4 5 6 7 8 9 10 200 201 202 300 301 302 500 501 502 503 504 506 507 508 509 510 511 512 513 514 515 516 517 518 519 600 601 800 801 802 803 900 901 902 903 1000 1001 1002 1004 1302 1303 1304 1305 1306 1308 1400 1401 1402 1404 1450 1451 1452 1502 1507 1508 1600 1602 1603 1605"
              make "TFLAGS=-n -e $tests" test-nonflaky
              make "TFLAGS=-n -t $tests" test-nonflaky
-             coveralls --gcov /usr/bin/gcov-4.8 --gcov-options '\-lp' -i src -i lib -i lib/vtls -i lib/vauth -e tests -e docs
+             coveralls --gcov /usr/bin/gcov-4.8 --gcov-options '\-lp' -i src -e lib -e tests -e docs -b $PWD/src
+             coveralls --gcov /usr/bin/gcov-4.8 --gcov-options '\-lp' -e src -i lib -e tests -e docs -b $PWD/lib
         fi
     - |
         if [ "$T" = "debug" ]; then
              ./configure --enable-debug --enable-werror $C
-             make
+             make && make examples
              make TFLAGS=-n test-nonflaky
         fi
     - |
         if [ "$T" = "normal" ]; then
              ./configure --enable-warnings --enable-werror $C
-             make
+             make && make examples
              make test-nonflaky
         fi
     - |
@@ -136,6 +153,21 @@ script:
              cd build && \
              cmake .. && \
              make)
+        fi
+    - |
+        if [ "$T" = "fuzzer" ]; then
+          export CC=clang
+          export CXX=clang++
+          export CFLAGS="-fsanitize=address"
+
+          # Specifically use libstdc++ for travis as libc++ is not installed.
+          # This is ok because we're not compiling against libFuzzer.
+          export CXXFLAGS="-fsanitize=address -stdlib=libstdc++"
+          ./configure --disable-shared --enable-debug --enable-maintainer-mode
+          make
+          cd tests/fuzz
+          make clean
+          make check
         fi
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
