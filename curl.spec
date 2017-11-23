@@ -1,6 +1,6 @@
 Name: curl
 Version: 7.56.1
-Release: alt1%ubt
+Release: alt1%ubt.1
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -14,7 +14,7 @@ Patch0: curl-%version-alt.patch
 
 Requires: lib%name = %version-%release
 
-BuildRequires: glibc-devel-static groff-base libidn-devel libssh2-devel libssl-devel zlib-devel python-modules libnghttp2-devel python-modules-logging python-modules-xml
+BuildRequires: glibc-devel-static groff-base libidn-devel libssh2-devel libssl-devel zlib-devel python-modules python-modules-logging python-modules-xml
 BuildRequires(pre):rpm-build-ubt
 
 %package -n lib%name
@@ -144,6 +144,41 @@ applications that utilize lib%name.
 %_libdir/*.a
 
 %changelog
+* Thu Nov 23 2017 Evgeny Sinelnikov <sin@altlinux.org> 7.56.1-alt1%ubt.1
+- Backport security updates to legacy stable branches
+- Fixes:
+  + CVE-2017-1000257 libcurl contains a buffer overrun flaw in the IMAP handler
+  + CVE-2017-1000254 libcurl may read outside of a heap allocated buffer when doing FTP
+  + CVE-2017-1000101 do not parse after a strtoul() overflow range
+  + CVE-2017-1000100 tftp reject file name lengths that don't fit
+  + CVE-2017-1000099 output the correct buffer to the user
+  + CVE-2017-9502 URL file scheme drive letter buffer overflow
+  + CVE-2016-5419 TLS session resumption client cert bypass (again)
+  + CVE-2017-2629 SSL_VERIFYSTATUS ignored
+  + CVE-2016-9594 uninitialized random
+  + CVE-2016-9586 printf floating point buffer overflow
+  + CVE-2016-8615 cookie injection for other servers
+  + CVE-2016-8616 case insensitive password comparison
+  + CVE-2016-8617 OOB write via unchecked multiplication
+  + CVE-2016-8618 double-free in curl_maprintf
+  + CVE-2016-8619 double-free in krb5 code
+  + CVE-2016-8620 glob parser write/read out of bounds
+  + CVE-2016-8621 curl_getdate read out of bounds
+  + CVE-2016-8622 URL unescape heap overflow via integer truncation
+  + CVE-2016-8623 Use-after-free via shared cookies
+  + CVE-2016-8624 invalid URL parsing with '#'
+  + CVE-2016-8625 IDNA 2003 makes curl use wrong host
+  + CVE-2015-3236 send the HTTP Basic authentication credentials for a previous connection
+  + CVE-2015-3237 The smb_request_state function allows remote SMB servers to obtain
+                  sensitive information from memory or cause a denial of service
+  + CVE-2015-3153 sends custom HTTP headers to both the proxy and destination server,
+                  which might allow remote proxy servers to obtain sensitive information
+  + CVE-2015-3148 do not properly re-use authenticated Negotiate connections
+  + CVE-2015-3143 does not properly re-use NTLM connections, which allows remote
+                  attackers to connect as other users via an unauthenticated request
+  + CVE-2015-3145 The sanitize_cookie_path function does not properly calculate an index
+  + CVE-2015-3144 The fix_hostname function does not properly calculate an index
+
 * Mon Dec 01 2014 Anton V. Boyarshinov <boyarsh@altlinux.ru> 7.31.0-alt1.M70C.2
 - build fixed
 
