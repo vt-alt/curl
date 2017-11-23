@@ -1,6 +1,6 @@
 Name: curl
-Version: 7.31.0
-Release: alt1.M70C.2
+Version: 7.56.1
+Release: alt1%ubt
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -9,12 +9,13 @@ Group: Networking/File transfer
 Url: http://curl.haxx.se
 
 Source: %url/download/%name-%version.tar
-Patch0: curl-%version-%release.patch
+Source1: %name.watch
+Patch0: curl-%version-alt.patch
 
 Requires: lib%name = %version-%release
 
-# Automatically added by buildreq on Tue Mar 15 2011
-BuildRequires: glibc-devel-static groff-base libidn-devel libssh2-devel libssl-devel zlib-devel python-modules
+BuildRequires: glibc-devel-static groff-base libidn-devel libssh2-devel libssl-devel zlib-devel python-modules libnghttp2-devel python-modules-logging python-modules-xml
+BuildRequires(pre):rpm-build-ubt
 
 %package -n lib%name
 Summary: The shared library for file transfer
@@ -108,13 +109,14 @@ applications that utilize lib%name.
 	--disable-rpat \
 	--disable-ldap \
 	--enable-threaded-resolver \
-	--without-gssapi \
+	--with-gssapi \
 	--with-ca-bundle=%_datadir/ca-certificates/ca-bundle.crt
 
 %make_build
 
 %install
 %makeinstall_std
+%makeinstall_std -C docs/libcurl
 
 %check
 %make_build -k test
@@ -132,10 +134,11 @@ applications that utilize lib%name.
 %_libdir/*.so
 %_libdir/pkgconfig/libcurl.pc
 %_bindir/curl-config
+%_aclocaldir/libcurl.m4
 %_includedir/*
 %_man3dir/*
 %_man1dir/curl-config.1*
-%doc docs/{THANKS,BUGS,CONTRIBUTE,INTERNALS,MANUAL,RESOURCES,TheArtOfHttpScripting,TODO,examples}
+%doc docs/{THANKS,BUGS,RESOURCES,TheArtOfHttpScripting,TODO,examples}
 
 %files -n lib%name-devel-static
 %_libdir/*.a

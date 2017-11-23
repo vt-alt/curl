@@ -1,2 +1,3 @@
 tar: v@version@:. name=curl-@version@
-diff: v@version@:.	.
+diff: v@version@:.	. name=curl-@version@-alt.patch
+copy: curl.watch

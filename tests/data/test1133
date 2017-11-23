@@ -40,15 +40,14 @@ foo
 # Verify data after the test has been "shot"
 <verify>
 <strip>
-^(User-Agent:|Content-Type: multipart/form-data;|Content-Type: multipart/mixed, boundary=|-------).*
+^(User-Agent:|Content-Type: multipart/form-data;|Content-Type: multipart/mixed; boundary=|-------).*
 </strip>
 <protocol>
 POST /we/want/1133 HTTP/1.1
 User-Agent: curl/7.10.4 (i686-pc-linux-gnu) libcurl/7.10.4 OpenSSL/0.9.7a ipv6 zlib/1.1.3
 Host: %HOSTIP:%HTTPPORT
 Accept: */*
-Content-Length: 967
-Expect: 100-continue
+Content-Length: 969
 Content-Type: multipart/form-data; boundary=----------------------------24e78000bd32
 
 ------------------------------24e78000bd32
@@ -71,7 +70,7 @@ foo
 
 ------------------------------24e78000bd32
 Content-Disposition: form-data; name="file3"
-Content-Type: multipart/mixed, boundary=----------------------------7f0e85a48b0b
+Content-Type: multipart/mixed; boundary=----------------------------7f0e85a48b0b
 
 Content-Disposition: attachment; filename="test1133,a\"nd;.txt"
 Content-Type: m/f
@@ -88,6 +87,7 @@ foo bar
 This is a bar foo
 bar
 foo
+
 
 ------------------------------24e78000bd32--
 </protocol>
