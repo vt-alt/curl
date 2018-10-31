@@ -1,4 +1,4 @@
-![curl logo](https://cdn.rawgit.com/curl/curl-www/master/logo/curl-logo.svg)
+![curl logo](https://curl.haxx.se/logo/curl-logo.svg)
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/63/badge)](https://bestpractices.coreinfrastructure.org/projects/63)
 [![Coverity passed](https://scan.coverity.com/projects/curl/badge.svg)](https://scan.coverity.com/projects/curl)
@@ -77,5 +77,3 @@ sponsor](https://opencollective.com/curl#sponsor)]
 <a href="https://opencollective.com/curl/sponsor/7/website" target="_blank"><img src="https://opencollective.com/curl/sponsor/7/avatar.svg"></a>
 <a href="https://opencollective.com/curl/sponsor/8/website" target="_blank"><img src="https://opencollective.com/curl/sponsor/8/avatar.svg"></a>
 <a href="https://opencollective.com/curl/sponsor/9/website" target="_blank"><img src="https://opencollective.com/curl/sponsor/9/avatar.svg"></a>
-
-
