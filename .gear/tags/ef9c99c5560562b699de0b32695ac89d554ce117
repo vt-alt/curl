@@ -1,0 +1,6 @@
+object 9cd755e1d768bbf228e7c9faf223b7459f7e0105
+type commit
+tag curl-7_66_0
+tagger Daniel Stenberg <daniel@haxx.se> 1568180932 +0200
+
+7.66.0
