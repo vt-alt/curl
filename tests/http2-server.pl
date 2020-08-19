@@ -75,7 +75,7 @@ while(@ARGV) {
 }
 
 my $cmdline="$nghttpx --backend=$connect ".
-    "--frontend=\"*,$listenport;no-tls\" ".
+    "--frontend=\"127.0.0.1,$listenport;no-tls\" ".
     "--log-level=INFO ".
     "--pid-file=$pidfile ".
     "--errorlog-file=$logfile";
