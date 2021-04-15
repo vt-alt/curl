@@ -1,0 +1,17 @@
+object 566b74a0e19b9aa610f4931e5bfd339bcf8e9147
+type commit
+tag curl-7_76_1
+tagger Daniel Stenberg <daniel@haxx.se> 1618379833 +0200
+
+7.76.1
+-----BEGIN PGP SIGNATURE-----
+
+iQFDBAABCgAtFiEEJ+3q8i86vOtQ25oSXMkI/bceEsIFAmB2hD0PHGRhbmllbEBo
+YXh4LnNlAAoJEFzJCP23HhLCYHMH/0QUms0JruJIJwhFXlmfFDZY9s1ByIBGWjOr
+EcDDCH+/vgvkPZi3wKrwh4YNvzCg8d6mRF6whUMYhAwZlMiHnwwA+Fl9/MNfX44u
+zVCi0GOpAl85IInSIxrVItt/Qiq0zbAr1qp3qvYnl6ugg8vaOhtg0M5P+qTcjg4H
+ti0OfXxU+oGFhMVglOqRvqQWvsLNUbykWSwvSfwWBGt3F4PEBA1bumk+V1fuH9P0
+7M1cPmVnozgFAR9/1V996/gNxR1cSXGYCx4iE1u8prI3ESCbjauf+pCkYDCp/F1U
+G4masC2xvWIlGMvabLRe7+mSLgfDsOU8JXVlukOAuLVAfMTeHRA=
+=hiMr
+-----END PGP SIGNATURE-----
