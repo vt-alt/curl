@@ -1,9 +1,10 @@
+%{?optflags_lto:%global optflags_lto %optflags_lto -ffat-lto-objects}
 %def_with nghttp2
 %def_with check
 
 Name: curl
 Version: 7.78.0
-Release: alt1
+Release: alt2
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -154,6 +155,9 @@ applications that utilize lib%name.
 %_libdir/*.a
 
 %changelog
+* Fri Sep 10 2021 Anton Farygin <rider@altlinux.ru> 7.78.0-alt2
+- fixed FTBFS via -ffat-lto-objects
+
 * Tue Jul 27 2021 Anton Farygin <rider@altlinux.ru> 7.78.0-alt1
 - 7.78.0
 
