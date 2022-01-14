@@ -519,7 +519,7 @@ static CURLcode http_perhapsrewind(struct Curl_easy *data,
             (curl_off_t)(expectsend - bytessent));
     }
 #endif
-#if defined(USE_SPNEGO)
+#if 0
     /* There is still data left to send */
     if((data->state.authproxy.picked == CURLAUTH_NEGOTIATE) ||
        (data->state.authhost.picked == CURLAUTH_NEGOTIATE)) {
