@@ -110,7 +110,7 @@ applications that utilize lib%name.
 
 %build
 ./maketgz %version only
-./buildconf
+%autoreconf
 %configure \
 	--with-ssl \
 	--with-libidn \
