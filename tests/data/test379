@@ -7,7 +7,7 @@ HTTP GET
 </info>
 
 #
-# Crafted to cause error 18
+# Crafted to cause error
 <reply>
 <data nocheck="yes">
 HTTP/1.1 200 OK swsclose
@@ -28,14 +28,17 @@ Funny-head: yesyes
 #
 # Client-side
 <client>
+<file name="log/save">
+exists before command runs
+</file>
 <server>
 http
 </server>
  <name>
---remove-on-error
+--remove-on-error with --no-clobber and an added number
  </name>
  <command option="no-output">
-http://%HOSTIP:%HTTPPORT/%TESTNUMBER -o log/save-%TESTNUMBER --remove-on-error
+http://%HOSTIP:%HTTPPORT/%TESTNUMBER -o log/save --remove-on-error --no-clobber
 </command>
 </client>
 
@@ -57,8 +60,12 @@ Accept: */*
 
 </protocol>
 
-# the file should be empty now
-<file name="log/save-%TESTNUMBER">
+# this file should be untouched
+<file name="log/save">
+exists before command runs
 </file>
+# the file should be empty now
+<file2 name="log/save.1">
+</file2>
 </verify>
 </testcase>
