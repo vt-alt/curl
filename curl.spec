@@ -8,7 +8,7 @@ Release: alt1
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
-License: MITX
+License: MIT
 Group: Networking/File transfer
 Url: http://curl.haxx.se
 
