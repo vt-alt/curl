@@ -3,7 +3,7 @@
 %def_with check
 
 Name: curl
-Version: 7.83.1
+Version: 7.84.0
 Release: alt1
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
@@ -155,6 +155,14 @@ applications that utilize lib%name.
 %_libdir/*.a
 
 %changelog
+* Mon Jun 27 2022 Anton Farygin <rider@altlinux.ru> 7.84.0-alt1
+- 7.84.0
+- Fixes:
+  * CVE-2022-32208: FTP-KRB bad message verification
+  * CVE-2022-32207: Unpreserved file permissions
+  * CVE-2022-32206: HTTP compression denial of service
+  * CVE-2022-32205: Set-Cookie denial of service
+
 * Wed May 11 2022 Anton Farygin <rider@altlinux.ru> 7.83.1-alt1
 - 7.83.1
 - Fixes:
