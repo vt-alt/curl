@@ -4,7 +4,7 @@
 
 Name: curl
 Version: 7.84.0
-Release: alt1
+Release: alt2
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -155,6 +155,11 @@ applications that utilize lib%name.
 %_libdir/*.a
 
 %changelog
+* Wed Aug 10 2022 Egor Ignatov <egori@altlinux.org> 7.84.0-alt2
+- backport upstream fixes:
+  + lib3026: reduce the number of threads to 100 (#9172)
+  + easy_lock.h: include sched.h if available to fix build (#9054)
+
 * Mon Jun 27 2022 Anton Farygin <rider@altlinux.ru> 7.84.0-alt1
 - 7.84.0
 - Fixes:
