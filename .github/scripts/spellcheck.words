@@ -92,6 +92,7 @@ chmod
 chown
 ChromeOS
 CI's
+CIDR
 CIFS
 CLA
 CLAs
@@ -159,6 +160,7 @@ dir
 distro
 distro's
 distros
+DJGPP
 dlist
 DLL
 dll
@@ -225,6 +227,7 @@ FreeDOS
 FreeRTOS
 freshmeat
 Frexx
+FS
 fseek
 FTPing
 fuzzer
@@ -246,7 +249,6 @@ getpwuid
 ggcov
 Ghedini
 Gisle
-github
 Glesys
 globbing
 gmail
@@ -755,6 +757,7 @@ Tomtom
 toolchain
 toolchains
 toolset
+toplevel
 TPF
 TrackMemory
 Tru
