@@ -123,6 +123,7 @@ applications that utilize lib%name.
 	--enable-threaded-resolver \
 	--with-ssl --enable-openssl-auto-load-config \
 	--with-gssapi \
+	--enable-websockets \
 	--with-ca-bundle=%_datadir/ca-certificates/ca-bundle.crt
 
 %make_build
