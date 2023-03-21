@@ -43,6 +43,7 @@ BuildRequires: zlib-devel libzstd-devel libpsl-devel libldap-devel libbrotli-dev
 %{?_with_check:BuildRequires: gnutls-utils}
 %{?_with_check:BuildRequires: /usr/bin/stunnel}
 %{?_with_check:BuildRequires: perl(Digest/SHA.pm) openssh-server openssh-clients}
+%{?_with_check:BuildRequires: apache2-devel apache2-mod_http2 apache2-mod_ssl caddy pytest3 python3-module-cryptography}
 
 %{?_with_openssl:BuildRequires: libssl-devel}
 %{?_with_gnutls:BuildRequires: libgnutls-devel libnettle-devel}
@@ -135,6 +136,7 @@ applications that utilize lib%name.
 %patch0 -p1
 
 %build
+export PATH=/sbin:/usr/sbin:$PATH
 ./maketgz %version only
 %autoreconf
 %configure \
@@ -161,6 +163,9 @@ applications that utilize lib%name.
 
 %check
 %make -k test-full
+pushd tests/http
+python3 -m pytest -v ||:
+popd
 
 %files
 %_bindir/curl
