@@ -121,7 +121,6 @@ applications that utilize lib%name.
 	--enable-ipv6 \
 	--disable-rpat \
 	--enable-ldap \
-	--enable-sspi \
 	--enable-threaded-resolver \
 	--with-ssl --enable-openssl-auto-load-config \
 	--with-gssapi \
