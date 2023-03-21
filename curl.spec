@@ -2,6 +2,7 @@
 %def_with nghttp2
 %def_with libssh2
 %def_with openssl
+%def_without gnutls
 %def_with check
 %def_disable static
 
@@ -27,8 +28,10 @@ BuildRequires: libidn2-devel libkrb5-devel libgsasl-devel
 BuildRequires: zlib-devel libzstd-devel libpsl-devel libldap-devel libbrotli-devel
 %{?_with_check:BuildRequires: python3-base}
 %{?_with_check:BuildRequires: libnghttp2-tools}
+%{?_with_check:BuildRequires: gnutls-utils}
 
 %{?_with_openssl:BuildRequires: libssl-devel}
+%{?_with_gnutls:BuildRequires: libgnutls-devel libnettle-devel}
 %{?_with_libssh2:BuildRequires: libssh2-devel}
 %{?_with_nghttp2:BuildRequires: libnghttp2-devel}
 
@@ -121,6 +124,7 @@ applications that utilize lib%name.
 %configure \
 	%{subst_enable static} \
 	%{subst_with openssl} \
+	%{subst_with gnutls} \
 	--with-libidn2 \
 	--enable-ipv6 \
 	--enable-ldap \
