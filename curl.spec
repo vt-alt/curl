@@ -18,7 +18,8 @@ Patch0: curl-%version-alt.patch
 
 Requires: lib%name = %version-%release
 
-BuildRequires: glibc-devel-static groff-base libidn2-devel libssh2-devel libssl-devel libkrb5-devel
+BuildRequires: glibc-devel-static groff-base
+BuildRequires: libidn2-devel libssh2-devel libssl-devel libkrb5-devel libgsasl-devel
 BuildRequires: zlib-devel libzstd-devel libpsl-devel libldap-devel libbrotli-devel
 %{?_with_check:BuildRequires: python3-base}
 %{?_with_check:BuildRequires: libnghttp2-tools}
