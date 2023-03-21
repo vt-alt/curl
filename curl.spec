@@ -41,6 +41,7 @@ BuildRequires: zlib-devel libzstd-devel libpsl-devel libldap-devel libbrotli-dev
 %{?_with_check:BuildRequires: python3-base}
 %{?_with_check:BuildRequires: libnghttp2-tools}
 %{?_with_check:BuildRequires: gnutls-utils}
+%{?_with_check:BuildRequires: /usr/bin/stunnel}
 %{?_with_check:BuildRequires: perl(Digest/SHA.pm) openssh-server openssh-clients}
 
 %{?_with_openssl:BuildRequires: libssl-devel}
