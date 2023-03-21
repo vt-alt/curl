@@ -1,6 +1,7 @@
 %{?optflags_lto:%global optflags_lto %optflags_lto -ffat-lto-objects}
 %def_with nghttp2
 %def_with check
+%def_disable static
 
 Name: curl
 Version: 8.0.1
@@ -18,7 +19,8 @@ Patch0: curl-%version-alt.patch
 
 Requires: lib%name = %version-%release
 
-BuildRequires: glibc-devel-static groff-base
+%{?_enable_static:BuildRequires: glibc-devel-static}
+BuildRequires: groff-base
 BuildRequires: libidn2-devel libssh2-devel libssl-devel libkrb5-devel libgsasl-devel
 BuildRequires: zlib-devel libzstd-devel libpsl-devel libldap-devel libbrotli-devel
 %{?_with_check:BuildRequires: python3-base}
@@ -113,6 +115,7 @@ applications that utilize lib%name.
 ./maketgz %version only
 %autoreconf
 %configure \
+	%{subst_enable static} \
 	--with-ssl \
 	--with-libidn \
 	--enable-ipv6 \
@@ -152,8 +155,10 @@ applications that utilize lib%name.
 %_man1dir/curl-config.1*
 %doc docs/{THANKS,TODO,examples,BUGS.md,TheArtOfHttpScripting.md}
 
+%if_enabled static
 %files -n lib%name-devel-static
 %_libdir/*.a
+%endif
 
 %changelog
 * Mon Mar 20 2023 Anton Farygin <rider@altlinux.ru> 8.0.1-alt1
