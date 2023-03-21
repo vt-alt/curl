@@ -20,7 +20,7 @@
 
 Name: curl
 Version: 8.0.1
-Release: alt1
+Release: alt2
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -192,6 +192,14 @@ popd
 %endif
 
 %changelog
+* Tue Mar 21 2023 Alexey Shabalin <shaba@altlinux.org> 8.0.1-alt2
+- disable build static library
+- fix configure options
+- fix build with libssh2
+- build with WebSockets support
+- build with gnutls instead of openssl, and build with http3 support
+- increased the number of tests to be execute
+
 * Mon Mar 20 2023 Anton Farygin <rider@altlinux.ru> 8.0.1-alt1
 - 8.0.0 -> 8.0.1
 
