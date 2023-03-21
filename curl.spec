@@ -38,7 +38,7 @@ Requires: lib%name = %version-%release
 BuildRequires: groff-base
 BuildRequires: libidn2-devel libkrb5-devel libgsasl-devel
 BuildRequires: zlib-devel libzstd-devel libpsl-devel libldap-devel libbrotli-devel
-%{?_with_check:BuildRequires: python3-base}
+%{?_with_check:BuildRequires: python3-base /proc}
 %{?_with_check:BuildRequires: libnghttp2-tools}
 %{?_with_check:BuildRequires: gnutls-utils}
 %{?_with_check:BuildRequires: /usr/bin/stunnel}
