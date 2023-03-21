@@ -1,12 +1,22 @@
 %{?optflags_lto:%global optflags_lto %optflags_lto -ffat-lto-objects}
 %def_with nghttp2
 %def_with libssh2
-%def_with openssl
-%def_without gnutls
-%def_without ngtcp2
-%def_without nghttp3
 %def_with check
 %def_disable static
+
+# QUIC protocol not supported in standart openssl, ngtcp2 build with gnutls for http3 support
+%def_enable http3
+%if_enabled http3
+  %def_without openssl
+  %def_with gnutls
+  %def_with ngtcp2
+  %def_with nghttp3
+%else
+  %def_with openssl
+  %def_without gnutls
+  %def_without ngtcp2
+  %def_without nghttp3
+%endif
 
 Name: curl
 Version: 8.0.1
