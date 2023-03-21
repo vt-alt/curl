@@ -119,7 +119,6 @@ applications that utilize lib%name.
 	--with-ssl \
 	--with-libidn2 \
 	--enable-ipv6 \
-	--disable-rpat \
 	--enable-ldap \
 	--enable-threaded-resolver \
 	--with-ssl --enable-openssl-auto-load-config \
