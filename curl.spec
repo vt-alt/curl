@@ -1,5 +1,6 @@
 %{?optflags_lto:%global optflags_lto %optflags_lto -ffat-lto-objects}
 %def_with nghttp2
+%def_with libssh2
 %def_with check
 %def_disable static
 
@@ -21,11 +22,12 @@ Requires: lib%name = %version-%release
 
 %{?_enable_static:BuildRequires: glibc-devel-static}
 BuildRequires: groff-base
-BuildRequires: libidn2-devel libssh2-devel libssl-devel libkrb5-devel libgsasl-devel
+BuildRequires: libidn2-devel libssl-devel libkrb5-devel libgsasl-devel
 BuildRequires: zlib-devel libzstd-devel libpsl-devel libldap-devel libbrotli-devel
 %{?_with_check:BuildRequires: python3-base}
 %{?_with_check:BuildRequires: libnghttp2-tools}
 
+%{?_with_libssh2:BuildRequires: libssh2-devel}
 %{?_with_nghttp2:BuildRequires: libnghttp2-devel}
 
 %package -n lib%name
@@ -124,6 +126,7 @@ applications that utilize lib%name.
 	--with-ssl --enable-openssl-auto-load-config \
 	--with-gssapi \
 	--enable-websockets \
+	%{subst_with libssh2} \
 	--with-ca-bundle=%_datadir/ca-certificates/ca-bundle.crt
 
 %make_build
