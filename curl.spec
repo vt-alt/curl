@@ -3,6 +3,8 @@
 %def_with libssh2
 %def_with openssl
 %def_without gnutls
+%def_without ngtcp2
+%def_without nghttp3
 %def_with check
 %def_disable static
 
@@ -34,6 +36,8 @@ BuildRequires: zlib-devel libzstd-devel libpsl-devel libldap-devel libbrotli-dev
 %{?_with_gnutls:BuildRequires: libgnutls-devel libnettle-devel}
 %{?_with_libssh2:BuildRequires: libssh2-devel}
 %{?_with_nghttp2:BuildRequires: libnghttp2-devel}
+%{?_with_ngtcp2:BuildRequires: libngtcp2-devel}
+%{?_with_nghttp3:BuildRequires: libnghttp3-devel}
 
 %package -n lib%name
 Summary: The shared library for file transfer
@@ -125,6 +129,8 @@ applications that utilize lib%name.
 	%{subst_enable static} \
 	%{subst_with openssl} \
 	%{subst_with gnutls} \
+	%{subst_with ngtcp2} \
+	%{subst_with nghttp3} \
 	--with-libidn2 \
 	--enable-ipv6 \
 	--enable-ldap \
