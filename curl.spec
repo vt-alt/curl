@@ -117,7 +117,7 @@ applications that utilize lib%name.
 %configure \
 	%{subst_enable static} \
 	--with-ssl \
-	--with-libidn \
+	--with-libidn2 \
 	--enable-ipv6 \
 	--disable-rpat \
 	--enable-ldap \
