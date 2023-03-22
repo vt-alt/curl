@@ -336,7 +336,7 @@ if test x"$request_httpd" = "xcheck"; then
       AC_MSG_NOTICE([apache2-dev not installed, httpd tests disabled])
     fi
   else
-    AC_PATH_PROG([HTTPD], [httpd])
+    AC_PATH_PROG([HTTPD], [httpd2])
     if test "x$HTTPD" = "x"; then
       AC_PATH_PROG([HTTPD], [apache2])
     fi
