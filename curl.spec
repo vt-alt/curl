@@ -44,6 +44,7 @@ BuildRequires: zlib-devel libzstd-devel libpsl-devel libldap-devel libbrotli-dev
 %{?_with_check:BuildRequires: /usr/bin/stunnel}
 %{?_with_check:BuildRequires: perl(Digest/SHA.pm) openssh-server openssh-clients}
 %{?_with_check:BuildRequires: apache2-devel apache2-mod_http2 apache2-mod_ssl caddy pytest3 python3-module-cryptography}
+%{?_with_check:BuildRequires: strace}
 
 %{?_with_openssl:BuildRequires: libssl-devel}
 %{?_with_gnutls:BuildRequires: libgnutls-devel libnettle-devel}
@@ -162,6 +163,22 @@ export PATH=/sbin:/usr/sbin:$PATH
 %makeinstall_std -C docs/libcurl
 
 %check
+# Build tests harness first, no tests are run.
+%make_build -C tests
+
+# Let's verify seccomp first
+pushd tests
+	# Non-flaky tests, that use curl tool only, no libs.
+	grep -L  -e '<tool>' -e '^lib' -e 'flaky' -r data | grep /test | grep -oP 'test\K\d+' | sort -V > t.txt
+	export SECCOMP_DEFAULT_ACTION=trap
+	if ! strace -o l.txt -f -e t=none -e s=sys -- ./runtests.pl -a -am -p $(cat t.txt); then
+		# After tests failure what syscalls were called?
+		grep syscall= l.txt
+		exit 2
+	fi
+	unset SECCOMP_DEFAULT_ACTION
+popd
+
 %make -k test-full
 pushd tests/http
 python3 -m pytest -v ||:
