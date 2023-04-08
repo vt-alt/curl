@@ -20,7 +20,7 @@
 
 Name: curl
 Version: 8.0.1
-Release: alt2
+Release: alt3
 
 Summary: Gets a file from a FTP, GOPHER or HTTP server
 Summary(ru_RU.UTF-8): Утилиты и библиотеки для передачи файлов
@@ -192,6 +192,9 @@ popd
 %endif
 
 %changelog
+* Sat Apr 08 2023 Vitaly Chikunov <vt@altlinux.org> 8.0.1-alt3
+- Apply process hardening measures.
+
 * Tue Mar 21 2023 Alexey Shabalin <shaba@altlinux.org> 8.0.1-alt2
 - disable build static library
 - fix configure options
