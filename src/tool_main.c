@@ -42,6 +42,11 @@
 #include <plarenas.h>
 #endif
 
+
+#ifdef HAVE_SYS_CAPABILITY_H
+#include <sys/capability.h>
+#endif
+
 #define ENABLE_CURLX_PRINTF
 /* use our own printf() functions */
 #include "curlx.h"
@@ -245,6 +250,21 @@ int main(int argc, char *argv[])
   CURLcode result = CURLE_OK;
   struct GlobalConfig global;
   memset(&global, 0, sizeof(global));
+
+#ifdef HAVE_SYS_CAPABILITY_H
+  /* Drop root capabilities. */
+  cap_t caps = cap_init();
+  if (caps) {
+     cap_value_t cap_list[2];
+     int ncap = 0;
+     cap_list[ncap++] = CAP_NET_RAW; /* For `--interface'. */
+     cap_list[ncap++] = CAP_FOWNER; /* For `--output'. */
+     cap_set_flag(caps, CAP_EFFECTIVE, ncap, cap_list, CAP_SET);
+     cap_set_flag(caps, CAP_PERMITTED, ncap, cap_list, CAP_SET);
+     cap_set_proc(caps);
+     cap_free(caps);
+  }
+#endif
 
   tool_init_stderr();
 

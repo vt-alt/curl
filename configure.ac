@@ -1307,6 +1307,11 @@ CURL_CHECK_LIBS_CONNECT
 CURL_NETWORK_LIBS=$LIBS
 
 dnl **********************************************************************
+dnl Libraries that only link with curl binary
+dnl **********************************************************************
+AC_CHECK_LIB([cap], [cap_init], [CURL_TOOL_LIBS="-lcap"])
+
+dnl **********************************************************************
 dnl In case that function clock_gettime with monotonic timer is available,
 dnl check for additional required libraries.
 dnl **********************************************************************
@@ -3418,6 +3423,7 @@ AC_CHECK_HEADERS(
         poll.h \
         socket.h \
         sys/resource.h \
+        sys/capability.h \
         libgen.h \
         locale.h \
         stdbool.h \
@@ -4347,6 +4353,7 @@ LIBCURL_LIBS="$LIBS$PTHREAD"
 AC_SUBST(LIBCURL_LIBS)
 AC_SUBST(CURL_NETWORK_LIBS)
 AC_SUBST(CURL_NETWORK_AND_TIME_LIBS)
+AC_SUBST(CURL_TOOL_LIBS)
 
 dnl BLANK_AT_MAKETIME may be used in our Makefile.am files to blank
 dnl LIBS variable used in generated makefile at makefile processing
@@ -4633,6 +4640,7 @@ squeeze LIBS
 squeeze LIBCURL_LIBS
 squeeze CURL_NETWORK_LIBS
 squeeze CURL_NETWORK_AND_TIME_LIBS
+squeeze CURL_TOOL_LIBS
 
 squeeze SUPPORT_FEATURES
 squeeze SUPPORT_PROTOCOLS

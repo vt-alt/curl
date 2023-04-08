@@ -37,6 +37,10 @@
 #  include <unistd.h>
 #endif
 
+#ifdef HAVE_SYS_CAPABILITY_H
+#  include <sys/capability.h>
+#endif
+
 #ifdef __VMS
 #  include <fabdef.h>
 #endif
@@ -2669,6 +2673,43 @@ static CURLcode run_all_transfers(struct GlobalConfig *global,
   return result;
 }
 
+static void sandbox(struct GlobalConfig *global)
+{
+   struct OperationConfig *config = global->current;
+
+   /* Do we have `--output'? It could be set per-URL so we need to scan them all. */
+   struct getout *next;
+   struct getout *node = config->url_list;
+   int have_output = 0;
+   while(node) {
+      next = node->next;
+      have_output |= node->flags & GETOUT_OUTFILE;
+      node = next;
+   }
+
+   have_output |= !!global->trace_dump; /* --trace, --trace-ascii */
+   have_output |= !!config->cookiejar; /* --cookie-jar */
+   have_output |= !!config->etag_save_file; /* --etag-save */
+
+#ifdef HAVE_SYS_CAPABILITY_H
+   /* Drop remaining capabilities since we left some in main(). */
+   cap_t caps = cap_init();
+   if (caps) {
+      cap_value_t cap_list[2];
+      int ncap = 0;
+      if (config->iface)
+         cap_list[ncap++] = CAP_NET_RAW;
+      if (have_output)
+         cap_list[ncap++] = CAP_FOWNER;
+      cap_set_flag(caps, CAP_EFFECTIVE, ncap, cap_list, CAP_SET);
+      cap_set_flag(caps, CAP_PERMITTED, ncap, cap_list, CAP_SET);
+      cap_set_proc(caps);
+      cap_free(caps);
+   }
+#endif
+}
+
+  /* Save the values of noprogress and isatty to restore them later on */
 CURLcode operate(struct GlobalConfig *global, int argc, argv_item_t argv[])
 {
   CURLcode result = CURLE_OK;
@@ -2755,6 +2796,9 @@ CURLcode operate(struct GlobalConfig *global, int argc, argv_item_t argv[])
 
         /* Set the current operation pointer */
         global->current = global->first;
+
+        /* Continue applying sandboxing. */
+        sandbox(global);
 
         /* now run! */
         result = run_all_transfers(global, share, result);
