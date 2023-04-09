@@ -1310,6 +1310,7 @@ dnl **********************************************************************
 dnl Libraries that only link with curl binary
 dnl **********************************************************************
 AC_CHECK_LIB([cap], [cap_init], [CURL_TOOL_LIBS="-lcap"])
+AC_CHECK_LIB([seccomp], [seccomp_init], [CURL_TOOL_LIBS="$CURL_TOOL_LIBS -lseccomp"])
 
 dnl **********************************************************************
 dnl In case that function clock_gettime with monotonic timer is available,
@@ -3424,6 +3425,7 @@ AC_CHECK_HEADERS(
         socket.h \
         sys/resource.h \
         sys/capability.h \
+        seccomp.h \
         libgen.h \
         locale.h \
         stdbool.h \
